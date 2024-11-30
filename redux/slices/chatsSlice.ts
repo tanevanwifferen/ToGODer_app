@@ -10,11 +10,13 @@ export interface Chat {
 export interface ChatsState extends ChatSettings {
   chats: {
     [id: string]: Chat;
-  }
+  };
+  currentChatId: string | null;
 }
 
 const initialState: ChatsState = {
     chats: {},
+    currentChatId: null,
     model: 'llama-3.2-90b',
     humanPrompt: false,
     keepGoing: false,
@@ -40,7 +42,8 @@ const chatsSlice = createSlice({
       return {
         ...state,
         ...action.payload,
-        chats: state.chats // Preserve existing chats
+        chats: state.chats, // Preserve existing chats
+        currentChatId: state.currentChatId // Preserve current chat id
       };
     },
     setTitle: (state, action: PayloadAction<{id: string, title: string}>) => {
@@ -51,11 +54,24 @@ const chatsSlice = createSlice({
     },
     deleteChat: (state, action: PayloadAction<string>) => {
       delete state.chats[action.payload];
+      if (state.currentChatId === action.payload) {
+        state.currentChatId = null;
+      }
+    },
+    setCurrentChat: (state, action: PayloadAction<string | null>) => {
+      state.currentChatId = action.payload;
     }
   },
 });
 
-export const { addChat, addMessage, updateSettings, setTitle, deleteChat } = chatsSlice.actions;
+export const { 
+  addChat, 
+  addMessage, 
+  updateSettings, 
+  setTitle, 
+  deleteChat,
+  setCurrentChat 
+} = chatsSlice.actions;
 
 export const selectChatList = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
@@ -66,6 +82,14 @@ export const selectChatById = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
   (_: any, chatId: string) => chatId,
   (chats, chatId) => chats[chatId]
+);
+
+export const selectCurrentChatId = (state: { chats: ChatsState }) => state.chats.currentChatId;
+
+export const selectCurrentChat = createSelector(
+  (state: { chats: ChatsState }) => state.chats.chats,
+  selectCurrentChatId,
+  (chats, currentChatId) => currentChatId ? chats[currentChatId] : null
 );
 
 export const selectModel = createSelector(

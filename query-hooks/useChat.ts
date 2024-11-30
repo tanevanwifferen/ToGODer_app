@@ -2,7 +2,6 @@ import { ChatApiClient } from "../apiClients";
 import { ApiChatMessage, ChatRequestCommunicationStyle } from "../model/ChatRequest";
 import { useSelector } from "react-redux";
 import { useState, useCallback } from "react";
-import { createSelector } from "@reduxjs/toolkit";
 import { selectCommunicationStyle, selectHumanPrompt, selectKeepGoing, selectModel, selectOutsideBox } from "@/redux";
 
 export function useChat() {

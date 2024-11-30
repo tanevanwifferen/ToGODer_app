@@ -1,12 +1,10 @@
 export interface Prompt {
-  id: string;
-  content: string;
-  category?: string;
-  metadata?: Record<string, unknown>;
+  prompt: string;
+  description: string;
 }
 
 export interface PromptsResponse {
-  prompts: Prompt[];
+  [promptId: string]: Prompt;
 }
 
 export interface Model {
@@ -18,10 +16,7 @@ export interface GlobalConfig {
   donateOptions: unknown[];
   quote: string;
   models: Model[];
-  prompts: Record<string, {
-    prompt: string;
-    description: string;
-    display: boolean;
-    aliases?: string[];
-  }>;
+  prompts: {
+  [promptId: string]: Prompt;
+  }
 }

@@ -1,14 +1,10 @@
 import { StyleSheet, View, Text, TouchableOpacity, FlatList, SafeAreaView, Alert } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
-import { selectChatList, addChat, deleteChat } from "../redux/slices/chatsSlice";
+import { selectChatList, addChat, deleteChat, setCurrentChat, Chat } from "../redux/slices/chatsSlice";
 import { v4 as uuidv4 } from 'uuid';
 import { Swipeable } from 'react-native-gesture-handler';
 
-interface ChatListProps {
-  onSelectChat: (chatId: string) => void;
-}
-
-export function ChatList({ onSelectChat }: ChatListProps) {
+export function ChatList() {
   const dispatch = useDispatch();
   const chats = useSelector(selectChatList);
 
@@ -19,13 +15,13 @@ export function ChatList({ onSelectChat }: ChatListProps) {
       title: null,
       messages: [],
     }));
-    onSelectChat(newChatId);
+    dispatch(setCurrentChat(newChatId));
   };
 
-  const handleLongPress = (chatId: string, title: string) => {
+  const handleLongPress = (chatId: string, title: string | null | undefined) => {
     Alert.alert(
       "Delete Chat",
-      `Are you sure you want to delete "${title}"?`,
+      `Are you sure you want to delete "${title || 'Untitled Chat'}"?`,
       [
         { text: "Cancel", style: "cancel" },
         { 
@@ -37,7 +33,7 @@ export function ChatList({ onSelectChat }: ChatListProps) {
     );
   };
 
-  const renderRightActions = (chatId: string, title: string) => {
+  const renderRightActions = (chatId: string, title: string | null | undefined) => {
     return (
       <TouchableOpacity 
         style={styles.deleteAction}
@@ -48,16 +44,16 @@ export function ChatList({ onSelectChat }: ChatListProps) {
     );
   };
 
-  const renderChatItem = ({ item }: { item: { id: string; title: string } }) => (
+  const renderChatItem = ({ item }: { item: Chat }) => (
     <Swipeable
       renderRightActions={() => renderRightActions(item.id, item.title)}
       rightThreshold={-100}
     >
       <TouchableOpacity
         style={styles.chatItem}
-        onPress={() => onSelectChat(item.id)}
+        onPress={() => dispatch(setCurrentChat(item.id))}
       >
-        <Text style={styles.chatTitle}>{item.title}</Text>
+        <Text style={styles.chatTitle}>{item.title || 'Untitled Chat'}</Text>
       </TouchableOpacity>
     </Swipeable>
   );

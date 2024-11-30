@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { GlobalApiClient } from "../apiClients/GlobalApiClient";
 import { setGlobalConfig } from "../redux/slices/globalConfigSlice";
-import { store, persistor } from "../redux/store";
+import { store } from "../redux/store";
 import { InitializationService } from "../services/InitializationService";
 
 export function useInitialize() {
@@ -13,6 +13,9 @@ export function useInitialize() {
         // Fetch global config
         const globalConfig = await GlobalApiClient.getGlobalConfig();
         store.dispatch(setGlobalConfig(globalConfig));
+
+        const prompts = await GlobalApiClient.getPrompts();
+        store.dispatch(setGlobalConfig({prompts}));
       } catch (error) {
         console.error("Failed to initialize app:", error);
       }

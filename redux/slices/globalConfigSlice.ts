@@ -1,19 +1,22 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { GlobalConfig } from '../../model/GlobalConfig';
+import { GlobalConfig, Prompt } from '../../model/GlobalConfig';
 
 const initialState: GlobalConfig = {
   donateOptions: [],
   quote: '',
   models: [],
-  prompts: {},
+  prompts: {}
 };
 
 const globalConfigSlice = createSlice({
   name: 'globalConfig',
   initialState,
   reducers: {
-    setGlobalConfig: (state, action: PayloadAction<GlobalConfig>) => {
-      return action.payload;
+    setGlobalConfig: (state, action: PayloadAction<Partial<GlobalConfig>>) => {
+      return {
+        ...state,
+        ...action.payload
+      };
     },
   },
 });

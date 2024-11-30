@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';

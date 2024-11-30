@@ -1,8 +1,6 @@
 import { store } from '@/redux';
-import { selectToken } from '@/redux/slices/authSlice';
 import axios from 'axios';
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { useSelector } from 'react-redux';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export interface AuthStore {
   token: string | null;
@@ -58,7 +56,6 @@ export class ApiClient {
       ...config,
       headers
     };
-    console.log('config', toreturn);
     return toreturn;
   }
 

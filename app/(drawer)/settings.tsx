@@ -5,7 +5,7 @@ import Checkbox from 'expo-checkbox';
 import { Picker } from '@react-native-picker/picker';
 import { selectCommunicationStyle, selectHumanPrompt, selectKeepGoing, selectModel, selectOutsideBox, updateSettings as updateSettingsAction } from '../../redux/slices/chatsSlice';
 import { ChatRequestCommunicationStyle, ChatSettings } from '../../model/ChatRequest';
-import { RootState, selectGlobalConfig, selectModels } from '@/redux';
+import { RootState, selectModels } from '@/redux';
 
 const Settings = () => {
   const dispatch = useDispatch();
@@ -100,7 +100,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    marginBottom: 60,
     backgroundColor: '#fff',
   },
   section: {
