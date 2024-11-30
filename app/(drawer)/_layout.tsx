@@ -12,22 +12,15 @@ export default function DrawerLayout() {
   return (
     <Drawer
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         drawerActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         drawerType: 'front',
       }}>
       <Drawer.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Chat',
           drawerIcon: ({ color }: { color: string }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Drawer.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          drawerIcon: ({ color }: { color: string }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
       <Drawer.Screen

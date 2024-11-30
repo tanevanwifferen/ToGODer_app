@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TextInput, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Checkbox from 'expo-checkbox';
 import { Picker } from '@react-native-picker/picker';
-import { fetchChats } from '../../redux/slices/chatsSlice';
+import { updateSettings as updateSettingsAction } from '../../redux/slices/chatsSlice';
 import { ChatRequestCommunicationStyle, ChatSettings } from '../../model/ChatRequest';
 import { RootState } from '@/redux';
 
@@ -17,14 +17,12 @@ const Settings = () => {
     outsideBox: state.chats.outsideBox,
     communicationStyle: state.chats.communicationStyle,
     assistant_name: state.chats.assistant_name,
-    chats: state.chats.chats,
   }));
 
   const updateSettings = (newSettings: Partial<ChatSettings>) => {
-    dispatch(fetchChats({
+    dispatch(updateSettingsAction({
       ...settings,
       ...newSettings,
-      chats: settings.chats,
     }));
   };
 
@@ -109,6 +107,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   section: {
+    //height: 50,
     marginBottom: 20,
   },
   label: {

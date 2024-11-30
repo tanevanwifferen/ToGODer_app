@@ -36,10 +36,17 @@ const chatsSlice = createSlice({
         chat.messages.push(action.payload.message);
       }
     },
+    updateSettings: (state, action: PayloadAction<ChatSettings>) => {
+      return {
+        ...state,
+        ...action.payload,
+        chats: state.chats // Preserve existing chats
+      };
+    }
   },
 });
 
-export const { addChat, addMessage } = chatsSlice.actions;
+export const { addChat, addMessage, updateSettings } = chatsSlice.actions;
 
 export const selectChatList = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,

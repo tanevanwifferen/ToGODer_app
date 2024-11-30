@@ -91,7 +91,6 @@ export default function HomeScreen() {
           scrollToBottom
           inverted={true}
           minInputToolbarHeight={50}
-          bottomOffset={Platform.select({ ios: 200, android: 100 })} // Increased bottomOffset
         />
       </View>
     </SafeAreaView>
@@ -106,6 +105,6 @@ const styles = StyleSheet.create({
   chatContainer: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingBottom: Platform.select({ ios: 100, android: 50 }), // Added paddingBottom
+    paddingBottom: Platform.select({ ios: 0, android: 0 }), // Added paddingBottom
   },
 });
