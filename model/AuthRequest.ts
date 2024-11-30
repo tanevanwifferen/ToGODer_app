@@ -3,8 +3,6 @@ export interface SignInRequest {
   password: string;
 }
 
-export interface SignUpRequest extends SignInRequest {}
-
 export interface UpdateTokenRequest {
   userId: string;
 }

@@ -1,11 +1,10 @@
-import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AuthResponse } from '../../model/AuthRequest';
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface AuthState {
   token: string | null;
   userId: string | null;
-  email: string | null,
-  password: string | null,
+  email: string | null;
+  password: string | null;
   isAuthenticated: boolean;
   lastTokenRefresh: number | null;
 }
@@ -16,21 +15,18 @@ const initialState: AuthState = {
   email: null,
   password: null,
   isAuthenticated: false,
-  lastTokenRefresh: null
+  lastTokenRefresh: null,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setAuthData: (state, action: PayloadAction<{email: string, password: string, response: AuthResponse}>) => {
-      state.token = action.payload.response.token;
-      state.userId = action.payload.response.userId;
-      state.email = action.payload.email;
-      state.password = action.payload.password;
-      state.isAuthenticated = true;
-      state.lastTokenRefresh = Date.now();
-    },
+    setAuthData: (state, action: PayloadAction<Partial<AuthState>>) => ({
+      ...state,
+      ...action.payload,
+      lastTokenRefresh: Date.now(),
+    }),
     clearAuth: (state) => {
       state.token = null;
       state.email = null;
@@ -41,30 +37,41 @@ const authSlice = createSlice({
     },
     updateTokenRefreshTime: (state) => {
       state.lastTokenRefresh = Date.now();
-    }
+    },
   },
 });
 
-export const { setAuthData, clearAuth, updateTokenRefreshTime } = authSlice.actions;
+export const { setAuthData, clearAuth, updateTokenRefreshTime } =
+  authSlice.actions;
 
-export const selectAuth = createSelector(
+export const selectEmail = createSelector(
   (state: { auth: AuthState }) => state.auth,
-  (auth) => auth
+  (auth) => auth.email
+);
+
+export const selectPassword = createSelector(
+  (state: { auth: AuthState }) => state.auth,
+  (auth) => auth.password
+);
+
+export const selectLastTokenRefresh = createSelector(
+  (state: { auth: AuthState }) => state.auth,
+  (auth) => auth.lastTokenRefresh
 );
 
 export const selectIsAuthenticated = createSelector(
-  (state: { auth: AuthState }) => state.auth.isAuthenticated,
-  (isAuthenticated) => isAuthenticated
+  (state: { auth: AuthState }) => state.auth,
+  (auth) => auth.isAuthenticated
 );
 
 export const selectToken = createSelector(
-  (state: { auth: AuthState }) => state.auth.token,
-  (token) => token
+  (state: { auth: AuthState }) => state.auth,
+  (auth) => auth.token
 );
 
 export const selectUserId = createSelector(
-  (state: { auth: AuthState }) => state.auth.userId,
-  (userId) => userId
+  (state: { auth: AuthState }) => state.auth,
+  (auth) => auth.userId
 );
 
 export default authSlice.reducer;

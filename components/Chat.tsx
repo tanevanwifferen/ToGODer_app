@@ -1,9 +1,10 @@
-import { StyleSheet, View, SafeAreaView, Platform, TouchableOpacity, Text } from "react-native";
-import { GiftedChat, IMessage } from 'react-native-gifted-chat';
+import { StyleSheet, View, SafeAreaView, Platform, TouchableOpacity, Text, ScrollView } from "react-native";
+import { GiftedChat, IMessage, Composer, InputToolbar } from 'react-native-gifted-chat';
 import { useChat } from "../query-hooks/useChat";
 import { useEffect, useState, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectChatList, addMessage, setTitle, selectChatById } from "../redux/slices/chatsSlice";
+import { selectPrompts } from "../redux/slices/globalConfigSlice";
 import { ApiChatMessage } from "../model/ChatRequest";
 import { ChatApiClient } from "../apiClients/ChatApiClient";
 
@@ -17,6 +18,9 @@ export function Chat({ chatId, onBack }: ChatProps) {
   const { sendMessage } = useChat();
   const chats = useSelector(selectChatList);
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [showPrompts, setShowPrompts] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const prompts = useSelector(selectPrompts);
 
   // Convert API messages to GiftedChat format
   useEffect(() => {
@@ -87,6 +91,54 @@ export function Chat({ chatId, onBack }: ChatProps) {
     }
   }, [chatId, sendMessage, chats]);
 
+  const handleInputTextChanged = (text: string) => {
+    setInputText(text);
+    if (messages.length === 0 && text.startsWith('/')) {
+      setShowPrompts(true);
+    } else {
+      setShowPrompts(false);
+    }
+  };
+
+  const handleSelectPrompt = (promptKey: string) => {
+    setInputText(`/${promptKey} `);
+    setShowPrompts(false);
+  };
+
+  const renderInputToolbar = (props: any) => {
+    return (
+      <View>
+        {showPrompts && (
+          <ScrollView style={styles.promptsContainer}>
+            <Text>{JSON.stringify(prompts)}</Text>
+            {/*Object.entries(prompts).map(([key, prompt]) => (
+              <TouchableOpacity
+                key={key}
+                style={styles.promptItem}
+                onPress={() => handleSelectPrompt(key)}
+              >
+                <Text style={styles.promptKey}>/{key}</Text>
+                <Text style={styles.promptDesc} numberOfLines={1}>{prompt.description}</Text>
+              </TouchableOpacity>
+            ))*/}
+          </ScrollView>
+        )}
+        <InputToolbar
+          {...props}
+          containerStyle={styles.inputToolbar}
+        />
+      </View>
+    );
+  };
+
+  const renderComposer = (props: any) => (
+    <Composer
+      {...props}
+      text={inputText}
+      onTextChanged={handleInputTextChanged}
+    />
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -97,6 +149,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
           <Text style={styles.headerTitle} numberOfLines={1}>{chatTitle}</Text>
         </View>
       </View>
+      <Text>{JSON.stringify(prompts)}</Text>
       <View style={styles.chatContainer}>
         <GiftedChat
           messages={messages}
@@ -104,11 +157,14 @@ export function Chat({ chatId, onBack }: ChatProps) {
           user={{
             _id: 1,
           }}
+          text={inputText}
+          renderInputToolbar={renderInputToolbar}
+          renderComposer={renderComposer}
           renderAvatar={null}
           alwaysShowSend
           scrollToBottom
           inverted={true}
-          minInputToolbarHeight={50}
+          minInputToolbarHeight={0}
         />
       </View>
     </SafeAreaView>
@@ -149,5 +205,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingBottom: Platform.select({ ios: 0, android: 0 }),
+  },
+  promptsContainer: {
+    maxHeight: 200,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 4,
+    margin: 8,
+  },
+  promptItem: {
+    flexDirection: 'row',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  promptKey: {
+    fontWeight: 'bold',
+    marginRight: 8,
+    minWidth: 80,
+  },
+  promptDesc: {
+    flex: 1,
+    color: '#666',
+  },
+  inputToolbar: {
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    backgroundColor: '#fff',
   },
 });

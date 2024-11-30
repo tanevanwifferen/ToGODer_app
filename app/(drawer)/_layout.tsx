@@ -1,4 +1,3 @@
-import { DrawerContentScrollView, createDrawerNavigator } from '@react-navigation/drawer';
 import { Drawer } from 'expo-router/drawer';
 import React from 'react';
 

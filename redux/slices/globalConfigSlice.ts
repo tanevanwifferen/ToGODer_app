@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { GlobalConfig } from '../../model/GlobalConfig';
 
 const initialState: GlobalConfig = {
@@ -23,9 +23,24 @@ export const { setGlobalConfig } = globalConfigSlice.actions;
 export const selectGlobalConfig = (state: { globalConfig: GlobalConfig }): GlobalConfig => 
   state.globalConfig;
 
-export const selectModels = (state: { globalConfig: GlobalConfig }) => state.globalConfig.models;
-export const selectPrompts = (state: { globalConfig: GlobalConfig }) => state.globalConfig.prompts;
-export const selectQuote = (state: { globalConfig: GlobalConfig }) => state.globalConfig.quote;
-export const selectDonateOptions = (state: { globalConfig: GlobalConfig }) => state.globalConfig.donateOptions;
+export const selectModels = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => globalConfig.models
+);
+
+export const selectPrompts = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => globalConfig.prompts
+);
+
+export const selectQuote = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => globalConfig.quote
+);
+
+export const selectDonateOptions = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => globalConfig.donateOptions
+);
 
 export default globalConfigSlice.reducer;

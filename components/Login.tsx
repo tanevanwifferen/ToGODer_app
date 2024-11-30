@@ -22,7 +22,7 @@ export const Login = () => {
     try {
       setError('');
       const response = await AuthApiClient.login(email, password);
-      dispatch(setAuthData({email, password, response}));
+      dispatch(setAuthData({email, password, ...response}));
     } catch (err:any) {
       setError(err);
     }

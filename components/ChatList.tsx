@@ -1,8 +1,7 @@
-import { StyleSheet, View, Text, TouchableOpacity, FlatList, SafeAreaView, Alert, Dimensions } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, FlatList, SafeAreaView, Alert } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { selectChatList, addChat, deleteChat } from "../redux/slices/chatsSlice";
 import { v4 as uuidv4 } from 'uuid';
-import { useState, useRef } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 
 interface ChatListProps {

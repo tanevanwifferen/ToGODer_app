@@ -1,5 +1,8 @@
+import { store } from '@/redux';
+import { selectToken } from '@/redux/slices/authSlice';
 import axios from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { useSelector } from 'react-redux';
 
 export interface AuthStore {
   token: string | null;
@@ -13,7 +16,6 @@ export interface RateLimitError {
 }
 
 export class ApiClient {
-  private static authStore: AuthStore | null = null;
   private static axiosInstance: AxiosInstance = axios.create({
       baseURL: 'https://dev.togoder.click/api',
       headers: {
@@ -22,22 +24,7 @@ export class ApiClient {
     });
 ;
 
-  static initialize(authStore: AuthStore): void {
-    ApiClient.authStore = authStore;
-    // Request interceptor for adding auth token
-    ApiClient.axiosInstance.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        if (this.authStore?.token) {
-          console.log(this.authStore?.token);
-          config.headers.set('Authorization', `Bearer ${this.authStore.token}`);
-        }
-        return config;
-      },
-      (error: unknown) => {
-        return Promise.reject(error);
-      }
-    );
-
+  static initialize(): void {
     // Response interceptor for handling common errors
     ApiClient.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => response,
@@ -58,11 +45,28 @@ export class ApiClient {
     );
   }
 
+  static extendConfig(config: AxiosRequestConfig): AxiosRequestConfig {
+    const token = store.getState().auth.token;
+    const headers : any = {
+      ...config.headers,
+      'Content-Type': 'application/json',
+    };
+    if (!!token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    var toreturn = {
+      ...config,
+      headers
+    };
+    console.log('config', toreturn);
+    return toreturn;
+  }
+
   static async get<T>(url: string, config: AxiosRequestConfig = {}): Promise<T> {
     if (!ApiClient.axiosInstance) {
       throw new Error('ApiClient not initialized');
     }
-    const response = await ApiClient.axiosInstance.get<T>(url, config);
+    const response = await ApiClient.axiosInstance.get<T>(url, ApiClient.extendConfig(config));
     return response.data;
   }
 
@@ -70,7 +74,7 @@ export class ApiClient {
     if (!ApiClient.axiosInstance) {
       throw new Error('ApiClient not initialized');
     }
-    const response = await ApiClient.axiosInstance.post<T>(url, data, config);
+    const response = await ApiClient.axiosInstance.post<T>(url, data, ApiClient.extendConfig(config));
     return response.data;
   }
 
@@ -78,7 +82,7 @@ export class ApiClient {
     if (!ApiClient.axiosInstance) {
       throw new Error('ApiClient not initialized');
     }
-    const response = await ApiClient.axiosInstance.put<T>(url, data, config);
+    const response = await ApiClient.axiosInstance.put<T>(url, data, ApiClient.extendConfig(config));
     return response.data;
   }
 
@@ -86,7 +90,7 @@ export class ApiClient {
     if (!ApiClient.axiosInstance) {
       throw new Error('ApiClient not initialized');
     }
-    const response = await ApiClient.axiosInstance.delete<T>(url, config);
+    const response = await ApiClient.axiosInstance.delete<T>(url, ApiClient.extendConfig(config));
     return response.data;
   }
 }

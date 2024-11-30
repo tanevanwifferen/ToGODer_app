@@ -1,13 +1,11 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
 import createExpoFileSystemStorage from 'redux-persist-expo-filesystem';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import globalConfigReducer from './slices/globalConfigSlice';
 import chatsReducer, { ChatsState } from './slices/chatsSlice';
 import authReducer, { AuthState } from './slices/authSlice';
 import { GlobalConfig } from '../model/GlobalConfig';
-import { Chat } from './slices/chatsSlice';
 
 export interface RootState {
   globalConfig: GlobalConfig;

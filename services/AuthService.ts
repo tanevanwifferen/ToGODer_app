@@ -1,6 +1,6 @@
+import { clearAuth, setAuthData } from '@/redux/slices/authSlice';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { store } from '../redux/store';
-import { setAuthData, clearAuth, selectAuth } from '../redux/slices/authSlice';
 
 export class AuthService {
   private static refreshInterval: NodeJS.Timeout | null = null;
@@ -31,19 +31,21 @@ export class AuthService {
 
   static async checkAndRefreshToken() {
     const state = store.getState();
-    const auth = selectAuth(state);
+    const isAuthenticated = state.auth.isAuthenticated;
+    const userId = state.auth.userId;
+    const lastTokenRefresh = state.auth.lastTokenRefresh;
 
-    if (!auth.isAuthenticated || !auth.userId) {
+    if (!isAuthenticated || !userId) {
       return;
     }
 
     // Check if token needs refresh (if last refresh was more than 14 minutes ago)
-    const shouldRefresh = auth.lastTokenRefresh && 
-      (Date.now() - auth.lastTokenRefresh > this.REFRESH_INTERVAL - this.TOKEN_EXPIRY_BUFFER);
+    const shouldRefresh = lastTokenRefresh && 
+      (Date.now() - lastTokenRefresh > this.REFRESH_INTERVAL - this.TOKEN_EXPIRY_BUFFER);
 
     if (shouldRefresh) {
       try {
-        const response = await AuthApiClient.refreshToken(auth.userId);
+        const response = await AuthApiClient.refreshToken(userId);
         store.dispatch(setAuthData(response));
       } catch (error) {
         // If refresh fails, clear auth state
@@ -55,14 +57,15 @@ export class AuthService {
 
   static isTokenValid(): boolean {
     const state = store.getState();
-    const auth = selectAuth(state);
+    const isAuthenticated = state.auth.isAuthenticated;
+    const lastTokenRefresh = state.auth.lastTokenRefresh;
 
-    if (!auth.isAuthenticated || !auth.lastTokenRefresh) {
+    if (!isAuthenticated || !lastTokenRefresh) {
       return false;
     }
 
     // Check if token is within valid timeframe
-    const tokenAge = Date.now() - auth.lastTokenRefresh;
+    const tokenAge = Date.now() - lastTokenRefresh;
     return tokenAge < this.REFRESH_INTERVAL;
   }
 }

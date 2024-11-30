@@ -1,5 +1,5 @@
 import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ChatRequest, ApiChatMessage, ChatSettings } from '../../model/ChatRequest';
+import { ApiChatMessage, ChatSettings } from '../../model/ChatRequest';
 
 export interface Chat {
   id: string;
@@ -36,7 +36,7 @@ const chatsSlice = createSlice({
         chat.messages.push(action.payload.message);
       }
     },
-    updateSettings: (state, action: PayloadAction<ChatSettings>) => {
+    updateSettings: (state, action: PayloadAction<Partial<ChatSettings>>) => {
       return {
         ...state,
         ...action.payload,
@@ -69,8 +69,28 @@ export const selectChatById = createSelector(
 );
 
 export const selectModel = createSelector(
-  (state: { chats: ChatsState }) => state.chats.model,
-  (model) => model
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.model
+);
+
+export const selectKeepGoing = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.keepGoing
+);
+
+export const selectOutsideBox = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.outsideBox
+);
+
+export const selectCommunicationStyle = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.communicationStyle
+);
+
+export const selectHumanPrompt = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.humanPrompt
 );
 
 export default chatsSlice.reducer;

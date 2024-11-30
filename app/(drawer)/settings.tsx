@@ -3,25 +3,22 @@ import { View, StyleSheet, Text, TextInput, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Checkbox from 'expo-checkbox';
 import { Picker } from '@react-native-picker/picker';
-import { updateSettings as updateSettingsAction } from '../../redux/slices/chatsSlice';
+import { selectCommunicationStyle, selectHumanPrompt, selectKeepGoing, selectModel, selectOutsideBox, updateSettings as updateSettingsAction } from '../../redux/slices/chatsSlice';
 import { ChatRequestCommunicationStyle, ChatSettings } from '../../model/ChatRequest';
-import { RootState } from '@/redux';
+import { RootState, selectGlobalConfig, selectModels } from '@/redux';
 
 const Settings = () => {
   const dispatch = useDispatch();
-  const settings = useSelector((state: RootState) => ({
-    availableModels: state.globalConfig.models,
-    model: state.chats.model,
-    humanPrompt: state.chats.humanPrompt,
-    keepGoing: state.chats.keepGoing,
-    outsideBox: state.chats.outsideBox,
-    communicationStyle: state.chats.communicationStyle,
-    assistant_name: state.chats.assistant_name,
-  }));
+  const availableModels = useSelector(selectModels);
+  const model = useSelector(selectModel);
+  const humanPrompt = useSelector(selectHumanPrompt);
+  const keepGoing = useSelector(selectKeepGoing);
+  const outsideBox = useSelector(selectOutsideBox);
+  const communicationStyle = useSelector(selectCommunicationStyle);
+  const assistant_name = useSelector((state: RootState) => state.chats.assistant_name);
 
   const updateSettings = (newSettings: Partial<ChatSettings>) => {
     dispatch(updateSettingsAction({
-      ...settings,
       ...newSettings,
     }));
   };
@@ -38,11 +35,11 @@ const Settings = () => {
       <View style={styles.section}>
         <Text style={styles.label}>Model</Text>
         <Picker
-          selectedValue={settings.model}
+          selectedValue={model}
           onValueChange={(value: string) => updateSettings({ model: value })}
           style={styles.picker}
         >
-          {settings.availableModels.map((model) => (
+          {availableModels.map((model) => (
             <Picker.Item key={model.model} label={model.title} value={model.model} />
           ))}
         </Picker>
@@ -51,7 +48,7 @@ const Settings = () => {
       <View style={styles.section}>
         <Text style={styles.label}>Communication Style</Text>
         <Picker
-          selectedValue={settings.communicationStyle}
+          selectedValue={communicationStyle}
           onValueChange={(value: ChatRequestCommunicationStyle) => 
             updateSettings({ communicationStyle: value })}
           style={styles.picker}
@@ -66,7 +63,7 @@ const Settings = () => {
         <Text style={styles.label}>Assistant Name</Text>
         <TextInput
           style={styles.input}
-          value={settings.assistant_name}
+          value={assistant_name}
           onChangeText={(value: string) => updateSettings({ assistant_name: value })}
           placeholder="Enter assistant name"
         />
@@ -74,7 +71,7 @@ const Settings = () => {
 
       <View style={styles.checkboxSection}>
         <Checkbox
-          value={settings.humanPrompt}
+          value={humanPrompt}
           onValueChange={(value: boolean) => updateSettings({ humanPrompt: value })}
         />
         <Text style={styles.checkboxLabel}>Human Prompt</Text>
@@ -82,7 +79,7 @@ const Settings = () => {
 
       <View style={styles.checkboxSection}>
         <Checkbox
-          value={settings.keepGoing}
+          value={keepGoing}
           onValueChange={(value: boolean) => updateSettings({ keepGoing: value })}
         />
         <Text style={styles.checkboxLabel}>Keep Going</Text>
@@ -90,7 +87,7 @@ const Settings = () => {
 
       <View style={styles.checkboxSection}>
         <Checkbox
-          value={settings.outsideBox}
+          value={outsideBox}
           onValueChange={(value: boolean) => updateSettings({ outsideBox: value })}
         />
         <Text style={styles.checkboxLabel}>Think Outside the Box</Text>

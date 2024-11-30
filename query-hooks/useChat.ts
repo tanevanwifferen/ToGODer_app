@@ -1,20 +1,19 @@
 import { ChatApiClient } from "../apiClients";
-import { ApiChatMessage } from "../model/ChatRequest";
+import { ApiChatMessage, ChatRequestCommunicationStyle } from "../model/ChatRequest";
 import { useSelector } from "react-redux";
 import { useState, useCallback } from "react";
+import { createSelector } from "@reduxjs/toolkit";
+import { selectCommunicationStyle, selectHumanPrompt, selectKeepGoing, selectModel, selectOutsideBox } from "@/redux";
 
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   
-  // Get all required settings from the chats state
-  const settings = useSelector((state: any) => ({
-    model: state.chats.model,
-    humanPrompt: state.chats.humanPrompt,
-    keepGoing: state.chats.keepGoing,
-    outsideBox: state.chats.outsideBox,
-    communicationStyle: state.chats.communicationStyle,
-  }));
+  const model = useSelector(selectModel);
+  const humanPrompt = useSelector(selectHumanPrompt);
+  const keepGoing = useSelector(selectKeepGoing);
+  const outsideBox = useSelector(selectOutsideBox);
+  const communicationStyle = useSelector(selectCommunicationStyle);
 
   const sendMessage = useCallback(
     async (messages: ApiChatMessage[]): Promise<string> => {
@@ -23,11 +22,11 @@ export function useChat() {
 
       try {
         const response = await ChatApiClient.sendMessage(
-          settings.model,
-          settings.humanPrompt,
-          settings.keepGoing,
-          settings.outsideBox,
-          settings.communicationStyle,
+          model,
+          humanPrompt,
+          keepGoing,
+          outsideBox,
+          communicationStyle ?? ChatRequestCommunicationStyle.Default,
           messages
         );
 
@@ -41,7 +40,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [settings]
+    [model, humanPrompt, keepGoing, outsideBox, communicationStyle]
   );
 
   return {

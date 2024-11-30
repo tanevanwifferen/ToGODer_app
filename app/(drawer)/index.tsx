@@ -19,7 +19,7 @@ export default function HomeScreen() {
         messages: [],
       }));
     }
-  }, []);
+  }, [chats.length, dispatch]);
 
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
