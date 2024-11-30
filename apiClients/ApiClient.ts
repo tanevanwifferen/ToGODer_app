@@ -28,6 +28,7 @@ export class ApiClient {
     ApiClient.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         if (this.authStore?.token) {
+          console.log(this.authStore?.token);
           config.headers.set('Authorization', `Bearer ${this.authStore.token}`);
         }
         return config;
@@ -39,7 +40,7 @@ export class ApiClient {
 
     // Response interceptor for handling common errors
     ApiClient.axiosInstance.interceptors.response.use(
-      (response: AxiosResponse) => response.data,
+      (response: AxiosResponse) => response,
       (error: unknown) => {
         if (axios.isAxiosError(error) && error.response?.status === 429) {
           const retryAfter = error.response.headers['retry-after'];

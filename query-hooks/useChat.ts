@@ -1,18 +1,20 @@
-import { ChatApiClient } from "@/apiClients";
-import { ApiChatMessage, ChatRequestCommunicationStyle } from "@/model";
-import { selectModel } from "@/redux";
-import { useState, useCallback } from "react";
+import { ChatApiClient } from "../apiClients";
+import { ApiChatMessage } from "../model/ChatRequest";
 import { useSelector } from "react-redux";
-
-interface Message {
-  sender: "user" | "bot";
-  content: string;
-}
+import { useState, useCallback } from "react";
 
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const model = useSelector(selectModel);
+  
+  // Get all required settings from the chats state
+  const settings = useSelector((state: any) => ({
+    model: state.chats.model,
+    humanPrompt: state.chats.humanPrompt,
+    keepGoing: state.chats.keepGoing,
+    outsideBox: state.chats.outsideBox,
+    communicationStyle: state.chats.communicationStyle,
+  }));
 
   const sendMessage = useCallback(
     async (messages: ApiChatMessage[]): Promise<string> => {
@@ -21,12 +23,12 @@ export function useChat() {
 
       try {
         const response = await ChatApiClient.sendMessage(
-          model,
-          false,
-          false,
-          false,
-          ChatRequestCommunicationStyle.Default,
-          [{ role: "user", content: "hallo" }]
+          settings.model,
+          settings.humanPrompt,
+          settings.keepGoing,
+          settings.outsideBox,
+          settings.communicationStyle,
+          messages
         );
 
         return response.content ?? "";
@@ -39,7 +41,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    []
+    [settings]
   );
 
   return {

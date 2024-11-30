@@ -3,7 +3,7 @@ import { ChatRequest, ApiChatMessage, ChatSettings } from '../../model/ChatReque
 
 export interface Chat {
   id: string;
-  title: string;
+  title?: string | null;
   messages: ApiChatMessage[];
 }
 
@@ -42,11 +42,20 @@ const chatsSlice = createSlice({
         ...action.payload,
         chats: state.chats // Preserve existing chats
       };
+    },
+    setTitle: (state, action: PayloadAction<{id: string, title: string}>) => {
+      const chat = state.chats[action.payload.id];
+      if (chat) {
+        chat.title = action.payload.title;
+      }
+    },
+    deleteChat: (state, action: PayloadAction<string>) => {
+      delete state.chats[action.payload];
     }
   },
 });
 
-export const { addChat, addMessage, updateSettings } = chatsSlice.actions;
+export const { addChat, addMessage, updateSettings, setTitle, deleteChat } = chatsSlice.actions;
 
 export const selectChatList = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,

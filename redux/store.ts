@@ -5,23 +5,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import globalConfigReducer from './slices/globalConfigSlice';
 import chatsReducer, { ChatsState } from './slices/chatsSlice';
+import authReducer, { AuthState } from './slices/authSlice';
 import { GlobalConfig } from '../model/GlobalConfig';
 import { Chat } from './slices/chatsSlice';
 
 export interface RootState {
   globalConfig: GlobalConfig;
   chats: ChatsState;
+  auth: AuthState;
 }
 
 const rootReducer = combineReducers({
   globalConfig: globalConfigReducer,
   chats: chatsReducer,
+  auth: authReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {
   key: 'root',
   storage: createExpoFileSystemStorage,
-  whitelist: ['globalConfig', 'chats'],
+  whitelist: ['globalConfig', 'chats', 'auth'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

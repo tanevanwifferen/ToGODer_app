@@ -5,9 +5,9 @@ import { ChatResponse, TitleResponse, ExperienceResponse } from '../model/ChatRe
 export class ChatApiClient {
   static async sendMessage(
     model: string,
-    humanPrompt: boolean,
-    keepGoing: boolean,
-    outsideBox: boolean,
+    humanPrompt: boolean = false,
+    keepGoing: boolean = false,
+    outsideBox: boolean = false,
     communicationStyle: ChatRequestCommunicationStyle,
     messages: ApiChatMessage[]
   ): Promise<ChatResponse> {
@@ -26,9 +26,8 @@ export class ChatApiClient {
     };
   }
 
-  static async getTitle(model: string , messages: ApiChatMessage[]): Promise<string> {
+  static async getTitle(messages: ApiChatMessage[]): Promise<string> {
     const response = await ApiClient.post<TitleResponse>('/title', {
-      model,
       content: messages
     });
 

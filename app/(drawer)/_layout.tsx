@@ -30,6 +30,13 @@ export default function DrawerLayout() {
           drawerIcon: ({ color }: { color: string }) => <IconSymbol size={28} name="gear" color={color} />,
         }}
       />
+      <Drawer.Screen
+        name="login"
+        options={{
+          title: 'Login',
+          drawerIcon: ({ color }: { color: string }) => <IconSymbol size={28} name="person.fill" color={color} />,
+        }}
+      />
     </Drawer>
   );
 }
