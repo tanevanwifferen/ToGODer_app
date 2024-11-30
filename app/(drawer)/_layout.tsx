@@ -1,3 +1,4 @@
+import { DrawerContentScrollView, createDrawerNavigator } from '@react-navigation/drawer';
 import { Drawer } from 'expo-router/drawer';
 import React from 'react';
 
@@ -13,6 +14,7 @@ export default function DrawerLayout() {
       screenOptions={{
         headerShown: false,
         drawerActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        drawerType: 'front',
       }}>
       <Drawer.Screen
         name="index"

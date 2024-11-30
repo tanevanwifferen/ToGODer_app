@@ -1,5 +1,3 @@
-import { AIProvider } from './AIProvider';
-
 export enum ChatRequestCommunicationStyle {
   Default = 0,
   LessBloat = 1,
@@ -13,7 +11,7 @@ export interface ApiChatMessage {
 }
 
 export interface ChatSettings {
-  model: AIProvider;
+  model: string;
   humanPrompt: boolean | undefined;
   keepGoing: boolean | undefined;
   outsideBox: boolean | undefined;
@@ -26,7 +24,7 @@ export interface ChatRequest extends ChatSettings {
 }
 
 export interface ExperienceRequest {
-  model: AIProvider;
+  model: string;
   language: string;
   assistant_name: string | undefined;
 }

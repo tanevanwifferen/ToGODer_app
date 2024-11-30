@@ -1,11 +1,10 @@
 import { ApiClient } from './ApiClient';
-import { AIProvider } from '../model/AIProvider';
 import { ChatRequestCommunicationStyle, ApiChatMessage } from '../model/ChatRequest';
 import { ChatResponse, TitleResponse, ExperienceResponse } from '../model/ChatResponse';
 
 export class ChatApiClient {
   static async sendMessage(
-    model: AIProvider,
+    model: string,
     humanPrompt: boolean,
     keepGoing: boolean,
     outsideBox: boolean,
@@ -27,7 +26,7 @@ export class ChatApiClient {
     };
   }
 
-  static async getTitle(model: AIProvider, messages: ApiChatMessage[]): Promise<string> {
+  static async getTitle(model: string , messages: ApiChatMessage[]): Promise<string> {
     const response = await ApiClient.post<TitleResponse>('/title', {
       model,
       content: messages
@@ -36,7 +35,7 @@ export class ChatApiClient {
     return response.content;
   }
 
-  static async startExperience(model: AIProvider, language: string): Promise<string> {
+  static async startExperience(model: string, language: string): Promise<string> {
     const response = await ApiClient.post<ExperienceResponse>('/experience', {
       model,
       language,
