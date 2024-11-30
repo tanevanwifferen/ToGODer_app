@@ -2,16 +2,16 @@ import React from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import { useSelector } from 'react-redux';
 import { selectQuote } from '../../redux/slices/globalConfigSlice';
-import { useExperience } from '@/hooks/useExperience';
+import { useExperienceContext } from '../providers/ExperienceProvider';
 
 export function EmptyChat() {
   const quote = useSelector(selectQuote);
-  const {showLanguageSelector} = useExperience();
+  const { showLanguageInput } = useExperienceContext();
 
   return (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>{quote}</Text>
-      <Button onPress={showLanguageSelector} title="Start Experience" />
+      <Button onPress={showLanguageInput} title="Start Experience" />
     </View>
   );
 }

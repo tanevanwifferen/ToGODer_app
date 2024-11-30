@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from '../redux/store';
+import { ExperienceProvider } from '../components/providers/ExperienceProvider';
 
 import { useColorScheme } from '../hooks/useColorScheme';
 import { useInitialize } from '../hooks/useInitialize';
@@ -38,13 +39,15 @@ export default function RootLayout() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <GestureHandlerRootView style={styles.container}>
-            <Stack>
-              <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-          </GestureHandlerRootView>
+          <ExperienceProvider>
+            <GestureHandlerRootView style={styles.container}>
+              <Stack>
+                <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="auto" />
+            </GestureHandlerRootView>
+          </ExperienceProvider>
         </ThemeProvider>
       </PersistGate>
     </Provider>

@@ -5,18 +5,24 @@ import createExpoFileSystemStorage from 'redux-persist-expo-filesystem';
 import globalConfigReducer from './slices/globalConfigSlice';
 import chatsReducer, { ChatsState } from './slices/chatsSlice';
 import authReducer, { AuthState } from './slices/authSlice';
+import experienceReducer from './slices/experienceSlice';
 import { GlobalConfig } from '../model/GlobalConfig';
 
 export interface RootState {
   globalConfig: GlobalConfig;
   chats: ChatsState;
   auth: AuthState;
+  experience: {
+    modalVisible: boolean;
+    inputLanguage: string;
+  };
 }
 
 const rootReducer = combineReducers({
   globalConfig: globalConfigReducer,
   chats: chatsReducer,
   auth: authReducer,
+  experience: experienceReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {
