@@ -8,6 +8,7 @@ export enum ChatRequestCommunicationStyle {
 export interface ApiChatMessage {
   content: string;
   role: 'user' | 'assistant';
+  updateData?: Record<string, any>;
 }
 
 export interface ChatSettings {

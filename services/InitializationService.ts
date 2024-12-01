@@ -11,9 +11,20 @@ export class InitializationService {
   private static readonly selectIsAuthenticated = (state: any) => Boolean(state.auth.token);
   private static readonly selectAppFirstLaunch = (state: any) => state.globalConfig.appFirstLaunch;
 
-  static initialize() {
+  static async initialize() {
     // Initialize API client with auth store
     ApiClient.initialize();
+
+    // Wait for state to be rehydrated
+    await new Promise<void>((resolve) => {
+      const unsubscribe = store.subscribe(() => {
+        const state = store.getState();
+        if (state._persist?.rehydrated) {
+          unsubscribe();
+          resolve();
+        }
+      });
+    });
 
     // Check if this is first app launch
     const state = store.getState();

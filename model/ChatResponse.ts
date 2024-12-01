@@ -1,6 +1,7 @@
 export interface ChatResponse {
   content: string;
   signature?: string;
+  updateData?: Record<string, any>;
 }
 
 export interface TitleResponse {

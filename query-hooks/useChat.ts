@@ -2,7 +2,9 @@ import { ChatApiClient } from "../apiClients";
 import { ApiChatMessage, ChatRequestCommunicationStyle } from "../model/ChatRequest";
 import { useSelector } from "react-redux";
 import { useState, useCallback } from "react";
-import { selectModel, selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectCommunicationStyle } from "@/redux/slices/chatSelectors";
+import { selectModel, selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectCommunicationStyle } from "../redux/slices/chatSelectors";
+import { selectPersonalData } from "../redux/slices/personalSlice";
+import { ChatResponse } from "@/model";
 
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,9 +15,10 @@ export function useChat() {
   const keepGoing = useSelector(selectKeepGoing);
   const outsideBox = useSelector(selectOutsideBox);
   const communicationStyle = useSelector(selectCommunicationStyle);
+  const personalData = useSelector(selectPersonalData);
 
   const sendMessage = useCallback(
-    async (messages: ApiChatMessage[]): Promise<string> => {
+    async (messages: ApiChatMessage[]): Promise<ChatResponse> => {
       setIsLoading(true);
       setError(null);
 
@@ -26,10 +29,11 @@ export function useChat() {
           keepGoing,
           outsideBox,
           communicationStyle ?? ChatRequestCommunicationStyle.Default,
-          messages
+          messages,
+          personalData
         );
 
-        return response.content ?? "";
+        return {...response, content: response.content ?? ""};
       } catch (err) {
         const error =
           err instanceof Error ? err : new Error("Failed to send message");
@@ -39,7 +43,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [model, humanPrompt, keepGoing, outsideBox, communicationStyle]
+    [model, humanPrompt, keepGoing, outsideBox, communicationStyle, personalData]
   );
 
   return {

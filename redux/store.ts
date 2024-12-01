@@ -9,6 +9,8 @@ import experienceReducer from './slices/experienceSlice';
 import balanceReducer from './slices/balanceSlice';
 import backgroundServiceReducer from './slices/backgroundServiceSlice';
 import passcodeReducer from './slices/passcodeSlice';
+import personalReducer, { PersonalState } from './slices/personalSlice';
+import { personalDataMiddleware } from './middleware/personalDataMiddleware';
 import { GlobalConfig } from '../model/GlobalConfig';
 import { BackgroundServiceConfig } from '../model/BackgroundService';
 
@@ -31,6 +33,7 @@ export interface RootState {
     passcode: string | null;
     isLocked: boolean;
   };
+  personal: PersonalState;
 }
 
 const rootReducer = combineReducers({
@@ -41,12 +44,13 @@ const rootReducer = combineReducers({
   balance: balanceReducer,
   backgroundService: backgroundServiceReducer,
   passcode: passcodeReducer,
+  personal: personalReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {
   key: 'root',
   storage: createExpoFileSystemStorage,
-  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'backgroundService', 'passcode'],
+  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'backgroundService', 'passcode', 'personal'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -58,7 +62,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
       },
-    }),
+    }).concat(personalDataMiddleware),
 });
 
 export const persistor = persistStore(store);

@@ -2,6 +2,7 @@ import { ApiClient } from './ApiClient';
 
 export interface ExperienceRequest {
   language: string;
+  data?: Record<string, any>;
 }
 
 export interface ExperienceResponse {

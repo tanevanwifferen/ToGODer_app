@@ -52,8 +52,10 @@ export const useMessages = (chatId: string) => {
       
       const apiAssistantMessage: ApiChatMessage = {
         role: 'assistant',
-        content: response
+        content: response.content,
+        updateData: response.updateData
       };
+      console.log("addming message, ", apiAssistantMessage);
       dispatch(addMessage({ id: chatId, message: apiAssistantMessage }));
 
       // Update balance after receiving response

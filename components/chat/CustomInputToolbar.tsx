@@ -24,6 +24,13 @@ export function CustomInputToolbar({
       {...composerProps}
       text={inputText}
       onTextChanged={onInputTextChanged}
+      placeholder='Type / to see possible commands'
+      textInputProps={{
+        autoCorrect: true,
+        autoCapitalize: 'sentences',
+        spellCheck: true,
+        autoComplete: 'on',
+      }}
     />
   );
 

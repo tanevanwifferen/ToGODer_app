@@ -9,7 +9,8 @@ export class ChatApiClient {
     keepGoing: boolean = true,
     outsideBox: boolean = true,
     communicationStyle: ChatRequestCommunicationStyle,
-    messages: ApiChatMessage[]
+    messages: ApiChatMessage[],
+    data?: Record<string, any>
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>('/chat', {
       model,
@@ -17,13 +18,11 @@ export class ChatApiClient {
       keepGoing,
       outsideBox,
       communicationStyle,
-      prompts: messages
+      prompts: messages,
+      data
     });
 
-    return {
-      content: response.content,
-      signature: response.signature,
-    };
+    return response;
   }
 
   static async getTitle(messages: ApiChatMessage[]): Promise<string> {
@@ -34,10 +33,15 @@ export class ChatApiClient {
     return response.content;
   }
 
-  static async startExperience(model: string, language: string): Promise<string> {
+  static async startExperience(
+    model: string, 
+    language: string,
+    data?: Record<string, any>
+  ): Promise<string> {
     const response = await ApiClient.post<ExperienceResponse>('/experience', {
       model,
       language,
+      data
     });
 
     return response.content;

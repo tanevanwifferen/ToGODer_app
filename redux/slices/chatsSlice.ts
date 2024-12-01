@@ -18,12 +18,12 @@ export interface ChatsState extends ChatSettings {
 const initialState: ChatsState = {
     chats: {},
     currentChatId: null,
-    model: 'llama-3.2-90b',
-    humanPrompt: false,
-    keepGoing: false,
-    outsideBox: false,
+    model: 'meta-llama/llama-3.2-90b-vision-instruct',
+    humanPrompt: true,
+    keepGoing: true,
+    outsideBox: true,
     communicationStyle: 2,
-    assistant_name: undefined,
+    assistant_name: "ToGODer",
     language: undefined
 };
 
