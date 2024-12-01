@@ -27,4 +27,6 @@ export interface GlobalConfig {
     [promptId: string]: Prompt;
   },
   showLogin: boolean;
+  userOnboarded: boolean;
+  appFirstLaunch: boolean;
 }

@@ -54,3 +54,8 @@ export const selectHumanPrompt = createSelector(
   (state: { chats: ChatsState }) => state.chats,
   (chats) => chats.humanPrompt
 );
+
+export const selectLanguage = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.language
+);

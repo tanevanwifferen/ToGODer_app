@@ -1,6 +1,7 @@
-import { clearAuth, setAuthData } from '@/redux/slices/authSlice';
+import { clearAuth, selectIsAuthenticated, setAuthData } from '@/redux/slices/authSlice';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { store } from '../redux/store';
+import { AppState } from 'react-native';
 
 export class AuthService {
   private static refreshInterval: NodeJS.Timeout | null = null;
@@ -9,6 +10,10 @@ export class AuthService {
   }
   private static readonly REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in milliseconds
   private static readonly TOKEN_EXPIRY_BUFFER = 60 * 1000; // 1 minute buffer before token expiry
+
+  private static storedEmail: string | null = null;
+  private static storedPassword: string | null = null;
+  private static appStateSubscription: any = null;
 
   static startTokenRefreshService() {
     // Clear any existing interval
@@ -30,11 +35,13 @@ export class AuthService {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
     }
+    this.clearStoredCredentials();
+    this.stopAppFocusHandler();
   }
 
   static async checkAndRefreshToken() {
     const state = store.getState();
-    const isAuthenticated = state.auth.isAuthenticated;
+    const isAuthenticated = selectIsAuthenticated(state);
     const userId = state.auth.userId;
     const lastTokenRefresh = state.auth.lastTokenRefresh;
 
@@ -60,7 +67,7 @@ export class AuthService {
 
   static isTokenValid(): boolean {
     const state = store.getState();
-    const isAuthenticated = state.auth.isAuthenticated;
+    const isAuthenticated = selectIsAuthenticated(state);
     const lastTokenRefresh = state.auth.lastTokenRefresh;
 
     if (!isAuthenticated || !lastTokenRefresh) {
@@ -70,5 +77,42 @@ export class AuthService {
     // Check if token is within valid timeframe
     const tokenAge = Date.now() - lastTokenRefresh;
     return tokenAge < this.REFRESH_INTERVAL;
+  }
+
+  static startAppFocusHandler() {
+    this.appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        this.handleAppFocus();
+      }
+    });
+  }
+
+  static stopAppFocusHandler() {
+    if (this.appStateSubscription) {
+      this.appStateSubscription.remove();
+      this.appStateSubscription = null;
+    }
+  }
+
+  static storeCredentials(email: string, password: string) {
+    this.storedEmail = email;
+    this.storedPassword = password;
+  }
+
+  static clearStoredCredentials() {
+    this.storedEmail = null;
+    this.storedPassword = null;
+  }
+
+  private static async handleAppFocus() {
+    if (this.storedEmail && this.storedPassword) {
+      try {
+        const response = await AuthApiClient.login(this.storedEmail, this.storedPassword);
+        store.dispatch(setAuthData(response));
+      } catch (error) {
+        store.dispatch(clearAuth());
+        console.error('Re-authentication failed:', error);
+      }
+    }
   }
 }

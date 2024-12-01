@@ -15,7 +15,7 @@ export interface RateLimitError {
 
 export class ApiClient {
   private static axiosInstance: AxiosInstance = axios.create({
-      baseURL: 'https://chat.togoder.click/api',
+      baseURL: 'https://dev.togoder.click/api',
       headers: {
         'Content-Type': 'application/json',
       },

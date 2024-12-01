@@ -2,6 +2,7 @@ import { store } from '../redux/store';
 import { setBalance, setLoading, setError } from '../redux/slices/balanceSlice';
 import { GlobalApiClient } from '../apiClients/GlobalApiClient';
 import Toast from 'react-native-toast-message';
+import { selectIsAuthenticated } from '@/redux/slices/authSlice';
 
 export class BalanceService {
   private static instance: BalanceService;
@@ -43,7 +44,8 @@ export class BalanceService {
 
   public async updateBalanceIfAuthenticated(): Promise<void> {
     const state = store.getState();
-    if (state.auth.isAuthenticated) {
+    const isAuthenticated = selectIsAuthenticated(state);
+    if (isAuthenticated) {
       await this.fetchBalance();
     }
   }

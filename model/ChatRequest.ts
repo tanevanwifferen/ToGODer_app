@@ -17,6 +17,7 @@ export interface ChatSettings {
   outsideBox: boolean | undefined;
   communicationStyle: ChatRequestCommunicationStyle | undefined;
   assistant_name: string | undefined;
+  language: string | undefined;
 }
 
 export interface ChatRequest extends ChatSettings {

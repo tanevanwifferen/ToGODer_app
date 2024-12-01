@@ -1,6 +1,6 @@
 import { Modal, View, TextInput, TouchableOpacity, Text, StyleSheet, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { addChat, addMessage, setCurrentChat } from '../redux/slices/chatsSlice';
+import { addChat, addMessage, setCurrentChat, updateSettings } from '../redux/slices/chatsSlice';
 import { selectCurrentChat } from '../redux/slices/chatSelectors';
 import { setModalVisible, setInputLanguage } from '../redux/slices/experienceSlice';
 import { ExperienceApiClient } from '../apiClients/ExperienceApiClient';
@@ -72,6 +72,9 @@ export const useExperience = () => {
 
   const handleSubmit = async (language: string) => {
     dispatch(setModalVisible(false));
+    // Store language in chatSlice
+    dispatch(updateSettings({ language }));
+    
     try {
       const response = await ExperienceApiClient.getExperience({ language });
       dispatch(addMessage({

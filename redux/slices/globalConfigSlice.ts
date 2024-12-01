@@ -6,7 +6,9 @@ const initialState: GlobalConfig = {
   quote: '',
   models: [],
   prompts: {},
-  showLogin: false
+  showLogin: false,
+  userOnboarded: false,
+  appFirstLaunch: true
 };
 
 const globalConfigSlice = createSlice({
@@ -50,6 +52,16 @@ export const selectDonateOptions = createSelector(
 export const selectShowLogin = createSelector(
   [selectGlobalConfig],
   (globalConfig) => globalConfig.showLogin
+);
+
+export const selectUserOnboarded = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => globalConfig.userOnboarded
+);
+
+export const selectAppFirstLaunch = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => globalConfig.appFirstLaunch
 );
 
 export default globalConfigSlice.reducer;

@@ -22,8 +22,9 @@ const initialState: ChatsState = {
     humanPrompt: false,
     keepGoing: false,
     outsideBox: false,
-    communicationStyle: 0,
-    assistant_name: undefined
+    communicationStyle: 2,
+    assistant_name: undefined,
+    language: undefined
 };
 
 const chatsSlice = createSlice({
