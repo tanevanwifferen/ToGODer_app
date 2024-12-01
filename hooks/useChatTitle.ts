@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectChatList, setTitle, selectChatById } from '../redux/slices/chatsSlice';
+import { setTitle } from '../redux/slices/chatsSlice';
 import { ChatApiClient } from '../apiClients/ChatApiClient';
 import { IMessage } from 'react-native-gifted-chat';
+import { selectChatList, selectChatById } from '@/redux/slices/chatSelectors';
 
 export const useChatTitle = (chatId: string, messages: IMessage[]): string | undefined => {
   const dispatch = useDispatch();

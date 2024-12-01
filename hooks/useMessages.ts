@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { IMessage } from 'react-native-gifted-chat';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectChatList, addMessage, deleteMessage } from '../redux/slices/chatsSlice';
+import { addMessage, deleteMessage } from '../redux/slices/chatsSlice';
 import { useChat } from '../query-hooks/useChat';
 import { ApiChatMessage } from '../model/ChatRequest';
 import { BalanceService } from '../services/BalanceService';
+import { selectChatList } from '@/redux/slices/chatSelectors';
 
 export const useMessages = (chatId: string) => {
   const dispatch = useDispatch();

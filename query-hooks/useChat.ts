@@ -2,7 +2,7 @@ import { ChatApiClient } from "../apiClients";
 import { ApiChatMessage, ChatRequestCommunicationStyle } from "../model/ChatRequest";
 import { useSelector } from "react-redux";
 import { useState, useCallback } from "react";
-import { selectCommunicationStyle, selectHumanPrompt, selectKeepGoing, selectModel, selectOutsideBox } from "@/redux";
+import { selectModel, selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectCommunicationStyle } from "@/redux/slices/chatSelectors";
 
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);

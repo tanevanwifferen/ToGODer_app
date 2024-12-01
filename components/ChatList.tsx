@@ -1,12 +1,14 @@
 import { StyleSheet, View, Text, TouchableOpacity, FlatList, SafeAreaView, Alert } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
-import { selectChatList, addChat, deleteChat, setCurrentChat, Chat } from "../redux/slices/chatsSlice";
+import { addChat, deleteChat, setCurrentChat, Chat } from "../redux/slices/chatsSlice";
 import { v4 as uuidv4 } from 'uuid';
 import { Swipeable } from 'react-native-gesture-handler';
+import { selectChats, selectChatRequests } from "../redux/slices/chatSelectors";
 
 export function ChatList() {
   const dispatch = useDispatch();
-  const chats = useSelector(selectChatList);
+  const chatRequests = useSelector(selectChatRequests);
+  const regularChats = useSelector(selectChats);
 
   const handleCreateNewChat = () => {
     const newChatId = uuidv4();
@@ -44,18 +46,26 @@ export function ChatList() {
     );
   };
 
-  const renderChatItem = ({ item }: { item: Chat }) => (
+  const renderChatItem = ({ item, isRequest }: { item: Chat; isRequest?: boolean }) => (
     <Swipeable
       renderRightActions={() => renderRightActions(item.id, item.title)}
       rightThreshold={-100}
     >
       <TouchableOpacity
-        style={styles.chatItem}
+        style={[styles.chatItem, isRequest && styles.requestItem]}
         onPress={() => dispatch(setCurrentChat(item.id))}
       >
-        <Text style={styles.chatTitle}>{item.title || 'Untitled Chat'}</Text>
+        <Text style={[styles.chatTitle, isRequest && styles.requestTitle]}>
+          {isRequest ? '🔔 ' : ''}{item.title || 'Untitled Chat'}
+        </Text>
       </TouchableOpacity>
     </Swipeable>
+  );
+
+  const renderSectionHeader = (title: string) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>{title}</Text>
+    </View>
   );
 
   return (
@@ -70,11 +80,15 @@ export function ChatList() {
         </TouchableOpacity>
       </View>
       <FlatList
-        data={chats}
-        renderItem={renderChatItem}
+        data={[...chatRequests, ...regularChats]}
+        renderItem={({ item, index }) => renderChatItem({ 
+          item, 
+          isRequest: index < chatRequests.length 
+        })}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         removeClippedSubviews={true}
+        ListHeaderComponent={() => chatRequests.length > 0 ? renderSectionHeader('Requests') : null}
       />
     </SafeAreaView>
   );
@@ -117,8 +131,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     marginBottom: 12,
   },
+  requestItem: {
+    backgroundColor: '#fff3e0',
+    borderWidth: 1,
+    borderColor: '#ffb74d',
+  },
   chatTitle: {
     fontSize: 16,
+  },
+  requestTitle: {
+    color: '#f57c00',
+    fontWeight: '500',
   },
   deleteAction: {
     backgroundColor: '#FF3B30',
@@ -131,5 +154,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
     padding: 20,
+  },
+  sectionHeader: {
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  sectionHeaderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    textTransform: 'uppercase',
   },
 });

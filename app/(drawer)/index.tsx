@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectChatList, addChat, selectCurrentChatId, setCurrentChat } from "../../redux/slices/chatsSlice";
+import { addChat, setCurrentChat } from "../../redux/slices/chatsSlice";
 import { v4 as uuidv4 } from 'uuid';
 import { Chat } from "../../components/Chat";
 import { ChatList } from "../../components/ChatList";
+import { selectChatList, selectCurrentChatId } from "@/redux/slices/chatSelectors";
 
 export default function HomeScreen() {
   const dispatch = useDispatch();

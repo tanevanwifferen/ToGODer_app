@@ -1,6 +1,7 @@
 import { Modal, View, TextInput, TouchableOpacity, Text, StyleSheet, TouchableWithoutFeedback, Pressable } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { addChat, addMessage, selectCurrentChat, setCurrentChat } from '../redux/slices/chatsSlice';
+import { addChat, addMessage, setCurrentChat } from '../redux/slices/chatsSlice';
+import { selectCurrentChat } from '../redux/slices/chatSelectors';
 import { setModalVisible, setInputLanguage } from '../redux/slices/experienceSlice';
 import { ExperienceApiClient } from '../apiClients/ExperienceApiClient';
 import { v4 as uuidv4 } from 'uuid';

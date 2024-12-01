@@ -1,10 +1,11 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { BackgroundServiceConfig } from '../../model/BackgroundService';
 import { RootState } from '../store';
 
 const initialState: BackgroundServiceConfig = {
     enabled: false,
     preferredHour: 9, // Default to 9 AM
+    amount: 0.3, // Default to 30% of the time
 };
 
 const backgroundServiceSlice = createSlice({
@@ -21,8 +22,18 @@ const backgroundServiceSlice = createSlice({
 export const { updateBackgroundService } = backgroundServiceSlice.actions;
 
 // Selectors
-export const selectBackgroundService = (state: RootState) => state.backgroundService;
-export const selectBackgroundServiceEnabled = (state: RootState) => state.backgroundService.enabled;
-export const selectBackgroundServicePreferredHour = (state: RootState) => state.backgroundService.preferredHour;
+export const selectBackgroundServiceState = (state: RootState) => state.backgroundService;
+export const selectBackgroundServiceEnabled = createSelector(
+    selectBackgroundServiceState,
+    (state: BackgroundServiceConfig) => state.enabled
+);
+export const selectBackgroundServicePreferredHour = createSelector(
+    selectBackgroundServiceState,
+    (state: BackgroundServiceConfig) => state.preferredHour
+);
+export const selectBackgroundServiceAmount = createSelector(
+    selectBackgroundServiceState,
+    (state: BackgroundServiceConfig) => state.amount
+);
 
 export default backgroundServiceSlice.reducer;

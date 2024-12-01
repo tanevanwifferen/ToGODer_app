@@ -1,10 +1,11 @@
-import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ApiChatMessage, ChatSettings } from '../../model/ChatRequest';
 
 export interface Chat {
   id: string;
   title?: string | null;
   messages: ApiChatMessage[];
+  isRequest: boolean;
 }
 
 export interface ChatsState extends ChatSettings {
@@ -29,8 +30,11 @@ const chatsSlice = createSlice({
   name:"chats",
   initialState,
   reducers: {
-    addChat: (state, action: PayloadAction<Chat>) => {
-      state.chats[action.payload.id] = action.payload;
+    addChat: (state, action: PayloadAction<Omit<Chat, 'isRequest'> & { isRequest?: boolean }>) => {
+      state.chats[action.payload.id] = {
+        ...action.payload,
+        isRequest: action.payload.isRequest ?? false
+      };
     },
     addMessage: (state, action: PayloadAction<{ id: string; message: ApiChatMessage }>) => {
       const { id, message } = action.payload;
@@ -79,49 +83,5 @@ export const {
   deleteChat,
   setCurrentChat 
 } = chatsSlice.actions;
-
-export const selectChatList = createSelector(
-  (state: { chats: ChatsState }) => state.chats.chats,
-  (chats) => Object.values(chats)
-);
-
-export const selectChatById = createSelector(
-  (state: { chats: ChatsState }) => state.chats.chats,
-  (_: any, chatId: string) => chatId,
-  (chats, chatId) => chats[chatId]
-);
-
-export const selectCurrentChatId = (state: { chats: ChatsState }) => state.chats.currentChatId;
-
-export const selectCurrentChat = createSelector(
-  (state: { chats: ChatsState }) => state.chats.chats,
-  selectCurrentChatId,
-  (chats, currentChatId) => currentChatId ? chats[currentChatId] : null
-);
-
-export const selectModel = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.model
-);
-
-export const selectKeepGoing = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.keepGoing
-);
-
-export const selectOutsideBox = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.outsideBox
-);
-
-export const selectCommunicationStyle = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.communicationStyle
-);
-
-export const selectHumanPrompt = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.humanPrompt
-);
 
 export default chatsSlice.reducer;
