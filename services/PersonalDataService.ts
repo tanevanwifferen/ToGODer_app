@@ -31,7 +31,7 @@ class PersonalDataService {
     try {
       console.log('[PersonalDataService] Handling update data:', updateData);
       const currentData = this.getCurrentData();
-      const updatedData = { ...currentData };
+      const updatedData = JSON.parse(JSON.stringify(currentData));
       let hasChanges = false;
 
       Object.entries(updateData).forEach(([key, value]) => {

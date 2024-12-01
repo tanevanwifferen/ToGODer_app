@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectPasscode, unlockApp } from '../../redux/slices/passcodeSlice';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
+import CustomAlert from '../ui/CustomAlert';
 
 export function LockScreen() {
   const dispatch = useDispatch();
@@ -14,7 +15,7 @@ export function LockScreen() {
     if (passcode === correctPasscode) {
       dispatch(unlockApp());
     } else {
-      Alert.alert('Error', 'Incorrect passcode');
+      CustomAlert.alert('Error', 'Incorrect passcode');
       setPasscode('');
     }
   };

@@ -1,9 +1,18 @@
-import { StyleSheet, View, Text, TouchableOpacity, FlatList, SafeAreaView, Alert } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, FlatList, SafeAreaView, Alert, Platform } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { addChat, deleteChat, setCurrentChat, Chat } from "../redux/slices/chatsSlice";
 import { v4 as uuidv4 } from 'uuid';
-import { Swipeable } from 'react-native-gesture-handler';
+import Animated, { 
+  FadeIn, 
+  SlideInRight,
+  withTiming,
+  useAnimatedStyle,
+  interpolate,
+  SharedValue
+} from 'react-native-reanimated';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { selectChats, selectChatRequests } from "../redux/slices/chatSelectors";
+import CustomAlert from "./ui/CustomAlert";
 
 export function ChatList() {
   const dispatch = useDispatch();
@@ -21,7 +30,8 @@ export function ChatList() {
   };
 
   const handleLongPress = (chatId: string, title: string | null | undefined) => {
-    Alert.alert(
+    console.log("handle long press");
+    CustomAlert.alert(
       "Delete Chat",
       `Are you sure you want to delete "${title || 'Untitled Chat'}"?`,
       [
@@ -35,32 +45,76 @@ export function ChatList() {
     );
   };
 
-  const renderRightActions = (chatId: string, title: string | null | undefined) => {
+  const renderRightActions = (item: Chat, progress: SharedValue<number>) => {
+    const animatedStyle = useAnimatedStyle(() => {
+      const translateX = interpolate(
+        progress.value,
+        [0, 1],
+        [100, 0]
+      );
+
+      return {
+        transform: [{ translateX }]
+      };
+    });
+
     return (
-      <TouchableOpacity 
-        style={styles.deleteAction}
-        onPress={() => handleLongPress(chatId, title)}
-      >
-        <Text style={styles.deleteActionText}>Delete</Text>
-      </TouchableOpacity>
+      <Animated.View style={[styles.deleteAction, animatedStyle]}>
+        <TouchableOpacity 
+          onPress={() => handleLongPress(item.id, item.title)}
+          style={{ flex: 1, justifyContent: 'center' }}
+        >
+          <Text style={styles.deleteActionText}>Delete</Text>
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 
-  const renderChatItem = ({ item, isRequest }: { item: Chat; isRequest?: boolean }) => (
-    <Swipeable
-      renderRightActions={() => renderRightActions(item.id, item.title)}
-      rightThreshold={-100}
-    >
-      <TouchableOpacity
-        style={[styles.chatItem, isRequest && styles.requestItem]}
-        onPress={() => dispatch(setCurrentChat(item.id))}
+  const renderChatItem = ({ item, isRequest }: { item: Chat; isRequest?: boolean }) => {
+    if (Platform.OS === 'web') {
+      return (
+        <View style={styles.chatItemContainer}>
+          <TouchableOpacity
+            style={[styles.chatItem, isRequest && styles.requestItem]}
+            onPress={() => dispatch(setCurrentChat(item.id))}
+          >
+            <Text style={[styles.chatTitle, isRequest && styles.requestTitle]}>
+              {isRequest ? '🔔 ' : ''}{item.title || 'Untitled Chat'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.webDeleteButton}
+            onPress={() => handleLongPress(item.id, item.title)}
+          >
+            <Text style={styles.webDeleteButtonText}>×</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <Swipeable
+        renderRightActions={(e) => renderRightActions(item, e)}
+        rightThreshold={0.3}
+        onSwipeableOpen={(direction: "left"|"right") => {
+          if (direction === 'right') {
+            handleLongPress(item.id, item.title);
+          }
+        }}
       >
-        <Text style={[styles.chatTitle, isRequest && styles.requestTitle]}>
-          {isRequest ? '🔔 ' : ''}{item.title || 'Untitled Chat'}
-        </Text>
-      </TouchableOpacity>
-    </Swipeable>
-  );
+        <Animated.View entering={SlideInRight}>
+          <TouchableOpacity
+            style={[styles.chatItem, isRequest && styles.requestItem]}
+            onPress={() => dispatch(setCurrentChat(item.id))}
+          >
+            <Text style={[styles.chatTitle, isRequest && styles.requestTitle]}>
+              {isRequest ? '🔔 ' : ''}{item.title || 'Untitled Chat'}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </Swipeable>
+    );
+  };
 
   const renderSectionHeader = (title: string) => (
     <View style={styles.sectionHeader}>
@@ -148,7 +202,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     width: 100,
-    height: '100%',
+    borderRadius: 8,
   },
   deleteActionText: {
     color: 'white',
@@ -164,5 +218,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#666',
     textTransform: 'uppercase',
+  },
+  swipeableContainer: {
+    marginBottom: 12,
+  },
+  chatItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  webDeleteButton: {
+    marginLeft: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webDeleteButtonText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    lineHeight: 24,
   },
 });

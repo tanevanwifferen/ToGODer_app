@@ -1,5 +1,6 @@
 import { Drawer } from "expo-router/drawer";
 import React from "react";
+import { Platform } from 'react-native';
 
 import { IconSymbol } from "../../components/ui/IconSymbol";
 import { Colors } from "../../constants/Colors";
@@ -19,7 +20,8 @@ export default function DrawerLayout() {
   const showLogin = useSelector(selectShowLogin);
   const { showPasscodeModal, setShowPasscodeModal, isLocked } = usePasscode();
 
-  if (isLocked) {
+  // Skip passcode check on web platform
+  if (Platform.OS !== 'web' && isLocked) {
     return <LockScreen />;
   }
 
@@ -29,6 +31,7 @@ export default function DrawerLayout() {
         screenOptions={{
           headerShown: true,
           drawerActiveTintColor: Colors[colorScheme ?? "light"].tint,
+          headerTintColor: Colors[colorScheme ?? "light"].tint,
           drawerType: "front",
         }}
       >
@@ -74,10 +77,12 @@ export default function DrawerLayout() {
         />
       </Drawer>
 
-      <PasscodeModal
-        visible={showPasscodeModal}
-        onClose={() => setShowPasscodeModal(false)}
-      />
+      {Platform.OS !== 'web' && (
+        <PasscodeModal
+          visible={showPasscodeModal}
+          onClose={() => setShowPasscodeModal(false)}
+        />
+      )}
     </>
   );
 }

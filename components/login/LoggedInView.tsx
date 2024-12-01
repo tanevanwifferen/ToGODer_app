@@ -15,7 +15,7 @@ export const LoggedInView: React.FC<LoggedInViewProps> = ({
   const { resetPasscode } = usePasscode();
 
   const handleResetPasscode = () => {
-    Alert.alert(
+    CustomAlert.alert(
       'Reset Passcode',
       'Are you sure you want to reset your passcode?',
       [

@@ -1,7 +1,6 @@
 import React from "react";
 import { View, StyleSheet, Text, useColorScheme } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import Checkbox from "expo-checkbox";
 import { Picker } from "@react-native-picker/picker";
 import {
   selectBackgroundServiceAmount,
@@ -10,6 +9,7 @@ import {
   updateBackgroundService,
 } from "../../redux/slices/backgroundServiceSlice";
 import { Colors } from "../../constants/Colors";
+import CustomCheckbox from "../ui/CustomCheckbox";
 
 const BackgroundServiceSettings = () => {
   const dispatch = useDispatch();
@@ -32,12 +32,13 @@ const BackgroundServiceSettings = () => {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Text style={[styles.sectionTitle, { color: theme.text }]}>Background Service</Text>
       <View style={styles.checkboxSection}>
-        <Checkbox
+        <CustomCheckbox
           value={backgroundServiceEnabled}
           onValueChange={(value: boolean) =>
             dispatch(updateBackgroundService({ enabled: value }))
           }
-          color={backgroundServiceEnabled ? theme.tint : undefined}
+          color={theme.tint}
+          colorScheme={colorScheme}
         />
         <Text style={[styles.checkboxLabel, { color: theme.text }]}>Enable Periodic Check-ins</Text>
       </View>
@@ -98,33 +99,37 @@ const BackgroundServiceSettings = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 16,
+    padding: 24,
+    minHeight: 300,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 32,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 12,
+    marginBottom: 24,
   },
   label: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   picker: {
     borderWidth: 1,
     borderRadius: 4,
+    minHeight: 48,
+    width: '100%',
+    maxWidth: 400,
   },
   checkboxSection: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 24,
+    minHeight: 40,
   },
   checkboxLabel: {
-    marginLeft: 8,
+    marginLeft: 12,
     fontSize: 16,
   },
 });

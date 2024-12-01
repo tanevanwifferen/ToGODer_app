@@ -2,6 +2,7 @@ import { Alert } from 'react-native';
 import { IMessage } from 'react-native-gifted-chat';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Toast from 'react-native-toast-message';
+import CustomAlert from '@/components/ui/CustomAlert';
 
 export const useChatActions = (messages: IMessage[], onDeleteMessage: (messageId: any) => void) => {
   const showToast = () => {
@@ -30,7 +31,7 @@ export const useChatActions = (messages: IMessage[], onDeleteMessage: (messageId
           showToast();
           break;
         case 1:
-          Alert.alert(
+          CustomAlert.alert(
             'Delete Message',
             'Are you sure you want to delete this message?',
             [

@@ -1,6 +1,7 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
-import createExpoFileSystemStorage from 'redux-persist-expo-filesystem';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 import globalConfigReducer from './slices/globalConfigSlice';
 import chatsReducer, { ChatsState } from './slices/chatsSlice';
@@ -49,7 +50,7 @@ const rootReducer = combineReducers({
 
 const persistConfig: PersistConfig<RootState> = {
   key: 'root',
-  storage: createExpoFileSystemStorage,
+  storage: AsyncStorage,
   whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'backgroundService', 'passcode', 'personal'],
 };
 

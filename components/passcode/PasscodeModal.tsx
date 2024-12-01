@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { setPasscode } from '../../redux/slices/passcodeSlice';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
+import CustomAlert from '../ui/CustomAlert';
 
 interface PasscodeModalProps {
   visible: boolean;
@@ -19,17 +20,17 @@ export function PasscodeModal({ visible, onClose }: PasscodeModalProps) {
   const handleSubmit = () => {
     if (step === 'set') {
       if (passcode.length !== 4) {
-        Alert.alert('Error', 'Passcode must be 4 digits');
+        CustomAlert.alert('Error', 'Passcode must be 4 digits');
         return;
       }
       setStep('verify');
     } else {
       if (passcode === verifyPasscode) {
         dispatch(setPasscode(passcode));
-        Alert.alert('Success', 'Passcode set successfully');
+        CustomAlert.alert('Success', 'Passcode set successfully');
         onClose();
       } else {
-        Alert.alert('Error', 'Passcodes do not match');
+        CustomAlert.alert('Error', 'Passcodes do not match');
         setPasscodeValue('');
         setVerifyPasscode('');
         setStep('set');

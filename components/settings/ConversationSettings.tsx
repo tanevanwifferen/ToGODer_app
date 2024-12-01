@@ -1,23 +1,24 @@
 import React from 'react';
 import { View, StyleSheet, Text, TextInput, useColorScheme } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import Checkbox from 'expo-checkbox';
 import { ChatSettings } from '../../model/ChatRequest';
 import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectLanguage } from '../../redux/slices/chatSelectors';
 import { updateSettings } from '../../redux/slices/chatsSlice';
 import { Colors } from '../../constants/Colors';
+import CustomCheckbox from '../ui/CustomCheckbox';
 
 const ConversationSettings = () => {
   const dispatch = useDispatch();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
   
-  const humanPrompt = useSelector(selectHumanPrompt);
-  const keepGoing = useSelector(selectKeepGoing);
-  const outsideBox = useSelector(selectOutsideBox);
+  const humanPrompt = useSelector(selectHumanPrompt) ?? false;
+  const keepGoing = useSelector(selectKeepGoing) ?? false;
+  const outsideBox = useSelector(selectOutsideBox) ?? false;
   const language = useSelector(selectLanguage);
 
   const updateSettingsFn = (newSettings: Partial<ChatSettings>) => {
+    console.log("updating settings", newSettings);
     dispatch(updateSettings({
       ...newSettings,
     }));
@@ -41,28 +42,31 @@ const ConversationSettings = () => {
       </View>
 
       <View style={styles.checkboxSection}>
-        <Checkbox
+        <CustomCheckbox
           value={humanPrompt}
           onValueChange={(value: boolean) => updateSettingsFn({ humanPrompt: value })}
-          color={humanPrompt ? theme.tint : undefined}
+          color={theme.tint}
+          colorScheme={colorScheme}
         />
         <Text style={[styles.checkboxLabel, { color: theme.text }]}>Conversational Style</Text>
       </View>
 
       <View style={styles.checkboxSection}>
-        <Checkbox
+        <CustomCheckbox
           value={keepGoing}
           onValueChange={(value: boolean) => updateSettingsFn({ keepGoing: value })}
-          color={keepGoing ? theme.tint : undefined}
+          color={theme.tint}
+          colorScheme={colorScheme}
         />
         <Text style={[styles.checkboxLabel, { color: theme.text }]}>Keep Conversation Going</Text>
       </View>
 
       <View style={styles.checkboxSection}>
-        <Checkbox
+        <CustomCheckbox
           value={outsideBox}
           onValueChange={(value: boolean) => updateSettingsFn({ outsideBox: value })}
-          color={outsideBox ? theme.tint : undefined}
+          color={theme.tint}
+          colorScheme={colorScheme}
         />
         <Text style={[styles.checkboxLabel, { color: theme.text }]}>Think Outside the Box</Text>
       </View>
@@ -72,30 +76,34 @@ const ConversationSettings = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 16,
+    padding: 24,
+    minHeight: 300,
   },
   checkboxSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
+    minHeight: 40,
   },
   checkboxLabel: {
-    marginLeft: 8,
+    marginLeft: 12,
     fontSize: 16,
   },
   inputSection: {
-    marginBottom: 16,
+    marginBottom: 32,
   },
   label: {
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   input: {
     borderWidth: 1,
     borderRadius: 4,
-    padding: 8,
+    padding: 12,
     fontSize: 16,
+    minHeight: 48,
+    width: '100%',
+    maxWidth: 400,
   },
 });
 

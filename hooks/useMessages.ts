@@ -31,6 +31,7 @@ export const useMessages = (chatId: string) => {
   }, [chatId, chats]);
 
   const onSend = useCallback(async (newMessages: IMessage[] = []) => {
+    console.log("sending message", newMessages);
     const userMessage = newMessages[0];
     const currentChat = chats.find(chat => chat.id === chatId);
     

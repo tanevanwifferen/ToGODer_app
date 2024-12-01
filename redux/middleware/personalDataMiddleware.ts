@@ -3,7 +3,6 @@ import { addMessage } from '../slices/chatsSlice';
 import PersonalDataService from '../../services/PersonalDataService';
 
 export const personalDataMiddleware: Middleware = () => (next) => (action) => {
-  const result = next(action);
 
   if (addMessage.match(action)) {
     const message = action.payload.message;
@@ -12,5 +11,6 @@ export const personalDataMiddleware: Middleware = () => (next) => (action) => {
     }
   }
 
+  const result = next(action);
   return result;
 };

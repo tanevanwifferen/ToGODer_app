@@ -7,4 +7,6 @@ defaultConfig.resolver = {
   sourceExts: [...defaultConfig.resolver.sourceExts, 'cjs'],
 };
 
+defaultConfig.resolver.assetExts.push('ttf');
+
 module.exports = defaultConfig;

@@ -1,14 +1,20 @@
-import React from 'react';
-import { StyleSheet, View, SafeAreaView, Platform } from 'react-native';
-import { GiftedChat } from 'react-native-gifted-chat';
-import { ChatHeader } from './chat/ChatHeader';
-import { CustomInputToolbar } from './chat/CustomInputToolbar';
-import { EmptyChat } from './chat/EmptyChat';
-import { useMessages } from '../hooks/useMessages';
-import { useChatTitle } from '../hooks/useChatTitle';
-import { usePrompts } from '../hooks/usePrompts';
-import { useChatActions } from '../hooks/useChatActions';
-import Toast from 'react-native-toast-message';
+import React, { useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  SafeAreaView,
+  Platform,
+  KeyboardAvoidingView,
+} from "react-native";
+import { GiftedChat } from "react-native-gifted-chat";
+import { ChatHeader } from "./chat/ChatHeader";
+import { CustomInputToolbar } from "./chat/CustomInputToolbar";
+import { EmptyChat } from "./chat/EmptyChat";
+import { useMessages } from "../hooks/useMessages";
+import { useChatTitle } from "../hooks/useChatTitle";
+import { usePrompts } from "../hooks/usePrompts";
+import { useChatActions } from "../hooks/useChatActions";
+import Toast from "react-native-toast-message";
 
 interface ChatProps {
   chatId: string;
@@ -23,13 +29,14 @@ export function Chat({ chatId, onBack }: ChatProps) {
     inputText,
     filteredPrompts,
     handleInputTextChanged,
-    handleSelectPrompt
+    handleSelectPrompt,
   } = usePrompts(messages);
   const { onLongPress } = useChatActions(messages, onDeleteMessage);
 
   const renderInputToolbar = (toolbarProps: any) => (
     <CustomInputToolbar
       {...toolbarProps}
+      onSend={onSend}
       showPrompts={showPrompts}
       inputText={inputText}
       filteredPrompts={filteredPrompts}
@@ -40,28 +47,32 @@ export function Chat({ chatId, onBack }: ChatProps) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Toast />
       <ChatHeader title={chatTitle} onBack={onBack} />
       <View style={styles.chatContainer}>
-        <GiftedChat
-          messages={messages}
-          onSend={messages => onSend(messages)}
-          user={{
-            _id: 1,
-          }}
-          text={inputText}
-          renderChatEmpty={() => <EmptyChat />}
-          renderInputToolbar={renderInputToolbar}
-          renderAvatar={null}
-          alwaysShowSend
-          scrollToBottom
-          maxComposerHeight={200}
-          minComposerHeight={60}
-          inverted={true}
-          minInputToolbarHeight={0}
-          onLongPress={onLongPress}
-        />
+          <GiftedChat
+            messages={messages}
+            onSend={(messages) => {
+              console.log("onsend", messages);
+              onSend(messages);
+              handleInputTextChanged("");
+            }}
+            user={{
+              _id: 1,
+            }}
+            text={inputText}
+            renderChatEmpty={() => <EmptyChat />}
+            renderInputToolbar={renderInputToolbar}
+            renderAvatar={null}
+            alwaysShowSend
+            scrollToBottom
+            maxComposerHeight={200}
+            minComposerHeight={60}
+            inverted={true}
+            minInputToolbarHeight={0}
+            onLongPress={onLongPress}
+          />
       </View>
-      <Toast />
     </SafeAreaView>
   );
 }
@@ -69,11 +80,11 @@ export function Chat({ chatId, onBack }: ChatProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     paddingBottom: Platform.select({ ios: 0, android: 0 }),
   },
 });

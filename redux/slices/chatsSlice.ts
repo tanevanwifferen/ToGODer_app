@@ -40,6 +40,7 @@ const chatsSlice = createSlice({
     addMessage: (state, action: PayloadAction<{ id: string; message: ApiChatMessage }>) => {
       const { id, message } = action.payload;
       const chat = state.chats[id];
+      delete message.updateData;
       chat.messages.push(message);
     },
     deleteMessage: (state, action: PayloadAction<{ chatId: string; messageIndex: number }>) => {
@@ -50,6 +51,8 @@ const chatsSlice = createSlice({
       }
     },
     updateSettings: (state, action: PayloadAction<Partial<ChatSettings>>) => {
+      console.log("old_state", state.humanPrompt);
+      console.log("new_state", action.payload);
       return {
         ...state,
         ...action.payload,

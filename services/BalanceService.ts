@@ -20,13 +20,14 @@ export class BalanceService {
     try {
       store.dispatch(setLoading(true));
       const oldBalance = store.getState().balance.balance;
+      const donationOptions = store.getState().globalConfig.donateOptions;
       const response = await GlobalApiClient.getBalance();
       const newBalance = response.balance;
       
       store.dispatch(setBalance(newBalance));
 
       // Show donation toast if balance is negative and crossing a whole number threshold
-      if (newBalance < -1 && Math.ceil(newBalance) === Math.floor(oldBalance)) {
+      if (donationOptions.length > 0 && newBalance < -1 && Math.ceil(newBalance) === Math.floor(oldBalance)) {
         Toast.show({
           type: 'info',
           text1: 'Support ToGODer',

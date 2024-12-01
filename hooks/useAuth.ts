@@ -7,6 +7,7 @@ import { setBalance } from '../redux/slices/balanceSlice';
 import { clearAllChats } from '../redux/slices/chatsSlice';
 import { clearPasscode } from '../redux/slices/passcodeSlice';
 import { Alert } from 'react-native';
+import CustomAlert from '@/components/ui/CustomAlert';
 
 export const useAuth = () => {
   const auth = useSelector((state: any) => state.auth);
@@ -40,7 +41,7 @@ export const useAuth = () => {
 
   const handleLogout = () => {
     return new Promise<boolean>((resolve) => {
-      Alert.alert(
+      CustomAlert.alert(
         'Confirm Logout',
         'For privacy reason logging out will delete all your ' +
         'chats and they cannot be recovered. Are you sure you ' +

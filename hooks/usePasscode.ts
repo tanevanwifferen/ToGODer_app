@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectPasscode, selectIsLocked, lockApp, clearPasscode } from '../redux/slices/passcodeSlice';
 import { RootState } from '../redux/store';
@@ -14,7 +14,7 @@ export function usePasscode() {
 
   // Show passcode setup modal when user logs in and hasn't set a passcode
   useEffect(() => {
-    if (isAuthenticated && !passcode) {
+    if (isAuthenticated && !passcode && Platform.OS !== "web") {
       setShowPasscodeModal(true);
     }
   }, [isAuthenticated, passcode]);
@@ -35,6 +35,7 @@ export function usePasscode() {
   }, [passcode, dispatch]);
 
   const resetPasscode = () => {
+    if(Platform.OS === 'web') return;
     dispatch(clearPasscode());
     setShowPasscodeModal(true);
   };

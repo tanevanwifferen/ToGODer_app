@@ -99,26 +99,32 @@ const ModelSettings = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 16,
+    padding: 24,
+    minHeight: 300,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 32,
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   input: {
     borderWidth: 1,
     borderRadius: 4,
-    padding: 8,
+    padding: 12,
     fontSize: 16,
+    minHeight: 48,
+    width: '100%',
+    maxWidth: 400,
   },
   picker: {
     borderWidth: 1,
     borderRadius: 4,
+    minHeight: 48,
+    width: '100%',
+    maxWidth: 400,
   },
 });
 

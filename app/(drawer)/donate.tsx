@@ -6,6 +6,7 @@ import { selectDonateOptions } from '../../redux/slices/globalConfigSlice';
 import { ThemedText } from '../../components/ThemedText';
 import { ThemedView } from '../../components/ThemedView';
 import { DonateOption } from '../../model/GlobalConfig';
+import CustomAlert from '@/components/ui/CustomAlert';
 
 export default function DonateScreen() {
   const donateOptions = useSelector(selectDonateOptions);
@@ -16,11 +17,11 @@ export default function DonateScreen() {
       if (supported) {
         await Linking.openURL(option.url);
       } else {
-        Alert.alert('Error', `Cannot open URL: ${option.url}`);
+        CustomAlert.alert('Error', `Cannot open URL: ${option.url}`);
       }
     } else {
       Clipboard.setString(option.address);
-      Alert.alert('Success', `${option.name} address copied to clipboard!`);
+      CustomAlert.alert('Success', `${option.name} address copied to clipboard!`);
     }
   };
 
