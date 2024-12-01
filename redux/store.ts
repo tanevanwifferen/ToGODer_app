@@ -8,6 +8,7 @@ import authReducer, { AuthState } from './slices/authSlice';
 import experienceReducer from './slices/experienceSlice';
 import balanceReducer from './slices/balanceSlice';
 import backgroundServiceReducer from './slices/backgroundServiceSlice';
+import passcodeReducer from './slices/passcodeSlice';
 import { GlobalConfig } from '../model/GlobalConfig';
 import { BackgroundServiceConfig } from '../model/BackgroundService';
 
@@ -26,6 +27,10 @@ export interface RootState {
     error: string | null;
   };
   backgroundService: BackgroundServiceConfig;
+  passcode: {
+    passcode: string | null;
+    isLocked: boolean;
+  };
 }
 
 const rootReducer = combineReducers({
@@ -35,12 +40,13 @@ const rootReducer = combineReducers({
   experience: experienceReducer,
   balance: balanceReducer,
   backgroundService: backgroundServiceReducer,
+  passcode: passcodeReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {
   key: 'root',
   storage: createExpoFileSystemStorage,
-  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'backgroundService'],
+  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'backgroundService', 'passcode'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

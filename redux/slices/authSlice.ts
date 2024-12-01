@@ -5,7 +5,6 @@ export interface AuthState {
   userId: string | null;
   email: string | null;
   password: string | null;
-  isAuthenticated: boolean;
   lastTokenRefresh: number | null;
 }
 
@@ -14,7 +13,6 @@ const initialState: AuthState = {
   userId: null,
   email: null,
   password: null,
-  isAuthenticated: false,
   lastTokenRefresh: null,
 };
 
@@ -32,7 +30,6 @@ const authSlice = createSlice({
       state.email = null;
       state.password = null;
       state.userId = null;
-      state.isAuthenticated = false;
       state.lastTokenRefresh = null;
     },
     updateTokenRefreshTime: (state) => {
@@ -61,7 +58,7 @@ export const selectLastTokenRefresh = createSelector(
 
 export const selectIsAuthenticated = createSelector(
   (state: { auth: AuthState }) => state.auth,
-  (auth) => auth.isAuthenticated
+  (auth) => !!auth.token
 );
 
 export const selectToken = createSelector(

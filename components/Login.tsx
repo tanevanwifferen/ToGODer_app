@@ -13,12 +13,13 @@ import { setAuthData } from "../redux/slices/authSlice";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 import { useBalance } from "../hooks/useBalance";
-import { GlobalApiClient } from "@/apiClients";
-import { setBalance } from "@/redux/slices/balanceSlice";
+import { GlobalApiClient } from "../apiClients/GlobalApiClient";
+import { setBalance } from "../redux/slices/balanceSlice";
 import { CreateAccount } from "./CreateAccount";
-import { createAction } from "@reduxjs/toolkit";
 import { ForgotPassword } from "./ForgotPassword";
 import { clearAllChats } from '../redux/slices/chatsSlice';
+import { clearPasscode } from '../redux/slices/passcodeSlice';
+import { usePasscode } from '../hooks/usePasscode';
 
 export const Login = () => {
   const auth = useSelector((state: any) => state.auth);
@@ -28,6 +29,7 @@ export const Login = () => {
     isLoading: isBalanceLoading,
     error: balanceError,
   } = useBalance();
+  const { resetPasscode } = usePasscode();
   const [email, setEmail] = useState(auth?.email || "");
   const [view, setView] = useState<"login" | "loggedIn" | "createAccount" | "forgotPassword">(
     auth?.token ? "loggedIn" : "login"
@@ -65,7 +67,6 @@ export const Login = () => {
       "For privacy reason logging out will delete all your " +
       "chats and they cannot be recovered. Are you sure you " +
       "want to proceed?", 
-      // TODO: once we gather more data, also clear that 
       [
         {
           text: "Cancel",
@@ -78,6 +79,7 @@ export const Login = () => {
             try {
               setError("");
               dispatch(clearAllChats());
+              dispatch(clearPasscode());
               dispatch(
                 setAuthData({
                   email: "",
@@ -91,6 +93,23 @@ export const Login = () => {
               setError(err);
             }
           }
+        }
+      ]
+    );
+  };
+
+  const handleResetPasscode = () => {
+    Alert.alert(
+      "Reset Passcode",
+      "Are you sure you want to reset your passcode?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Reset",
+          onPress: resetPasscode
         }
       ]
     );
@@ -180,6 +199,12 @@ export const Login = () => {
           <TouchableOpacity style={styles.button} onPress={handleLogout}>
             <ThemedText style={styles.buttonText}>Logout</ThemedText>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.secondaryButton]}
+            onPress={handleResetPasscode}
+          >
+            <ThemedText style={styles.buttonText}>Reset Passcode</ThemedText>
+          </TouchableOpacity>
         </>
       )}
     </ThemedView>
@@ -207,6 +232,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 10,
+  },
+  secondaryButton: {
+    backgroundColor: "#6c757d",
   },
   buttonText: {
     color: "#fff",
