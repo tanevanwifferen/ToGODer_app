@@ -5,7 +5,8 @@ const initialState: GlobalConfig = {
   donateOptions: [],
   quote: '',
   models: [],
-  prompts: {}
+  prompts: {},
+  showLogin: false
 };
 
 const globalConfigSlice = createSlice({
@@ -44,6 +45,11 @@ export const selectQuote = createSelector(
 export const selectDonateOptions = createSelector(
   [selectGlobalConfig],
   (globalConfig) => globalConfig.donateOptions
+);
+
+export const selectShowLogin = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => globalConfig.showLogin
 );
 
 export default globalConfigSlice.reducer;

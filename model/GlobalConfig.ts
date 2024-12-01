@@ -13,11 +13,18 @@ export interface Model {
   title: string;
 }
 
+export interface DonateOption {
+  name: string;
+  address: string;
+  url?: string;
+}
+
 export interface GlobalConfig {
-  donateOptions: unknown[];
+  donateOptions: DonateOption[];
   quote: string;
   models: Model[];
   prompts: {
-  [promptId: string]: Prompt;
-  }
+    [promptId: string]: Prompt;
+  },
+  showLogin: boolean;
 }
