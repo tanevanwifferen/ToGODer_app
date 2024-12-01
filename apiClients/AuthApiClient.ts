@@ -1,7 +1,6 @@
 import { ApiClient } from './ApiClient';
 import type { 
   SignInRequest, 
-  SignUpRequest, 
   UpdateTokenRequest, 
   ResetPasswordRequest,
   AuthResponse,
@@ -19,7 +18,7 @@ export class AuthApiClient {
   }
 
   static async createUser(email: string, password: string): Promise<AuthResponse> {
-    const request: SignUpRequest = { email, password };
+    const request: SignInRequest = { email, password };
     return ApiClient.post<AuthResponse>('/auth/signUp', request);
   }
 

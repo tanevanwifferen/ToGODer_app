@@ -70,6 +70,10 @@ const chatsSlice = createSlice({
     },
     setCurrentChat: (state, action: PayloadAction<string | null>) => {
       state.currentChatId = action.payload;
+    },
+    clearAllChats: (state) => {
+      state.chats = {};
+      state.currentChatId = null;
     }
   },
 });
@@ -81,7 +85,8 @@ export const {
   updateSettings, 
   setTitle, 
   deleteChat,
-  setCurrentChat 
+  setCurrentChat,
+  clearAllChats 
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;

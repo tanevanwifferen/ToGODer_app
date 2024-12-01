@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Text,
+  Alert,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { AuthApiClient } from "../apiClients/AuthApiClient";
@@ -16,6 +17,8 @@ import { GlobalApiClient } from "@/apiClients";
 import { setBalance } from "@/redux/slices/balanceSlice";
 import { CreateAccount } from "./CreateAccount";
 import { createAction } from "@reduxjs/toolkit";
+import { ForgotPassword } from "./ForgotPassword";
+import { clearAllChats } from '../redux/slices/chatsSlice';
 
 export const Login = () => {
   const auth = useSelector((state: any) => state.auth);
@@ -26,7 +29,7 @@ export const Login = () => {
     error: balanceError,
   } = useBalance();
   const [email, setEmail] = useState(auth?.email || "");
-  const [view, setView] = useState<"login" | "loggedIn" | "createAccount">(
+  const [view, setView] = useState<"login" | "loggedIn" | "createAccount" | "forgotPassword">(
     auth?.token ? "loggedIn" : "login"
   );
   const [createAccount, setCreateAccount] = useState(false);
@@ -57,20 +60,40 @@ export const Login = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      setError("");
-      dispatch(
-        setAuthData({
-          email: "",
-          password: "",
-          token: "",
-          isAuthenticated: false,
-        })
-      );
-      setView("login");
-    } catch (err: any) {
-      setError(err);
-    }
+    Alert.alert(
+      "Confirm Logout",
+      "For privacy reason logging out will delete all your " +
+      "chats and they cannot be recovered. Are you sure you " +
+      "want to proceed?", 
+      // TODO: once we gather more data, also clear that 
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setError("");
+              dispatch(clearAllChats());
+              dispatch(
+                setAuthData({
+                  email: "",
+                  password: "",
+                  token: "",
+                  isAuthenticated: false,
+                })
+              );
+              setView("login");
+            } catch (err: any) {
+              setError(err);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderBalance = () => {
@@ -137,12 +160,18 @@ export const Login = () => {
             style={[styles.button, {marginTop: 15}]}
             onPress={() => setView("createAccount")}
           >
-            <ThemedText style={styles.buttonText}>
-              {createAccount ? "Back" : "Create Account"}
-            </ThemedText>
+            <ThemedText style={styles.buttonText}>Create Account</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => setView("forgotPassword")}
+          >
+            <ThemedText style={styles.linkText}>Forgot Password?</ThemedText>
           </TouchableOpacity>
         </>
       )}
+
+      {view == "forgotPassword" && <ForgotPassword setView={setView} />}
 
       {view == "loggedIn" && (
         <>

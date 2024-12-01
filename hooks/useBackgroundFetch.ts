@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import BackgroundFetch from "react-native-background-fetch";
 import {
@@ -11,6 +11,7 @@ import { Platform } from "react-native";
 export const useBackgroundFetch = () => {
   const enabled = useSelector(selectBackgroundServiceEnabled);
   const preferredHour = useSelector(selectBackgroundServicePreferredHour);
+  const [lastFetch, setLastFetch] = useState(new Date());
 
   useEffect(() => {
     const configureBackgroundFetch = async () => {
@@ -32,13 +33,15 @@ export const useBackgroundFetch = () => {
             const currentHour = now.getHours();
 
             try {
-              if (currentHour !== preferredHour) {
+              if (currentHour !== preferredHour 
+                || lastFetch.getTime() > now.getTime() - 1000 * 60 * 60 * 2) {
                 console.log(
                     "[BackgroundFetch] Running not running, waiting for preferred hour:",
                     preferredHour
                 );
                 return;
               }
+              setLastFetch(now);
               console.log(
                 "[BackgroundFetch] Running at preferred hour:",
                 preferredHour
