@@ -5,7 +5,10 @@ import { IconSymbol } from "../../components/ui/IconSymbol";
 import { Colors } from "../../constants/Colors";
 import { useColorScheme } from "../../hooks/useColorScheme";
 import { useSelector } from "react-redux";
-import { selectDonateOptions, selectShowLogin } from "../../redux/slices/globalConfigSlice";
+import {
+  selectDonateOptions,
+  selectShowLogin,
+} from "../../redux/slices/globalConfigSlice";
 import { usePasscode } from "../../hooks/usePasscode";
 import { PasscodeModal } from "../../components/passcode/PasscodeModal";
 import { LockScreen } from "../../components/passcode/LockScreen";
@@ -47,28 +50,28 @@ export default function DrawerLayout() {
             ),
           }}
         />
-        {showLogin && (
-          <Drawer.Screen
-            name="login"
-            options={{
-              title: "Profile",
-              drawerIcon: ({ color }: { color: string }) => (
-                <IconSymbol size={28} name="person.fill" color={color} />
-              ),
-            }}
-          />
-        )}
-        {donateOptions.length > 0 && (
-          <Drawer.Screen
-            name="donate"
-            options={{
-              title: "Support ToGODer",
-              drawerIcon: ({ color }: { color: string }) => (
-                <IconSymbol size={28} name="heart.fill" color={color} />
-              ),
-            }}
-          />
-        )}
+        <Drawer.Screen
+          name="login"
+          options={{
+            title: "Profile",
+            drawerIcon: ({ color }: { color: string }) => (
+              <IconSymbol size={28} name="person.fill" color={color} />
+            ),
+            drawerItemStyle: { display: showLogin ? "flex" : "none" },
+          }}
+        />
+        <Drawer.Screen
+          name="donate"
+          options={{
+            title: "Support ToGODer",
+            drawerIcon: ({ color }: { color: string }) => (
+              <IconSymbol size={28} name="heart.fill" color={color} />
+            ),
+            drawerItemStyle: {
+              display: donateOptions.length > 0 ? "flex" : "none",
+            },
+          }}
+        />
       </Drawer>
 
       <PasscodeModal

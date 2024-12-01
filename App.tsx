@@ -1,11 +1,6 @@
-import { AppNavigator } from './navigation/AppNavigator';
-import { Provider } from 'react-redux';
-import { store } from './redux/store';
+import { ExpoRoot } from 'expo-router';
 
 export default function App() {
-  return (
-    <Provider store={store}>
-      <AppNavigator />
-    </Provider>
-  );
+  const ctx = require.context('app');
+  return <ExpoRoot context={ctx} />;
 }

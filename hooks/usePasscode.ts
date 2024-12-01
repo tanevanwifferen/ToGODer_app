@@ -14,8 +14,6 @@ export function usePasscode() {
 
   // Show passcode setup modal when user logs in and hasn't set a passcode
   useEffect(() => {
-    console.log("passcode", passcode);
-    console.log("isauthenticated", isAuthenticated);
     if (isAuthenticated && !passcode) {
       setShowPasscodeModal(true);
     }
