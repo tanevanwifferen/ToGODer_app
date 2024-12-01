@@ -7,6 +7,8 @@ import { EmptyChat } from './chat/EmptyChat';
 import { useMessages } from '../hooks/useMessages';
 import { useChatTitle } from '../hooks/useChatTitle';
 import { usePrompts } from '../hooks/usePrompts';
+import { useChatActions } from '../hooks/useChatActions';
+import Toast from 'react-native-toast-message';
 
 interface ChatProps {
   chatId: string;
@@ -14,7 +16,7 @@ interface ChatProps {
 }
 
 export function Chat({ chatId, onBack }: ChatProps) {
-  const { messages, onSend } = useMessages(chatId);
+  const { messages, onSend, onDeleteMessage } = useMessages(chatId);
   const chatTitle = useChatTitle(chatId, messages);
   const {
     showPrompts,
@@ -23,6 +25,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
     handleInputTextChanged,
     handleSelectPrompt
   } = usePrompts(messages);
+  const { onLongPress } = useChatActions(messages, onDeleteMessage);
 
   const renderInputToolbar = (toolbarProps: any) => (
     <CustomInputToolbar
@@ -51,10 +54,14 @@ export function Chat({ chatId, onBack }: ChatProps) {
           renderAvatar={null}
           alwaysShowSend
           scrollToBottom
+          maxComposerHeight={200}
+          minComposerHeight={60}
           inverted={true}
           minInputToolbarHeight={0}
+          onLongPress={onLongPress}
         />
       </View>
+      <Toast />
     </SafeAreaView>
   );
 }
@@ -62,11 +69,11 @@ export function Chat({ chatId, onBack }: ChatProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     paddingBottom: Platform.select({ ios: 0, android: 0 }),
   },
 });

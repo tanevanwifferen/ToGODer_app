@@ -18,7 +18,7 @@ export function PromptSuggestions({ prompts, onSelectPrompt }: PromptSuggestions
           onPress={() => onSelectPrompt(key)}
         >
           <Text style={styles.promptKey}>{key}</Text>
-          <Text style={styles.promptDesc} numberOfLines={1}>{prompt.description}</Text>
+          <Text style={styles.promptDesc} numberOfLines={6}>{prompt.description.replace(/\s+/g, ' ')}</Text>
         </TouchableOpacity>
       ))}
     </ScrollView>

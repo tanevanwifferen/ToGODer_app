@@ -23,7 +23,7 @@ export const usePrompts = (messages: IMessage[]) => {
   };
 
   const filteredPrompts = showPrompts
-    ? Object.entries(prompts).filter(([key]) => key.includes(inputText))
+    ? Object.entries(prompts).filter(([key, value]) => value.display).filter(([key]) => key.includes(inputText))
     : [];
 
   return {

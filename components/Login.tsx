@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
+import { useBalance } from '../hooks/useBalance';
+import { GlobalApiClient } from '@/apiClients';
+import { setBalance } from '@/redux/slices/balanceSlice';
 
 export const Login = () => {
   const auth = useSelector((state: any) => state.auth);
+  const { balance, isLoading: isBalanceLoading, error: balanceError } = useBalance();
   const [email, setEmail] = useState(auth?.email || '');
   const [password, setPassword] = useState(auth?.password || '');
   const [error, setError] = useState('');
   const dispatch = useDispatch();
+  const isAuthenticated = auth?.token;
 
   useEffect(() => {
     if (auth?.email) setEmail(auth.email);
@@ -23,14 +28,54 @@ export const Login = () => {
       setError('');
       const response = await AuthApiClient.login(email, password);
       dispatch(setAuthData({email, password, ...response}));
+      const balance = await GlobalApiClient.getBalance();
+      dispatch(setBalance(balance.balance));
     } catch (err:any) {
       setError(err);
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      setError('');
+      dispatch(setAuthData({email: "", password: "", token: "", isAuthenticated: false}));
+    } catch (err:any) {
+      setError(err);
+    }
+  };
+
+  const renderBalance = () => {
+    if (!auth?.token) return null;
+    
+    if (isBalanceLoading) {
+      return (
+        <ThemedView style={styles.balanceContainer}>
+          <ActivityIndicator size="small" color="#007AFF" />
+        </ThemedView>
+      );
+    }
+
+    if (balanceError) {
+      return (
+        <ThemedView style={styles.balanceContainer}>
+          <ThemedText style={styles.balanceError}>Failed to load balance</ThemedText>
+        </ThemedView>
+      );
+    }
+
+    return (
+      <ThemedView style={styles.balanceContainer}>
+        <ThemedText style={styles.balanceLabel}>Balance:</ThemedText>
+        <ThemedText style={styles.balanceValue}>{Number(balance).toFixed(2)}$</ThemedText>
+      </ThemedView>
+    );
+  };
+
   return (
     <ThemedView style={styles.container}>
       {error ? <ThemedText style={styles.error}>{JSON.stringify(error)}</ThemedText> : null}
+      
+      {renderBalance()}
       
       <TextInput
         style={styles.input}
@@ -49,12 +94,20 @@ export const Login = () => {
         secureTextEntry
       />
       
-      <TouchableOpacity 
+     { !isAuthenticated && <TouchableOpacity 
         style={styles.button}
         onPress={handleLogin}
       >
         <ThemedText style={styles.buttonText}>Login</ThemedText>
       </TouchableOpacity>
+    }
+     { isAuthenticated && <TouchableOpacity 
+        style={styles.button}
+        onPress={handleLogout}
+      >
+        <ThemedText style={styles.buttonText}>Logout</ThemedText>
+      </TouchableOpacity>
+    }
     </ThemedView>
   );
 };
@@ -90,5 +143,27 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 15,
     textAlign: 'center',
+  },
+  balanceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  balanceLabel: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  balanceValue: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  balanceError: {
+    color: 'red',
+    fontSize: 14,
   },
 });

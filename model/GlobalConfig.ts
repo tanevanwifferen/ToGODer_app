@@ -1,6 +1,7 @@
 export interface Prompt {
   prompt: string;
   description: string;
+  display: boolean;
 }
 
 export interface PromptsResponse {

@@ -5,9 +5,9 @@ import { ChatResponse, TitleResponse, ExperienceResponse } from '../model/ChatRe
 export class ChatApiClient {
   static async sendMessage(
     model: string,
-    humanPrompt: boolean = false,
-    keepGoing: boolean = false,
-    outsideBox: boolean = false,
+    humanPrompt: boolean = true,
+    keepGoing: boolean = true,
+    outsideBox: boolean = true,
     communicationStyle: ChatRequestCommunicationStyle,
     messages: ApiChatMessage[]
   ): Promise<ChatResponse> {

@@ -1,6 +1,7 @@
 import { store } from '../redux/store';
 import { ApiClient } from '../apiClients/ApiClient';
 import { AuthService } from './AuthService';
+import { BalanceService } from './BalanceService';
 
 export class InitializationService {
   private static readonly selectToken = (state: any) => state.auth.token;
@@ -8,12 +9,7 @@ export class InitializationService {
 
   static initialize() {
     // Initialize API client with auth store
-    ApiClient.initialize({
-      get token() {
-        const state = store.getState();
-        return state.auth.token;
-      }
-    });
+    ApiClient.initialize();
 
     // Start token refresh service if user is authenticated
     const state = store.getState();
@@ -21,6 +17,8 @@ export class InitializationService {
     
     if (isAuthenticated) {
       AuthService.startTokenRefreshService();
+      // Fetch initial balance if authenticated
+      BalanceService.getInstance().fetchBalance();
     }
 
     // Subscribe to auth state changes
@@ -28,8 +26,9 @@ export class InitializationService {
       const currentState = store.getState();
       const currentIsAuthenticated = InitializationService.selectIsAuthenticated(currentState);
       
-      if (currentIsAuthenticated) {
+      if (currentIsAuthenticated && !AuthService.RefreshInterval) {
         AuthService.startTokenRefreshService();
+        // Fetch balance when user becomes authenticated
       } else {
         AuthService.stopTokenRefreshService();
       }

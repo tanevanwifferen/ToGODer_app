@@ -6,7 +6,10 @@ import globalConfigReducer from './slices/globalConfigSlice';
 import chatsReducer, { ChatsState } from './slices/chatsSlice';
 import authReducer, { AuthState } from './slices/authSlice';
 import experienceReducer from './slices/experienceSlice';
+import balanceReducer from './slices/balanceSlice';
+import backgroundServiceReducer from './slices/backgroundServiceSlice';
 import { GlobalConfig } from '../model/GlobalConfig';
+import { BackgroundServiceConfig } from '../model/BackgroundService';
 
 export interface RootState {
   globalConfig: GlobalConfig;
@@ -16,6 +19,13 @@ export interface RootState {
     modalVisible: boolean;
     inputLanguage: string;
   };
+  balance: {
+    balance: number;
+    lastUpdated: string;
+    isLoading: boolean;
+    error: string | null;
+  };
+  backgroundService: BackgroundServiceConfig;
 }
 
 const rootReducer = combineReducers({
@@ -23,12 +33,14 @@ const rootReducer = combineReducers({
   chats: chatsReducer,
   auth: authReducer,
   experience: experienceReducer,
+  balance: balanceReducer,
+  backgroundService: backgroundServiceReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {
   key: 'root',
   storage: createExpoFileSystemStorage,
-  whitelist: ['globalConfig', 'chats', 'auth'],
+  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'backgroundService'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

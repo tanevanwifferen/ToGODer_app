@@ -33,9 +33,15 @@ const chatsSlice = createSlice({
       state.chats[action.payload.id] = action.payload;
     },
     addMessage: (state, action: PayloadAction<{ id: string; message: ApiChatMessage }>) => {
-      const chat = state.chats[action.payload.id];
-      if (chat) {
-        chat.messages.push(action.payload.message);
+      const { id, message } = action.payload;
+      const chat = state.chats[id];
+      chat.messages.push(message);
+    },
+    deleteMessage: (state, action: PayloadAction<{ chatId: string; messageIndex: number }>) => {
+      const { chatId, messageIndex } = action.payload;
+      const chat = state.chats[chatId];
+      if (chat && messageIndex >= 0 && messageIndex < chat.messages.length) {
+        chat.messages.splice(messageIndex, 1);
       }
     },
     updateSettings: (state, action: PayloadAction<Partial<ChatSettings>>) => {
@@ -66,7 +72,8 @@ const chatsSlice = createSlice({
 
 export const { 
   addChat, 
-  addMessage, 
+  addMessage,
+  deleteMessage,
   updateSettings, 
   setTitle, 
   deleteChat,

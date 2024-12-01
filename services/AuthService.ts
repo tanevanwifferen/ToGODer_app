@@ -4,6 +4,9 @@ import { store } from '../redux/store';
 
 export class AuthService {
   private static refreshInterval: NodeJS.Timeout | null = null;
+  public static get RefreshInterval() {
+    return AuthService.refreshInterval;
+  }
   private static readonly REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in milliseconds
   private static readonly TOKEN_EXPIRY_BUFFER = 60 * 1000; // 1 minute buffer before token expiry
 
