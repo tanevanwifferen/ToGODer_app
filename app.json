@@ -25,6 +25,11 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      ["@kingstinct/react-native-healthkit", {
+        "NSHealthShareUsageDescription": "Let ToGODer analyze your physical and mental health",
+        "NSHealthUpdateUsageDescription": false,  
+        "background": true
+      }],
       "expo-router",
       [
         "expo-splash-screen",

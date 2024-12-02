@@ -17,7 +17,7 @@ export default function HomeScreen() {
       const newChatId = uuidv4();
       dispatch(addChat({
         id: newChatId,
-        title: 'New Chat',
+        title: '',
         messages: [],
       }));
       dispatch(setCurrentChat(newChatId));

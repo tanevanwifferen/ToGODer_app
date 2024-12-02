@@ -20,7 +20,7 @@ class PersonalDataService {
   private getCurrentData(): Record<string, any> {
     const data = selectPersonalData(store.getState());
     console.log('[PersonalDataService] Current data retrieved:', data);
-    return data;
+    return typeof data == "string" ? JSON.parse(data) : data;
   }
 
   private isEqual(obj1: any, obj2: any): boolean {
@@ -47,21 +47,28 @@ class PersonalDataService {
           if (!Array.isArray(updatedData[propertyName])) {
             updatedData[propertyName] = [];
           }
-          value.id = Math.max(...updatedData[propertyName].map((item: any) => item.id), 0) + 1;
-          updatedData[propertyName].push(value);
+          const itemsToAdd = Array.isArray(value) ? value : [value];
+          const maxId = Math.max(...updatedData[propertyName].map((item: any) => item.id), 0);
+          itemsToAdd.forEach((item: any, index: number) => {
+            const item_copy = { ...item, id: maxId + index + 1 };
+            updatedData[propertyName].push(item_copy);
+          });
         } else if (key.startsWith('remove')) {
           const propertyName = (key.slice(6).toLowerCase() + 's').replace(/ss$/, 's');
           console.log(`[PersonalDataService] REMOVE operation: ${propertyName}:`, value);
           if (Array.isArray(updatedData[propertyName])) {
-            const id = typeof value === 'number' ? value : value.id;
-            updatedData[propertyName] = updatedData[propertyName].filter(item => item.id !== id);
+            const itemsToRemove = Array.isArray(value) ? value : [value];
+            const idsToRemove = itemsToRemove.map(item => typeof item === 'number' ? item : item.id);
+            updatedData[propertyName] = updatedData[propertyName].filter(item => !idsToRemove.includes(item.id));
           }
         } else if (key.startsWith('update')) {
           const propertyName = (key.slice(6).toLowerCase() + 's').replace(/ss$/, 's');
           console.log(`[PersonalDataService] UPDATE operation: ${propertyName}:`, value);
           if (Array.isArray(updatedData[propertyName])) {
+            const itemsToUpdate = Array.isArray(value) ? value : [value];
+            const updateMap = new Map(itemsToUpdate.map(item => [item.id, item]));
             updatedData[propertyName] = updatedData[propertyName].map(item => 
-              item.id === value.id ? { ...item, ...value } : item
+              updateMap.has(item.id) ? { ...item, ...updateMap.get(item.id) } : item
             );
           }
         }

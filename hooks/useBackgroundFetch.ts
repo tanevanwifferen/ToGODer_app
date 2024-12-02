@@ -32,6 +32,8 @@ export const useBackgroundFetch = () => {
             const now = new Date();
             const currentHour = now.getHours();
 
+            
+
             try {
               if (currentHour !== preferredHour 
                 || lastFetch.getTime() > now.getTime() - 1000 * 60 * 60 * 2) {
@@ -68,11 +70,15 @@ export const useBackgroundFetch = () => {
       }
     };
 
-    configureBackgroundFetch();
+    if(Platform.OS !== "web") {
+      configureBackgroundFetch();
+    }
 
     // Cleanup
     return () => {
-      BackgroundFetch.stop();
+      if(Platform.OS !== "web"){
+        BackgroundFetch.stop();
+      }
     };
   }, [enabled, preferredHour]);
 };

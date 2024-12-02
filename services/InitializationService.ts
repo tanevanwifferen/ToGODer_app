@@ -5,6 +5,7 @@ import { BalanceService } from './BalanceService';
 import { setGlobalConfig } from '../redux/slices/globalConfigSlice';
 import { addChat, setCurrentChat } from '../redux/slices/chatsSlice';
 import { setModalVisible } from '../redux/slices/experienceSlice';
+import * as Calendar from 'expo-calendar';
 
 export class InitializationService {
   private static readonly selectToken = (state: any) => state.auth.token;
@@ -14,6 +15,8 @@ export class InitializationService {
   static async initialize() {
     // Initialize API client with auth store
     ApiClient.initialize();
+    await Calendar.requestCalendarPermissionsAsync();
+
 
     // Wait for state to be rehydrated
     await new Promise<void>((resolve) => {

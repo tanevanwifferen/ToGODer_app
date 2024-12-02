@@ -47,7 +47,6 @@ export function Chat({ chatId, onBack }: ChatProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Toast />
       <ChatHeader title={chatTitle} onBack={onBack} />
       <View style={styles.chatContainer}>
           <GiftedChat
@@ -73,6 +72,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
             onLongPress={onLongPress}
           />
       </View>
+      <Toast />
     </SafeAreaView>
   );
 }

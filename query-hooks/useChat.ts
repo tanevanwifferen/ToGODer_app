@@ -5,6 +5,9 @@ import { useState, useCallback } from "react";
 import { selectModel, selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectCommunicationStyle } from "../redux/slices/chatSelectors";
 import { selectPersonalData } from "../redux/slices/personalSlice";
 import { ChatResponse } from "@/model";
+import { CalendarService } from "@/services/CalendarService";
+import { Platform } from "react-native";
+import { HealthService } from "@/services/health";
 
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +25,13 @@ export function useChat() {
       setIsLoading(true);
       setError(null);
 
+      let pd = typeof personalData == "string" ? JSON.parse(personalData) : personalData;
+      if(Platform.OS !== "web"){
+        const calendar = await CalendarService.getUpcomingEvents();
+        const health = await HealthService.getHealthDataSummerized();
+        pd = {...pd, calendar, health};
+      }
+
       try {
         const response = await ChatApiClient.sendMessage(
           model,
@@ -30,7 +40,8 @@ export function useChat() {
           outsideBox,
           communicationStyle ?? ChatRequestCommunicationStyle.Default,
           messages,
-          personalData
+          // legacy of dev
+          pd
         );
 
         return {...response, content: response.content ?? ""};
