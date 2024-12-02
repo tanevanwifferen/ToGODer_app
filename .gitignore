@@ -40,4 +40,5 @@ app-example
 # Expo
 .expo
 dist/
+dist.zip
 web-build/

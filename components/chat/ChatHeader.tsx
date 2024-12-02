@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, useColorScheme } from 'react-native';
+import { Colors } from '../../constants/Colors';
 
 interface ChatHeaderProps {
   title: string | undefined;
@@ -7,13 +8,22 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ title = 'Chat', onBack }: ChatHeaderProps) {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+
   return (
-    <View style={styles.header}>
+    <View style={[
+      styles.header,
+      {
+        backgroundColor: theme.background,
+        borderBottomColor: colorScheme === 'dark' ? '#2D2D2D' : '#e0e0e0'
+      }
+    ]}>
       <TouchableOpacity onPress={onBack} style={styles.backButton}>
-        <Text style={styles.backButtonText}>← Back</Text>
+        <Text style={[styles.backButtonText, { color: theme.text }]}>← Back</Text>
       </TouchableOpacity>
       <View style={styles.titleContainer}>
-        <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
       </View>
     </View>
   );
@@ -25,7 +35,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   backButton: {
     paddingVertical: 8,

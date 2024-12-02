@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, View } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { CreateAccount } from './CreateAccount';
@@ -38,37 +38,42 @@ export const Login = () => {
     }
   };
 
+  const containerStyle = Platform.OS === 'web' ? styles.webContainer : styles.container;
+  const contentStyle = Platform.OS === 'web' ? styles.webContent : undefined;
+
   return (
-    <ThemedView style={styles.container}>
-      {error ? (
-        <ThemedText style={styles.error}>{JSON.stringify(error)}</ThemedText>
-      ) : null}
+    <ThemedView style={containerStyle}>
+      <View style={contentStyle}>
+        {error ? (
+          <ThemedText style={styles.error}>{JSON.stringify(error)}</ThemedText>
+        ) : null}
 
-      {view === 'createAccount' && <CreateAccount setView={setView} />}
+        {view === 'createAccount' && <CreateAccount setView={setView} />}
 
-      {view === 'login' && (
-        <LoginForm
-          email={email}
-          setEmail={setEmail}
-          password={password}
-          setPassword={setPassword}
-          onLogin={onLogin}
-          onCreateAccount={() => setView('createAccount')}
-          onForgotPassword={() => setView('forgotPassword')}
-        />
-      )}
-
-      {view === 'forgotPassword' && <ForgotPassword setView={setView} />}
-
-      {view === 'loggedIn' && (
-        <>
-          <BalanceDisplay isAuthenticated={isAuthenticated} />
-          <LoggedInView
+        {view === 'login' && (
+          <LoginForm
             email={email}
-            onLogout={onLogout}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            onLogin={onLogin}
+            onCreateAccount={() => setView('createAccount')}
+            onForgotPassword={() => setView('forgotPassword')}
           />
-        </>
-      )}
+        )}
+
+        {view === 'forgotPassword' && <ForgotPassword setView={setView} />}
+
+        {view === 'loggedIn' && (
+          <>
+            <BalanceDisplay isAuthenticated={isAuthenticated} />
+            <LoggedInView
+              email={email}
+              onLogout={onLogout}
+            />
+          </>
+        )}
+      </View>
     </ThemedView>
   );
 };
@@ -78,6 +83,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: 'center',
+  },
+  webContainer: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webContent: {
+    width: '100%',
+    maxWidth: 600,
   },
   error: {
     color: 'red',

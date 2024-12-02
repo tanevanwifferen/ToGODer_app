@@ -5,8 +5,10 @@ import {
   SafeAreaView,
   Platform,
   KeyboardAvoidingView,
+  useColorScheme,
 } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
+import { Colors } from "../constants/Colors";
 import { ChatHeader } from "./chat/ChatHeader";
 import { CustomInputToolbar } from "./chat/CustomInputToolbar";
 import { EmptyChat } from "./chat/EmptyChat";
@@ -22,6 +24,7 @@ interface ChatProps {
 }
 
 export function Chat({ chatId, onBack }: ChatProps) {
+  const colorScheme = useColorScheme();
   const { messages, onSend, onDeleteMessage } = useMessages(chatId);
   const chatTitle = useChatTitle(chatId, messages);
   const {
@@ -45,10 +48,12 @@ export function Chat({ chatId, onBack }: ChatProps) {
     />
   );
 
+  const backgroundColor = Colors[colorScheme ?? 'light'].background;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor }]}>
       <ChatHeader title={chatTitle} onBack={onBack} />
-      <View style={styles.chatContainer}>
+      <View style={[styles.chatContainer, { backgroundColor }]}>
           <GiftedChat
             messages={messages}
             onSend={(messages) => {
@@ -80,11 +85,9 @@ export function Chat({ chatId, onBack }: ChatProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
     paddingBottom: Platform.select({ ios: 0, android: 0 }),
   },
 });

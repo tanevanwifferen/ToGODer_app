@@ -1,6 +1,7 @@
 import React from 'react';
-import { TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { TextInput, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
 import { ThemedText } from '../ThemedText';
+import { Colors } from '../../constants/Colors';
 
 interface LoginFormProps {
   email: string;
@@ -21,11 +22,23 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onCreateAccount,
   onForgotPassword,
 }) => {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  // In dark mode, use dark text since the button background (tint) is white
+  // In light mode, use white text since the button background (tint) is blue
+  const buttonTextColor = colorScheme === 'dark' ? '#151718' : '#fff';
+
   return (
     <>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { 
+          backgroundColor: colors.background,
+          borderColor: colorScheme === 'dark' ? colors.icon : '#ddd',
+          color: colors.text
+        }]}
         placeholder="Email"
+        placeholderTextColor={colors.icon}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -33,29 +46,39 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { 
+          backgroundColor: colors.background,
+          borderColor: colorScheme === 'dark' ? colors.icon : '#ddd',
+          color: colors.text
+        }]}
         placeholder="Password"
+        placeholderTextColor={colors.icon}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={onLogin}>
-        <ThemedText style={styles.buttonText}>Login</ThemedText>
+      <TouchableOpacity 
+        style={[styles.button, { backgroundColor: colors.tint }]} 
+        onPress={onLogin}
+      >
+        <ThemedText style={[styles.buttonText, { color: buttonTextColor }]}>Login</ThemedText>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, { marginTop: 15 }]}
+        style={[styles.button, { backgroundColor: colors.tint, marginTop: 15 }]}
         onPress={onCreateAccount}
       >
-        <ThemedText style={styles.buttonText}>Create Account</ThemedText>
+        <ThemedText style={[styles.buttonText, { color: buttonTextColor }]}>Create Account</ThemedText>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.linkButton}
         onPress={onForgotPassword}
       >
-        <ThemedText style={styles.linkText}>Forgot Password?</ThemedText>
+        <ThemedText style={[styles.linkText, { color: colors.tint }]}>
+          Forgot Password?
+        </ThemedText>
       </TouchableOpacity>
     </>
   );
@@ -65,14 +88,11 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     marginBottom: 15,
     paddingHorizontal: 15,
-    backgroundColor: '#fff',
   },
   button: {
-    backgroundColor: '#007AFF',
     height: 50,
     borderRadius: 8,
     justifyContent: 'center',
@@ -80,7 +100,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -89,7 +108,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkText: {
-    color: '#007AFF',
     fontSize: 14,
   },
 });

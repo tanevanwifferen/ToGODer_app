@@ -1,5 +1,5 @@
 import React from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import {
   InputToolbar,
   InputToolbarProps,
@@ -8,6 +8,7 @@ import {
   SendProps,
   Send,
 } from "react-native-gifted-chat";
+import { Colors } from "../../constants/Colors";
 import { PromptSuggestions } from "./PromptSuggestions";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -20,7 +21,6 @@ interface CustomInputToolbarProps extends InputToolbarProps<IMessage> {
   onSend: (messages: {text:string}[]) => void;
 }
 
-
 export function CustomInputToolbar({
   showPrompts,
   inputText,
@@ -30,6 +30,8 @@ export function CustomInputToolbar({
   onSend,
   ...toolbarProps
 }: CustomInputToolbarProps) {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
 
   function handleSend(){
     onSend([{text: inputText}]);
@@ -41,6 +43,7 @@ export function CustomInputToolbar({
       {...composerProps}
       text={inputText}
       onTextChanged={onInputTextChanged}
+      textInputStyle={{ color: theme.text }}
       textInputProps={{
         autoCorrect: true,
         autoCapitalize: "sentences",
@@ -71,7 +74,7 @@ export function CustomInputToolbar({
           <Ionicons 
             name="send" 
             size={24} 
-            color={props.text ? "#007AFF" : "#B8B8B8"}
+            color={props.text ? theme.tint : (colorScheme === 'dark' ? '#4A4A4A' : '#B8B8B8')}
           />
         </View>
       </Send>
@@ -88,7 +91,13 @@ export function CustomInputToolbar({
       )}
       <InputToolbar
         {...toolbarProps}
-        containerStyle={styles.inputToolbar}
+        containerStyle={[
+          styles.inputToolbar,
+          {
+            borderTopColor: colorScheme === 'dark' ? '#2D2D2D' : '#e0e0e0',
+            backgroundColor: theme.background
+          }
+        ]}
         renderComposer={renderComposer}
         renderSend={(props)=>renderSend(props, onSend, inputText)}
       />
@@ -99,8 +108,6 @@ export function CustomInputToolbar({
 const styles = StyleSheet.create({
   inputToolbar: {
     borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
-    backgroundColor: "#fff",
   },
   sendContainer: {
     justifyContent: 'center',

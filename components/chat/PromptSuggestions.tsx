@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Text, useColorScheme } from 'react-native';
+import { Colors } from '../../constants/Colors';
 
 interface PromptSuggestionsProps {
   prompts: [string, { description: string }][];
@@ -7,18 +8,40 @@ interface PromptSuggestionsProps {
 }
 
 export function PromptSuggestions({ prompts, onSelectPrompt }: PromptSuggestionsProps) {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  
   if (prompts.length === 0) return null;
 
   return (
-    <ScrollView style={styles.promptsContainer}>
+    <ScrollView style={[
+      styles.promptsContainer,
+      {
+        backgroundColor: theme.background,
+        borderColor: colorScheme === 'dark' ? '#2D2D2D' : '#e0e0e0'
+      }
+    ]}>
       {prompts.map(([key, prompt]) => (
         <TouchableOpacity
           key={key}
-          style={styles.promptItem}
+          style={[
+            styles.promptItem,
+            {
+              borderBottomColor: colorScheme === 'dark' ? '#2D2D2D' : '#e0e0e0'
+            }
+          ]}
           onPress={() => onSelectPrompt(key)}
         >
-          <Text style={styles.promptKey}>{key}</Text>
-          <Text style={styles.promptDesc} numberOfLines={6}>{prompt.description.replace(/\s+/g, ' ')}</Text>
+          <Text style={[styles.promptKey, { color: theme.text }]}>{key}</Text>
+          <Text 
+            style={[
+              styles.promptDesc,
+              { color: colorScheme === 'dark' ? '#9BA1A6' : '#666' }
+            ]} 
+            numberOfLines={6}
+          >
+            {prompt.description.replace(/\s+/g, ' ')}
+          </Text>
         </TouchableOpacity>
       ))}
     </ScrollView>
@@ -28,9 +51,7 @@ export function PromptSuggestions({ prompts, onSelectPrompt }: PromptSuggestions
 const styles = StyleSheet.create({
   promptsContainer: {
     maxHeight: 200,
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     borderRadius: 4,
     margin: 8,
   },
@@ -38,7 +59,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   promptKey: {
     fontWeight: 'bold',
@@ -47,6 +67,5 @@ const styles = StyleSheet.create({
   },
   promptDesc: {
     flex: 1,
-    color: '#666',
   },
 });

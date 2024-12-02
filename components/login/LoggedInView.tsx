@@ -1,7 +1,14 @@
-import React from 'react';
-import { Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { ThemedText } from '../ThemedText';
-import { usePasscode } from '../../hooks/usePasscode';
+import React from "react";
+import {
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  useColorScheme,
+  Platform,
+} from "react-native";
+import { ThemedText } from "../ThemedText";
+import { usePasscode } from "../../hooks/usePasscode";
+import { Colors } from "../../constants/Colors";
 
 interface LoggedInViewProps {
   email: string;
@@ -13,55 +20,67 @@ export const LoggedInView: React.FC<LoggedInViewProps> = ({
   onLogout,
 }) => {
   const { resetPasscode } = usePasscode();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? "light"];
 
   const handleResetPasscode = () => {
-    CustomAlert.alert(
-      'Reset Passcode',
-      'Are you sure you want to reset your passcode?',
+    Alert.alert(
+      "Reset Passcode",
+      "Are you sure you want to reset your passcode?",
       [
         {
-          text: 'Cancel',
-          style: 'cancel'
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Reset',
-          onPress: resetPasscode
-        }
+          text: "Reset",
+          onPress: resetPasscode,
+        },
       ]
     );
   };
 
   return (
     <>
-      <Text>{email}</Text>
-      <TouchableOpacity style={styles.button} onPress={onLogout}>
+      <ThemedText style={styles.email}>{email}</ThemedText>
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: colorScheme === "dark" ? "#4A4D50" : "#6c757d" }]}
+        onPress={onLogout}
+      >
         <ThemedText style={styles.buttonText}>Logout</ThemedText>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, styles.secondaryButton]}
-        onPress={handleResetPasscode}
-      >
-        <ThemedText style={styles.buttonText}>Reset Passcode</ThemedText>
-      </TouchableOpacity>
+
+      {Platform.OS !== "web" && (
+        <TouchableOpacity
+          style={[
+            styles.button,
+            { backgroundColor: colorScheme === "dark" ? "#4A4D50" : "#6c757d" },
+          ]}
+          onPress={handleResetPasscode}
+        >
+          <ThemedText style={styles.buttonText}>Reset Passcode</ThemedText>
+        </TouchableOpacity>
+      )}
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  email: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
+  },
   button: {
-    backgroundColor: '#007AFF',
     height: 50,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 10,
   },
-  secondaryButton: {
-    backgroundColor: '#6c757d',
-  },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

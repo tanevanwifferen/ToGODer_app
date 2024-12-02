@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { TextInput, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
+import { Colors } from '../constants/Colors';
 
 export const CreateAccount = ({setView}: {setView:(view: "login"|"loggedIn"|"createAccount") => void}) => {
   const [email, setEmail] = useState('');
@@ -12,6 +13,10 @@ export const CreateAccount = ({setView}: {setView:(view: "login"|"loggedIn"|"cre
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const dispatch = useDispatch();
+  
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const buttonTextColor = colorScheme === 'dark' ? '#151718' : '#fff';
 
   const validateForm = () => {
     if (!email || !password || !confirmPassword) {
@@ -44,11 +49,20 @@ export const CreateAccount = ({setView}: {setView:(view: "login"|"loggedIn"|"cre
 
   return (
     <ThemedView style={styles.container}>
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? (
+        <ThemedText style={[styles.error, { color: colorScheme === 'dark' ? '#ff6b6b' : 'red' }]}>
+          {error}
+        </ThemedText>
+      ) : null}
       
       <TextInput
-        style={styles.input}
+        style={[styles.input, {
+          backgroundColor: colors.background,
+          borderColor: colorScheme === 'dark' ? colors.icon : '#ddd',
+          color: colors.text
+        }]}
         placeholder="Email"
+        placeholderTextColor={colors.icon}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -56,33 +70,45 @@ export const CreateAccount = ({setView}: {setView:(view: "login"|"loggedIn"|"cre
       />
       
       <TextInput
-        style={styles.input}
+        style={[styles.input, {
+          backgroundColor: colors.background,
+          borderColor: colorScheme === 'dark' ? colors.icon : '#ddd',
+          color: colors.text
+        }]}
         placeholder="Password"
+        placeholderTextColor={colors.icon}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, {
+          backgroundColor: colors.background,
+          borderColor: colorScheme === 'dark' ? colors.icon : '#ddd',
+          color: colors.text
+        }]}
         placeholder="Confirm Password"
+        placeholderTextColor={colors.icon}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
       />
       
       <TouchableOpacity 
-        style={styles.button}
+        style={[styles.button, { backgroundColor: colors.tint }]}
         onPress={handleCreateAccount}
       >
-        <ThemedText style={styles.buttonText}>Create Account</ThemedText>
+        <ThemedText style={[styles.buttonText, { color: buttonTextColor }]}>Create Account</ThemedText>
       </TouchableOpacity>
 
       <TouchableOpacity 
         style={styles.linkButton}
         onPress={() => setView('login')}
       >
-        <ThemedText style={styles.linkText}>Already have an account? Login</ThemedText>
+        <ThemedText style={[styles.linkText, { color: colors.tint }]}>
+          Already have an account? Login
+        </ThemedText>
       </TouchableOpacity>
     </ThemedView>
   );
@@ -97,26 +123,21 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     marginBottom: 15,
     paddingHorizontal: 15,
-    backgroundColor: '#fff',
   },
   button: {
-    backgroundColor: '#007AFF',
     height: 50,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
   error: {
-    color: 'red',
     marginBottom: 15,
     textAlign: 'center',
   },
@@ -125,7 +146,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkText: {
-    color: '#007AFF',
     fontSize: 14,
   },
 });
