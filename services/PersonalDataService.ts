@@ -48,9 +48,9 @@ class PersonalDataService {
             updatedData[propertyName] = [];
           }
           const itemsToAdd = Array.isArray(value) ? value : [value];
-          const maxId = Math.max(...updatedData[propertyName].map((item: any) => item.id), 0);
+          const maxId = Math.max(...updatedData[propertyName].map((item: any) => item.id || 0), 0);
           itemsToAdd.forEach((item: any, index: number) => {
-            const item_copy = { ...item, id: maxId + index + 1 };
+            const item_copy = typeof item === 'string' ? item : { ...item, id: maxId + index + 1 };
             updatedData[propertyName].push(item_copy);
           });
         } else if (key.startsWith('remove')) {
