@@ -41,7 +41,10 @@ const chatsSlice = createSlice({
       const { id, message } = action.payload;
       const chat = state.chats[id];
       delete message.updateData;
-      chat.messages.push(message);
+      chat.messages.push({
+        ...message,
+        timestamp: new Date().toISOString()
+      });
     },
     deleteMessage: (state, action: PayloadAction<{ chatId: string; messageIndex: number }>) => {
       const { chatId, messageIndex } = action.payload;

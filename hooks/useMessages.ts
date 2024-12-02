@@ -5,27 +5,32 @@ import { addMessage, deleteMessage } from '../redux/slices/chatsSlice';
 import { useChat } from '../query-hooks/useChat';
 import { ApiChatMessage } from '../model/ChatRequest';
 import { BalanceService } from '../services/BalanceService';
-import { selectChatList } from '@/redux/slices/chatSelectors';
+import { selectChatList } from '../redux/slices/chatSelectors';
+import { Chat } from '../redux/slices/chatsSlice';
 
 export const useMessages = (chatId: string) => {
   const dispatch = useDispatch();
   const { sendMessage } = useChat();
-  const chats = useSelector(selectChatList);
+  const chats = useSelector(selectChatList) as Chat[];
   const [messages, setMessages] = useState<IMessage[]>([]);
   const balanceService = BalanceService.getInstance();
 
   useEffect(() => {
     const currentChat = chats.find(chat => chat.id === chatId);
     if (currentChat) {
-      const giftedMessages: IMessage[] = currentChat.messages.map((msg: ApiChatMessage, index: number) => ({
+      const giftedMessages: IMessage[] = currentChat.messages.map((msg: ApiChatMessage, index: number) => {
+        console.log(msg);
+        console.log(new Date(msg.timestamp ?? 0));
+        return ({
         _id: index.toString(),
         text: msg.content,
-        createdAt: new Date(),
+        createdAt: msg.timestamp ? new Date(msg.timestamp) : new Date(),
         user: {
           _id: msg.role === 'user' ? 1 : 2,
           name: msg.role === 'user' ? 'User' : 'Assistant'
         }
-      })).reverse();
+      })
+    }).reverse();
       setMessages(giftedMessages);
     }
   }, [chatId, chats]);
