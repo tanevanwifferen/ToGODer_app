@@ -42,7 +42,7 @@ class PersonalDataService {
           console.log(`[PersonalDataService] SET operation: ${propertyName}:`, value);
           updatedData[propertyName] = value;
         } else if (key.startsWith('add')) {
-          const propertyName = key.slice(3).toLowerCase() + 's';
+          const propertyName = (key.slice(3).toLowerCase() + 's').replace(/ss$/, 's');
           console.log(`[PersonalDataService] ADD operation: ${propertyName}:`, value);
           if (!Array.isArray(updatedData[propertyName])) {
             updatedData[propertyName] = [];
@@ -50,7 +50,7 @@ class PersonalDataService {
           value.id = Math.max(...updatedData[propertyName].map((item: any) => item.id), 0) + 1;
           updatedData[propertyName].push(value);
         } else if (key.startsWith('remove')) {
-          const propertyName = key.slice(6).toLowerCase() + 's';
+          const propertyName = (key.slice(6).toLowerCase() + 's').replace(/ss$/, 's');
           console.log(`[PersonalDataService] REMOVE operation: ${propertyName}:`, value);
           if (Array.isArray(updatedData[propertyName])) {
             const id = typeof value === 'number' ? value : value.id;
