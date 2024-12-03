@@ -1,6 +1,7 @@
 import { store } from '@/redux';
 import axios from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { Platform } from 'react-native';
 
 export interface AuthStore {
   token: string | null;
@@ -14,8 +15,15 @@ export interface RateLimitError {
 }
 
 export class ApiClient {
+  private static get_base_url(){
+    if(Platform.OS === 'web'){
+      return '/api'
+    }
+
+    return 'https://dev.togoder.click/api';
+  }
   private static axiosInstance: AxiosInstance = axios.create({
-      baseURL: 'https://dev.togoder.click/api',
+      baseURL: this.get_base_url(),
       headers: {
         'Content-Type': 'application/json',
       },

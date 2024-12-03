@@ -57,6 +57,8 @@
     <string>Allow ToGODer to read your calendar and respond to events.</string>
     <key>NSHealthShareUsageDescription</key>
     <string>Let ToGODer analyze your physical and mental health</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>Not used, but I think the library supports it so I'm not sure how to disable this.</string>
     <key>NSRemindersFullAccessUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your reminders</string>
     <key>NSRemindersUsageDescription</key>
