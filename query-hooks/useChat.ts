@@ -25,11 +25,12 @@ export function useChat() {
       setIsLoading(true);
       setError(null);
 
-      let pd = typeof personalData == "string" ? JSON.parse(personalData) : personalData;
+      let configurableData = typeof personalData == "string" ? JSON.parse(personalData) : personalData;
+      let staticData = undefined;
       if(Platform.OS !== "web"){
         const calendar = await CalendarService.getUpcomingEvents();
         const health = await HealthService.getHealthDataSummerized();
-        pd = {...pd, calendar, health};
+        staticData = {calendar, health};
       }
 
       try {
@@ -41,7 +42,8 @@ export function useChat() {
           communicationStyle ?? ChatRequestCommunicationStyle.Default,
           messages,
           // legacy of dev
-          pd
+          configurableData,
+          staticData
         );
 
         return {...response, content: response.content ?? ""};
