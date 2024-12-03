@@ -6,6 +6,7 @@ export interface Chat {
   title?: string | null;
   messages: ApiChatMessage[];
   isRequest: boolean;
+  last_update?: number;
 }
 
 export interface ChatsState extends ChatSettings {
@@ -34,7 +35,8 @@ const chatsSlice = createSlice({
     addChat: (state, action: PayloadAction<Omit<Chat, 'isRequest'> & { isRequest?: boolean }>) => {
       state.chats[action.payload.id] = {
         ...action.payload,
-        isRequest: action.payload.isRequest ?? false
+        isRequest: action.payload.isRequest ?? false,
+        last_update: new Date().getTime()
       };
     },
     addMessage: (state, action: PayloadAction<{ id: string; message: ApiChatMessage }>) => {
@@ -43,8 +45,9 @@ const chatsSlice = createSlice({
       delete message.updateData;
       chat.messages.push({
         ...message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().getTime()
       });
+      chat.last_update = new Date().getTime();
     },
     deleteMessage: (state, action: PayloadAction<{ chatId: string; messageIndex: number }>) => {
       const { chatId, messageIndex } = action.payload;

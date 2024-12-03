@@ -32,7 +32,7 @@ class PersonalDataService {
       console.log('[PersonalDataService] Handling update data:', newData);
       
       // If newData is null, no changes were detected by the API
-      if (newData === null || newData === "null") {
+      if (newData === null || newData === "null" || Object.keys(newData).length === 0) {
         console.log('[PersonalDataService] No changes detected');
         return;
       }
