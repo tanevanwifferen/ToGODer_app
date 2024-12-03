@@ -20,7 +20,7 @@ export class ApiClient {
       return '/api'
     }
 
-    return 'https://chat.togoder.click/api';
+    return process.env.EXPO_PUBLIC_API_URL;
   }
   private static axiosInstance: AxiosInstance = axios.create({
       baseURL: this.get_base_url(),
