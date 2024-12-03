@@ -27,57 +27,22 @@ class PersonalDataService {
     return JSON.stringify(obj1) === JSON.stringify(obj2);
   }
 
-  public handleUpdateData(updateData: Record<string, any>) {
+  public handleUpdateData(newData: Record<string, any> | null | "null") {
     try {
-      console.log('[PersonalDataService] Handling update data:', updateData);
-      const currentData = this.getCurrentData();
-      const updatedData = JSON.parse(JSON.stringify(currentData));
-      let hasChanges = false;
+      console.log('[PersonalDataService] Handling update data:', newData);
+      
+      // If newData is null, no changes were detected by the API
+      if (newData === null || newData === "null" || Object.keys(newData).length === 0) {
+        console.log('[PersonalDataService] No changes detected');
+        return;
+      }
 
-      Object.entries(updateData).forEach(([key, value]) => {
-        console.log('[PersonalDataService] Processing operation:', key, value);
-        
-        if (key.startsWith('set')) {
-          const propertyName = key.slice(3).toLowerCase();
-          console.log(`[PersonalDataService] SET operation: ${propertyName}:`, value);
-          updatedData[propertyName] = value;
-        } else if (key.startsWith('add')) {
-          const propertyName = (key.slice(3).toLowerCase() + 's').replace(/ss$/, 's');
-          console.log(`[PersonalDataService] ADD operation: ${propertyName}:`, value);
-          if (!Array.isArray(updatedData[propertyName])) {
-            updatedData[propertyName] = [];
-          }
-          const itemsToAdd = Array.isArray(value) ? value : [value];
-          const maxId = Math.max(...updatedData[propertyName].map((item: any) => item.id || 0), 0);
-          itemsToAdd.forEach((item: any, index: number) => {
-            const item_copy = typeof item === 'string' ? item : { ...item, id: maxId + index + 1 };
-            updatedData[propertyName].push(item_copy);
-          });
-        } else if (key.startsWith('remove')) {
-          const propertyName = (key.slice(6).toLowerCase() + 's').replace(/ss$/, 's');
-          console.log(`[PersonalDataService] REMOVE operation: ${propertyName}:`, value);
-          if (Array.isArray(updatedData[propertyName])) {
-            const itemsToRemove = Array.isArray(value) ? value : [value];
-            const idsToRemove = itemsToRemove.map(item => typeof item === 'number' ? item : item.id);
-            updatedData[propertyName] = updatedData[propertyName].filter(item => !idsToRemove.includes(item.id));
-          }
-        } else if (key.startsWith('update')) {
-          const propertyName = (key.slice(6).toLowerCase() + 's').replace(/ss$/, 's');
-          console.log(`[PersonalDataService] UPDATE operation: ${propertyName}:`, value);
-          if (Array.isArray(updatedData[propertyName])) {
-            const itemsToUpdate = Array.isArray(value) ? value : [value];
-            const updateMap = new Map(itemsToUpdate.map(item => [item.id, item]));
-            updatedData[propertyName] = updatedData[propertyName].map(item => 
-              updateMap.has(item.id) ? { ...item, ...updateMap.get(item.id) } : item
-            );
-          }
-        }
-      });
+      const currentData = this.getCurrentData();
 
       // Only dispatch and show toast if data actually changed
-      if (!this.isEqual(currentData, updatedData)) {
-        console.log('[PersonalDataService] Changes detected, dispatching updated data:', updatedData);
-        store.dispatch(setPersonalData(updatedData));
+      if (!this.isEqual(currentData, newData)) {
+        console.log('[PersonalDataService] Changes detected, dispatching updated data:', newData);
+        store.dispatch(setPersonalData(newData));
         Toast.show({
           type: 'success',
           text1: 'Memory updated',

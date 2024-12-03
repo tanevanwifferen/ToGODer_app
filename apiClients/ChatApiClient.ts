@@ -10,7 +10,8 @@ export class ChatApiClient {
     outsideBox: boolean = true,
     communicationStyle: ChatRequestCommunicationStyle,
     messages: ApiChatMessage[],
-    data?: Record<string, any>
+    configurableData?: Record<string, any> | undefined,
+    staticData?: Record<string, any> | undefined
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>('/chat', {
       model,
@@ -19,7 +20,8 @@ export class ChatApiClient {
       outsideBox,
       communicationStyle,
       prompts: messages,
-      data
+      configurableData,
+      staticData
     });
 
     return response;
