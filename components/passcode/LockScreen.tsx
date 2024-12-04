@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
-import { StyleSheet, TextInput, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, TextInput } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectPasscode, unlockApp } from '../../redux/slices/passcodeSlice';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import CustomAlert from '../ui/CustomAlert';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 export function LockScreen() {
   const dispatch = useDispatch();
   const correctPasscode = useSelector(selectPasscode);
   const [passcode, setPasscode] = useState('');
+
+  const textColor = useThemeColor({}, 'text');
+  const backgroundColor = useThemeColor({}, 'background');
+  const tintColor = useThemeColor({}, 'tint');
 
   const handleSubmit = () => {
     if (passcode === correctPasscode) {
@@ -20,6 +25,12 @@ export function LockScreen() {
     }
   };
 
+  useEffect(()=>{
+    if(passcode.length === 4){
+      handleSubmit();
+    }
+  }, [passcode]);
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Enter Passcode</ThemedText>
@@ -28,7 +39,14 @@ export function LockScreen() {
       </ThemedText>
       
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: textColor,
+            backgroundColor: backgroundColor,
+            borderColor: textColor,
+          }
+        ]}
         keyboardType="numeric"
         maxLength={4}
         secureTextEntry
@@ -36,10 +54,14 @@ export function LockScreen() {
         onChangeText={setPasscode}
         onSubmitEditing={handleSubmit}
         autoFocus
+        placeholderTextColor={textColor}
       />
       
       {passcode.length === 4 && (
-        <ThemedText style={styles.button} onPress={handleSubmit}>
+        <ThemedText 
+          style={[styles.button, { color: tintColor }]} 
+          onPress={handleSubmit}
+        >
           Unlock
         </ThemedText>
       )}
@@ -73,10 +95,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     textAlign: 'center',
     letterSpacing: 10,
+    padding: 10,
   },
   button: {
     fontSize: 18,
-    color: '#2196F3',
     fontWeight: '500',
   },
 });

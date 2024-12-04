@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Text, useColorScheme } from 'react-native';
+import { StyleSheet, ScrollView, TouchableOpacity, Text, useColorScheme } from 'react-native';
 import { Colors } from '../../constants/Colors';
 
 interface PromptSuggestionsProps {

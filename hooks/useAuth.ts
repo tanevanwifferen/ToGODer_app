@@ -6,7 +6,6 @@ import { setAuthData } from '../redux/slices/authSlice';
 import { setBalance } from '../redux/slices/balanceSlice';
 import { clearAllChats } from '../redux/slices/chatsSlice';
 import { clearPasscode } from '../redux/slices/passcodeSlice';
-import { Alert } from 'react-native';
 import CustomAlert from '@/components/ui/CustomAlert';
 
 export const useAuth = () => {

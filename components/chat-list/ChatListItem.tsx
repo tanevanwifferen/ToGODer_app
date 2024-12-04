@@ -17,23 +17,27 @@ import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Chat } from "../../redux/slices/chatsSlice";
 
 const formatLastUpdate = (timestamp?: number) => {
-  if (!timestamp) return '';
-  
+  if (!timestamp) return "";
+
   const date = new Date(timestamp);
   const now = new Date();
-  
+
   // Same day
   if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
-  
+
   // Same year
   if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString([], { month: "short", day: "numeric" });
   }
-  
+
   // Different year
-  return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
 interface ChatListItemProps {
@@ -43,6 +47,36 @@ interface ChatListItemProps {
   onDelete: (chatId: string, title: string | null | undefined) => void;
 }
 
+const RightActions = ({
+  progress,
+  onDelete,
+  itemId,
+  itemTitle,
+}: {
+  progress: SharedValue<number>;
+  onDelete: (id: string, title: string | null | undefined) => void;
+  itemId: string;
+  itemTitle: string | null | undefined;
+}) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    const translateX = interpolate(progress.value, [0, 1], [100, 0]);
+    return {
+      transform: [{ translateX }],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.deleteAction, animatedStyle]}>
+      <TouchableOpacity
+        onPress={() => onDelete(itemId, itemTitle)}
+        style={{ flex: 1, justifyContent: "center" }}
+      >
+        <Text style={styles.deleteActionText}>Delete</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 export function ChatListItem({
   item,
   isRequest,
@@ -51,26 +85,6 @@ export function ChatListItem({
 }: ChatListItemProps) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
-
-  const renderRightActions = (progress: SharedValue<number>) => {
-    const animatedStyle = useAnimatedStyle(() => {
-      const translateX = interpolate(progress.value, [0, 1], [100, 0]);
-      return {
-        transform: [{ translateX }],
-      };
-    });
-
-    return (
-      <Animated.View style={[styles.deleteAction, animatedStyle]}>
-        <TouchableOpacity
-          onPress={() => onDelete(item.id, item.title)}
-          style={{ flex: 1, justifyContent: "center" }}
-        >
-          <Text style={styles.deleteActionText}>Delete</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
 
   if (Platform.OS === "web") {
     return (
@@ -106,7 +120,7 @@ export function ChatListItem({
               {isRequest ? "🔔 " : ""}
               {item.title || "Untitled Chat"}
             </Text>
-            <Text style={[styles.timestamp, { color: theme.text + '99' }]}>
+            <Text style={[styles.timestamp, { color: theme.text + "99" }]}>
               {formatLastUpdate(item.last_update)}
             </Text>
           </View>
@@ -123,7 +137,14 @@ export function ChatListItem({
 
   return (
     <Swipeable
-      renderRightActions={(e) => renderRightActions(e)}
+      renderRightActions={(progress) => (
+        <RightActions
+          progress={progress}
+          onDelete={onDelete}
+          itemId={item.id}
+          itemTitle={item.title}
+        ></RightActions>
+      )}
       rightThreshold={0.3}
       onSwipeableOpen={(direction: "left" | "right") => {
         if (direction === "right") {
@@ -162,7 +183,7 @@ export function ChatListItem({
               {isRequest ? "🔔 " : ""}
               {item.title || "Untitled Chat"}
             </Text>
-            <Text style={[styles.timestamp, { color: theme.text + '99' }]}>
+            <Text style={[styles.timestamp, { color: theme.text + "99" }]}>
               {formatLastUpdate(item.last_update)}
             </Text>
           </View>
@@ -221,9 +242,9 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   chatItemContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   timestamp: {
     fontSize: 12,

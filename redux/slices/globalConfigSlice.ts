@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { GlobalConfig, Prompt } from '../../model/GlobalConfig';
+import { GlobalConfig } from '../../model/GlobalConfig';
 
 const initialState: GlobalConfig = {
   donateOptions: [],

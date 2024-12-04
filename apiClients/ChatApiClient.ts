@@ -11,7 +11,8 @@ export class ChatApiClient {
     communicationStyle: ChatRequestCommunicationStyle,
     messages: ApiChatMessage[],
     configurableData?: Record<string, any> | undefined,
-    staticData?: Record<string, any> | undefined
+    staticData?: Record<string, any> | undefined,
+    assistant_name?: string | undefined
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>('/chat', {
       model,
@@ -21,7 +22,8 @@ export class ChatApiClient {
       communicationStyle,
       prompts: messages,
       configurableData,
-      staticData
+      staticData,
+      assistant_name
     });
 
     return response;

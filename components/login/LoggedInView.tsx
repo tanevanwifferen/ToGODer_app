@@ -8,7 +8,6 @@ import {
 } from "react-native";
 import { ThemedText } from "../ThemedText";
 import { usePasscode } from "../../hooks/usePasscode";
-import { Colors } from "../../constants/Colors";
 
 interface LoggedInViewProps {
   email: string;
@@ -21,7 +20,6 @@ export const LoggedInView: React.FC<LoggedInViewProps> = ({
 }) => {
   const { resetPasscode } = usePasscode();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
 
   const handleResetPasscode = () => {
     Alert.alert(

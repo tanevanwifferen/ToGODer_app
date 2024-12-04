@@ -1,10 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   StyleSheet,
   View,
   SafeAreaView,
   Platform,
-  KeyboardAvoidingView,
   useColorScheme,
 } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
@@ -65,7 +64,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
               _id: 1,
             }}
             text={inputText}
-            renderChatEmpty={() => <EmptyChat />}
+            renderChatEmpty={() => <EmptyChat setInputText={handleInputTextChanged} />}
             renderInputToolbar={renderInputToolbar}
             renderAvatar={null}
             alwaysShowSend

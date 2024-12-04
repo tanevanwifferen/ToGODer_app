@@ -10,7 +10,7 @@ export const usePrompts = (messages: IMessage[]) => {
 
   const handleInputTextChanged = (text: string) => {
     setInputText(text);
-    if (text.startsWith('/') && !text.includes(' ') && messages.length == 0) {
+    if (text.startsWith('/') && !text.includes(' ') && messages.length === 0) {
       setShowPrompts(true);
     } else {
       setShowPrompts(false);
@@ -23,7 +23,9 @@ export const usePrompts = (messages: IMessage[]) => {
   };
 
   const filteredPrompts = showPrompts
-    ? Object.entries(prompts).filter(([key, value]) => value.display).filter(([key]) => key.includes(inputText))
+    ? Object.entries(prompts)
+    .filter(([key, value]) => value.display)
+    .filter(([key]) => key.includes(inputText))
     : [];
 
   return {

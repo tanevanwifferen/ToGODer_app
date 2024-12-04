@@ -22,7 +22,7 @@ const personalSlice = createSlice({
   name: "personal",
   initialState,
   reducers: {
-    setPersonalData: (state, action: PayloadAction<Record<string, any>>) => {
+    setPersonalData: (state, action: PayloadAction<string|Record<string, any>>) => {
       state.data = action.payload;
     },
   },

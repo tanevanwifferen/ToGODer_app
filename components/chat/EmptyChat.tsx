@@ -4,14 +4,24 @@ import { useSelector } from 'react-redux';
 import { selectQuote } from '../../redux/slices/globalConfigSlice';
 import { useExperienceContext } from '../providers/ExperienceProvider';
 
-export function EmptyChat() {
+export function EmptyChat({setInputText}: {setInputText: (text: string) => void}) {
   const quote = useSelector(selectQuote);
   const { showLanguageInput } = useExperienceContext();
+
+  const startFiveMinuteCheckin = ()=>{
+    setInputText('/fiveMinuteCheckin');
+  }
+
+  const startFifteenMinuteCheckin = ()=>{
+    setInputText('/fifteenMinuteCheckin');
+  }
 
   return (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>{quote}</Text>
       <Button onPress={showLanguageInput} title="Start Experience" />
+      <Button onPress={startFiveMinuteCheckin} title="5 minute checkin" />
+      <Button onPress={startFifteenMinuteCheckin} title="15 minute checkin" />
     </View>
   );
 }
