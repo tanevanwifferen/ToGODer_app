@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectPasscode, selectIsLocked, lockApp, clearPasscode } from '../redux/slices/passcodeSlice';
-import { RootState } from '../redux/store';
 import { selectIsAuthenticated } from '@/redux/slices/authSlice';
 
 export function usePasscode() {

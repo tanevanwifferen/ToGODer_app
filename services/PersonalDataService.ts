@@ -20,19 +20,19 @@ class PersonalDataService {
   private getCurrentData(): Record<string, any> {
     const data = selectPersonalData(store.getState());
     console.log('[PersonalDataService] Current data retrieved:', data);
-    return typeof data == "string" ? JSON.parse(data) : data;
+    return typeof data == "string" ? data : JSON.parse(data);
   }
 
   private isEqual(obj1: any, obj2: any): boolean {
     return JSON.stringify(obj1) === JSON.stringify(obj2);
   }
 
-  public handleUpdateData(newData: Record<string, any> | null | "null") {
+  public handleUpdateData(newData: Record<string, any> | null | string) {
     try {
       console.log('[PersonalDataService] Handling update data:', newData);
       
       // If newData is null, no changes were detected by the API
-      if (newData === null || newData === "null" || Object.keys(newData).length === 0) {
+      if (newData == "" || newData === null || newData === "null" || Object.keys(newData).length === 0) {
         console.log('[PersonalDataService] No changes detected');
         return;
       }

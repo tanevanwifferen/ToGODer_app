@@ -5,7 +5,6 @@ import {
   selectBackgroundServiceEnabled,
   selectBackgroundServicePreferredHour,
 } from "../redux/slices/backgroundServiceSlice";
-import { platform } from "os";
 import { Platform } from "react-native";
 
 export const useBackgroundFetch = () => {
@@ -80,5 +79,5 @@ export const useBackgroundFetch = () => {
         BackgroundFetch.stop();
       }
     };
-  }, [enabled, preferredHour]);
+  }, [enabled, preferredHour, lastFetch]);
 };

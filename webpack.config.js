@@ -1,5 +1,7 @@
 const path = require('path');
 
+var __dirname = __dirname || path.resolve();
+
 const ttfRule = {
   test: /.ttf$/,
   loader: "url-loader", // or directly file-loader

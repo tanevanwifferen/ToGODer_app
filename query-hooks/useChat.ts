@@ -1,8 +1,17 @@
 import { ChatApiClient } from "../apiClients";
-import { ApiChatMessage, ChatRequestCommunicationStyle } from "../model/ChatRequest";
+import {
+  ApiChatMessage,
+  ChatRequestCommunicationStyle,
+} from "../model/ChatRequest";
 import { useSelector } from "react-redux";
 import { useState, useCallback } from "react";
-import { selectModel, selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectCommunicationStyle } from "../redux/slices/chatSelectors";
+import {
+  selectModel,
+  selectHumanPrompt,
+  selectKeepGoing,
+  selectOutsideBox,
+  selectCommunicationStyle,
+} from "../redux/slices/chatSelectors";
 import { selectPersonalData } from "../redux/slices/personalSlice";
 import { ChatResponse } from "@/model";
 import { CalendarService } from "@/services/CalendarService";
@@ -12,7 +21,7 @@ import { HealthService } from "@/services/health";
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  
+
   const model = useSelector(selectModel);
   const humanPrompt = useSelector(selectHumanPrompt);
   const keepGoing = useSelector(selectKeepGoing);
@@ -25,12 +34,15 @@ export function useChat() {
       setIsLoading(true);
       setError(null);
 
-      let configurableData = typeof personalData == "string" ? JSON.parse(personalData) : personalData;
+      let configurableData =
+        typeof personalData == "string"
+          ? personalData
+          : JSON.parse(personalData);
       let staticData = undefined;
-      if(Platform.OS !== "web"){
+      if (Platform.OS !== "web") {
         const calendar = await CalendarService.getUpcomingEvents();
         const health = await HealthService.getHealthDataSummerized();
-        staticData = {calendar, health};
+        staticData = { calendar, health };
       }
 
       try {
@@ -40,13 +52,19 @@ export function useChat() {
           keepGoing,
           outsideBox,
           communicationStyle ?? ChatRequestCommunicationStyle.Default,
-          messages,
+          messages.map((message) => ({
+            ...message,
+            timestamp:
+              typeof message.timestamp == "number"
+                ? new Date(message.timestamp as number)
+                : message.timestamp,
+          })),
           // legacy of dev
           configurableData,
           staticData
         );
 
-        return {...response, content: response.content ?? ""};
+        return { ...response, content: response.content ?? "" };
       } catch (err) {
         const error =
           err instanceof Error ? err : new Error("Failed to send message");
@@ -56,7 +74,14 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [model, humanPrompt, keepGoing, outsideBox, communicationStyle, personalData]
+    [
+      model,
+      humanPrompt,
+      keepGoing,
+      outsideBox,
+      communicationStyle,
+      personalData,
+    ]
   );
 
   return {

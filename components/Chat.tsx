@@ -1,10 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   StyleSheet,
   View,
   SafeAreaView,
   Platform,
-  KeyboardAvoidingView,
   useColorScheme,
 } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";

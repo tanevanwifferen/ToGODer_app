@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, Alert } from 'react-native';
+import { StyleSheet, TextInput } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectPasscode, unlockApp } from '../../redux/slices/passcodeSlice';
 import { ThemedText } from '../ThemedText';
@@ -20,6 +20,19 @@ export function LockScreen() {
     }
   };
 
+  const trySubmit = () => {
+    if(passcode.length !== 4){
+      return;
+    }
+    if(passcode == correctPasscode){
+        dispatch(unlockApp());
+    }
+    else{
+        CustomAlert.alert('Error', 'Incorrect passcode');
+        setPasscode('');
+    }
+  }
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Enter Passcode</ThemedText>
@@ -33,7 +46,7 @@ export function LockScreen() {
         maxLength={4}
         secureTextEntry
         value={passcode}
-        onChangeText={setPasscode}
+        onChangeText={(val) => {setPasscode(val); trySubmit();}}
         onSubmitEditing={handleSubmit}
         autoFocus
       />

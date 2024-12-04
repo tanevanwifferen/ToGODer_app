@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Linking, Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { useSelector } from 'react-redux';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { selectDonateOptions } from '../../redux/slices/globalConfigSlice';

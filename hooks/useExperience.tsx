@@ -11,6 +11,10 @@ export const useExperience = () => {
   const selectedChat = useSelector(selectCurrentChat);
   const personalData = useSelector(selectPersonalData);
 
+  // TODO: add calendar / health
+  // TODO: group all that stuff into one service so we don't have to call all those
+  // services every time we want to send them to the backend.
+
   const handleSubmit = async (language: string) => {
     dispatch(setModalVisible(false));
     // Store language in chatSlice

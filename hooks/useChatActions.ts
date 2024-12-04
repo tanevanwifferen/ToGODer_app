@@ -1,4 +1,3 @@
-import { Alert } from 'react-native';
 import { IMessage } from 'react-native-gifted-chat';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Toast from 'react-native-toast-message';

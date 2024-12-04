@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, StyleSheet, View, TextInput, Alert } from 'react-native';
+import { Modal, StyleSheet, TextInput } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { setPasscode } from '../../redux/slices/passcodeSlice';
 import { ThemedText } from '../ThemedText';

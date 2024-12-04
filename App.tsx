@@ -1,8 +1,12 @@
-import { useFonts } from 'expo-font';
-import { ExpoRoot } from 'expo-router';
-const [fontsLoaded, fontError] = useFonts({ 'MaterialIcons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'), 'Feather': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf'), 'AntDesign': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf'), });
+import { useFonts } from "expo-font";
+import { ExpoRoot } from "expo-router";
 
 export default function App() {
-  const ctx = require.context('app');
+  useFonts({
+    MaterialIcons: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf"),
+    Feather: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf"),
+    AntDesign: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf"),
+  });
+  const ctx = require.context("app");
   return <ExpoRoot context={ctx} />;
 }

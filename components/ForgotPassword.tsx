@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Platform,
   TextInput,
   StyleSheet,
   TouchableOpacity,

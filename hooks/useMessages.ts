@@ -69,12 +69,12 @@ export const useMessages = (chatId: string) => {
     } catch (error) {
       console.error('Failed to send message:', error);
     }
-  }, [chatId, sendMessage, dispatch, chats]);
+  }, [chatId, sendMessage, dispatch, chats, balanceService]);
 
   const onDeleteMessage = useCallback((messageId: any) => {
-    const messageIndex = messages.reverse().findIndex(x => x._id == messageId); // Convert from reversed index to original index
+    const messageIndex = messages.reverse().findIndex(x => x._id === messageId); // Convert from reversed index to original index
     dispatch(deleteMessage({ chatId, messageIndex }));
-  }, [chatId, dispatch, messages.length]);
+  }, [chatId, dispatch, messages]);
 
   return {
     messages,
