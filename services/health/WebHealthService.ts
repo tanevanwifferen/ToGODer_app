@@ -38,6 +38,7 @@ export class WebHealthService implements IHealthService {
     return {
       averageTimeSpentInBed: 0,
       averageGoingToBedtime: "00:00",
+      averageWakeUpTime: "00:00",
       periodStart: startDate,
       periodEnd: endDate
     };

@@ -64,7 +64,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
               _id: 1,
             }}
             text={inputText}
-            renderChatEmpty={() => <EmptyChat />}
+            renderChatEmpty={() => <EmptyChat setInputText={handleInputTextChanged} />}
             renderInputToolbar={renderInputToolbar}
             renderAvatar={null}
             alwaysShowSend

@@ -11,6 +11,7 @@ import {
   selectKeepGoing,
   selectOutsideBox,
   selectCommunicationStyle,
+  selectLanguage,
 } from "../redux/slices/chatSelectors";
 import { selectPersonalData } from "../redux/slices/personalSlice";
 import { ChatResponse } from "@/model";
@@ -26,8 +27,10 @@ export function useChat() {
   const humanPrompt = useSelector(selectHumanPrompt);
   const keepGoing = useSelector(selectKeepGoing);
   const outsideBox = useSelector(selectOutsideBox);
+  const preferredLanguage = useSelector(selectLanguage);
   const communicationStyle = useSelector(selectCommunicationStyle);
   const personalData = useSelector(selectPersonalData);
+  const assistant_name = useSelector((state: RootState) => state.chats.assistant_name);
 
   const sendMessage = useCallback(
     async (messages: ApiChatMessage[]): Promise<ChatResponse> => {
@@ -38,11 +41,11 @@ export function useChat() {
         typeof personalData == "string"
           ? personalData
           : JSON.parse(personalData);
-      let staticData = undefined;
+      let staticData:any = {preferredLanguage};
       if (Platform.OS !== "web") {
         const calendar = await CalendarService.getUpcomingEvents();
         const health = await HealthService.getHealthDataSummerized();
-        staticData = { calendar, health };
+        staticData = {...staticData, calendar, health };
       }
 
       try {
@@ -61,7 +64,8 @@ export function useChat() {
           })),
           // legacy of dev
           configurableData,
-          staticData
+          staticData,
+          assistant_name
         );
 
         return { ...response, content: response.content ?? "" };

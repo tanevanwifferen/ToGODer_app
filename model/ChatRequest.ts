@@ -9,7 +9,7 @@ export interface ApiChatMessage {
   content: string;
   role: 'user' | 'assistant';
   timestamp?: Date | number;
-  updateData?: Record<string, any>;
+  updateData?: string;
 }
 
 export interface ChatSettings {
