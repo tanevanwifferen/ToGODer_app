@@ -14,9 +14,10 @@ interface CacheEntry {
 export class CalendarService {
   private static cache: Map<string, CacheEntry> = new Map();
   private static readonly CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+  private static cache_clear_time = new Date();
 
   private static getCacheKey(startDate: Date, endDate: Date): string {
-    return `${startDate.getTime()}-${endDate.getTime()}`;
+    return `${startDate.toDateString()}-${endDate.toDateString()}`;
   }
 
   private static async getEventsByDateRange(startDate: Date, endDate: Date): Promise<CalendarEvent[]> {
@@ -63,10 +64,23 @@ export class CalendarService {
         timestamp: Date.now()
       });
 
+      this.clearCacheIfNeeded();
+
       return sortedEvents;
     } catch (error) {
       console.error('Error fetching calendar events:', error);
       return [];
+    }
+  }
+
+  private static clearCacheIfNeeded() {
+    if(this.cache_clear_time.getTime() < Date.now()) {
+      this.cache.forEach((value, key) => {
+        if(Date.now() - value.timestamp > this.CACHE_DURATION) {
+          this.cache.delete(key);
+        }
+      });
+      this.cache_clear_time = new Date(Date.now() + this.CACHE_DURATION);
     }
   }
 
