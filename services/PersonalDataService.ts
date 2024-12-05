@@ -17,10 +17,10 @@ class PersonalDataService {
     return PersonalDataService.instance;
   }
 
-  private getCurrentData(): Record<string, any> {
+  private getCurrentData(): string {
     const data = selectPersonalData(store.getState());
     console.log('[PersonalDataService] Current data retrieved:', data);
-    return typeof data == "string" ? data : JSON.parse(data);
+    return typeof data == "string" ? data : JSON.stringify(data);
   }
 
   private isEqual(obj1: any, obj2: any): boolean {

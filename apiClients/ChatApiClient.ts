@@ -10,7 +10,7 @@ export class ChatApiClient {
     outsideBox: boolean = true,
     communicationStyle: ChatRequestCommunicationStyle,
     messages: ApiChatMessage[],
-    configurableData?: Record<string, any> | undefined,
+    configurableData?: string,
     staticData?: Record<string, any> | undefined,
     assistant_name?: string | undefined
   ): Promise<ChatResponse> {

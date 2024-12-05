@@ -40,7 +40,7 @@ export function useChat() {
       let configurableData =
         typeof personalData == "string"
           ? personalData
-          : JSON.parse(personalData);
+          : JSON.stringify(personalData);
       let staticData:any = {preferredLanguage};
       if (Platform.OS !== "web") {
         const calendar = await CalendarService.getUpcomingEvents();
