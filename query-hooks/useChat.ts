@@ -18,6 +18,7 @@ import { ChatResponse } from "@/model";
 import { CalendarService } from "@/services/CalendarService";
 import { Platform } from "react-native";
 import { HealthService } from "@/services/health";
+import { RootState } from "@/redux";
 
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
@@ -43,9 +44,10 @@ export function useChat() {
           : JSON.stringify(personalData);
       let staticData:any = {preferredLanguage};
       if (Platform.OS !== "web") {
-        const calendar = await CalendarService.getUpcomingEvents();
+        const upcomingEventsInCalendar = await CalendarService.getUpcomingEvents();
+        const pastEventsInCalendar = await CalendarService.getPastWeekEvents();
         const health = await HealthService.getHealthDataSummerized();
-        staticData = {...staticData, calendar, health };
+        staticData = {...staticData, upcomingEventsInCalendar, pastEventsInCalendar, health };
       }
 
       try {
