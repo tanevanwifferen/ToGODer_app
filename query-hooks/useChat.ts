@@ -42,7 +42,7 @@ export function useChat() {
         typeof personalData == "string"
           ? personalData
           : JSON.stringify(personalData);
-      let staticData:any = {preferredLanguage};
+      let staticData:any = {preferredLanguage, date: new Date().toLocaleString()};
       if (Platform.OS !== "web") {
         const upcomingEventsInCalendar = await CalendarService.getUpcomingEvents();
         const pastEventsInCalendar = await CalendarService.getPastWeekEvents();
