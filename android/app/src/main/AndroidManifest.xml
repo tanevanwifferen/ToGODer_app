@@ -29,6 +29,8 @@
         <data android:scheme="myapp"/>
         <data android:scheme="com.anonymous.ToGODerapp"/>
         <data android:scheme="exp+togoderapp"/>
+        <data android:scheme="com.vanWifferen.ToGODerapp"/>
+        <data android:scheme="exp+togoder"/>
       </intent-filter>
     </activity>
   </application>

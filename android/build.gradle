@@ -37,5 +37,79 @@ allprojects {
         google()
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
+        maven { url "${project(':react-native-background-fetch').projectDir}/libs" }
     }
 }
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 20,
+    width: Platform.OS === 'android' ? '85%' : '90%',
+    maxWidth: 400,
+    minWidth: 300,
+    alignSelf: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 24,
+        marginVertical: 50,
+      },
+    }),
+  },
+  modalContentAndroid: {
+    // Remove this style as we're handling Android-specific styles in modalContent
+  },
+  input: {
+    width: '100%',
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    marginBottom: 20,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+  },
+  submitButton: {
+    backgroundColor: Platform.OS === 'android' ? '#2196F3' : '#007AFF',
+  },
+  cancelButton: {
+    backgroundColor: Platform.OS === 'android' ? '#f44336' : '#FF3B30',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  }
+});

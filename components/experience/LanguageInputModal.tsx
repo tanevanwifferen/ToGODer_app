@@ -1,4 +1,5 @@
-import { Modal, View, TextInput, TouchableOpacity, Text, StyleSheet, Pressable } from 'react-native';
+import { Modal, View, TextInput, Pressable, Text, StyleSheet } from 'react-native';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import { setModalVisible, setInputLanguage } from '../../redux/slices/experienceSlice';
@@ -7,15 +8,14 @@ interface LanguageInputModalProps {
   onSubmit: (language: string) => void;
 }
 
-export const LanguageInputModal = ({
-  onSubmit,
-}: LanguageInputModalProps) => {
+export const LanguageInputModal = ({ onSubmit }: LanguageInputModalProps) => {
   const dispatch = useDispatch();
   const { modalVisible, inputLanguage } = useSelector((state: RootState) => state.experience);
 
   const handleSubmit = () => {
     if (inputLanguage.trim()) {
       onSubmit(inputLanguage);
+      dispatch(setModalVisible(false));
     }
   };
 
@@ -26,43 +26,45 @@ export const LanguageInputModal = ({
       visible={modalVisible}
       onRequestClose={() => dispatch(setModalVisible(false))}
     >
-      <Pressable 
-        style={styles.modalOverlay}
-        onPress={() => dispatch(setModalVisible(false))}
-      >
-        <Pressable 
-          style={styles.modalContent}
-          onPress={e => e.stopPropagation()}
-        >
-          <TextInput
-            style={styles.input}
-            placeholder="Enter language"
-            value={inputLanguage}
-            onChangeText={(text) => dispatch(setInputLanguage(text))}
-            autoFocus
-            onSubmitEditing={handleSubmit}
-          />
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={handleSubmit}
-            >
-              <Text>Submit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={() => dispatch(setModalVisible(false))}
-            >
-              <Text>Cancel</Text>
-            </TouchableOpacity>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter language"
+              value={inputLanguage}
+              onChangeText={(text) => dispatch(setInputLanguage(text))}
+              autoFocus
+              onSubmitEditing={handleSubmit}
+            />
+            <View style={styles.buttonContainer}>
+              <Pressable 
+                style={[styles.button, styles.buttonSubmit]}
+                onPress={handleSubmit}
+              >
+                <Text style={styles.textStyle}>Submit</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.button, styles.buttonCancel]}
+                onPress={() => dispatch(setModalVisible(false))}
+              >
+                <Text style={styles.textStyle}>Cancel</Text>
+              </Pressable>
+            </View>
           </View>
-        </Pressable>
-      </Pressable>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+  },
   modalView: {
     margin: 20,
     backgroundColor: 'white',
@@ -76,7 +78,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5
+    elevation: 5,
+    width: '80%'
   },
   input: {
     width: '100%',
@@ -91,24 +94,21 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   button: {
+    borderRadius: 20,
     padding: 10,
     elevation: 2,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 5,
     minWidth: 100,
-    alignItems: 'center'
+    marginHorizontal: 5
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+  buttonSubmit: {
+    backgroundColor: '#2196F3',
   },
-  modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center'
+  buttonCancel: {
+    backgroundColor: '#F194FF',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
   }
 });
