@@ -1,4 +1,4 @@
-package com.anonymous.ToGODerapp
+package com.vanWifferen.ToGODerapp
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

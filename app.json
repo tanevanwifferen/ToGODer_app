@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "ToGODer_app",
-    "slug": "ToGODer_app",
-    "version": "1.0.0",
+    "name": "ToGODer",
+    "slug": "ToGODer",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -10,14 +10,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.ToGODer-app"
+      "bundleIdentifier": "com.vanWifferen.ToGODer-app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.ToGODerapp"
+      "package": "com.vanWifferen.ToGODerapp"
     },
     "web": {
       "bundler": "metro",

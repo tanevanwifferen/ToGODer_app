@@ -1,4 +1,4 @@
-package com.anonymous.ToGODerapp
+package com.vanWifferen.ToGODerapp
 
 import android.app.Application
 import android.content.res.Configuration

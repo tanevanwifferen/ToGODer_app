@@ -257,7 +257,14 @@ export class IOSHealthService implements IHealthService {
 
     const hasPermission = await this.requestPermissions();
     if (!hasPermission) {
-      throw new Error('Health permissions not granted');
+      var emptyStart = new Date();
+      emptyStart.setTime(0);
+      return {
+        averageMinutes: 0,
+        totalMinutes: 0,
+        periodStart: emptyStart,
+        periodEnd: emptyStart,
+      }
     }
 
     const totalMinutes = await this.getExerciseMinutes(startDate, endDate);
@@ -290,7 +297,15 @@ export class IOSHealthService implements IHealthService {
 
     const hasPermission = await this.requestPermissions();
     if (!hasPermission) {
-      throw new Error('Health permissions not granted');
+      var emptyStart = new Date();
+      emptyStart.setTime(0);
+      return {
+       averageGoingToBedtime: "00:00",
+       averageTimeSpentInBed: 0,
+       averageWakeUpTime: "00:00",
+       periodEnd: emptyStart,
+       periodStart: emptyStart
+      }
     }
 
     const stats = await this.getSleepData(startDate, endDate);
