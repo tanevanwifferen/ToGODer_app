@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addMemories,
@@ -8,28 +8,35 @@ import {
 import { useChat } from "../query-hooks/useChat";
 import { ApiChatMessage } from "../model/ChatRequest";
 import { BalanceService } from "../services/BalanceService";
-import { selectChatList } from "../redux/slices/chatSelectors";
+import { selectChatList, selectCurrentChat, selectCurrentMessages } from "../redux/slices/chatSelectors";
 import { Chat } from "../redux/slices/chatsSlice";
+import { setError } from "@/redux/slices/balanceSlice";
 
 export const useMessages = (chatId: string) => {
   const dispatch = useDispatch();
   const { sendMessage } = useChat();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [typing, setTyping] = useState(false);
   const chats = useSelector(selectChatList) as Chat[];
   const balanceService = BalanceService.getInstance();
 
-  const getCurrentChat = useCallback(() => {
-    return chats.find((chat) => chat.id === chatId);
-  }, [chatId, chats]);
+  const chat = useSelector(selectCurrentChat);
+  const messages = useSelector(selectCurrentMessages)
 
-  const getMessages = useCallback(() => {
-    const currentChat = getCurrentChat();
-    return currentChat ? currentChat.messages : [];
-  }, [getCurrentChat]);
+  const retrySend = useCallback(()=>{
+    setErrorMessage(null);
+    if (!chat) return;
+    const lastMessage = chat.messages[chat.messages.length - 1];
+    if(lastMessage.role == "user") {
+      dispatch(deleteMessage({ chatId, messageIndex: chat.messages.length - 1 }));
+      onSend(lastMessage.content);
+    }
+  }, [])
 
   const onSend = useCallback(
     async (content: string) => {
-      const currentChat = getCurrentChat();
-      if (!currentChat) return;
+      setTyping(true);
+      if (!chat) return;
 
       const apiUserMessage: ApiChatMessage = {
         role: "user",
@@ -39,19 +46,20 @@ export const useMessages = (chatId: string) => {
 
       try {
         const completeHistory: ApiChatMessage[] = [
-          ...currentChat.messages,
+          ...chat.messages,
           apiUserMessage,
         ];
 
-        const memoriesToInclude = currentChat.memories;
+        const memoriesToInclude = chat.memories;
         const response = await sendMessage(
           completeHistory,
-          currentChat.memories
+          chat.memories
         );
         if ("requestForMemory" in response) {
           // request for memory message
+          var keys = (response.requestForMemory as any).keys as string[];
           dispatch(
-            addMemories({ id: chatId, memories: response.requestForMemory })
+            addMemories({ id: chatId, memories: keys })
           );
           onSend(content);
           return;
@@ -65,11 +73,16 @@ export const useMessages = (chatId: string) => {
           dispatch(addMessage({ id: chatId, message: apiAssistantMessage }));
           await balanceService.updateBalanceIfAuthenticated();
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to send message:", error);
+        if(error.type == "RateLimit") {
+          setErrorMessage(`Rate limit reached. Please wait ${error.minutes}:${error.seconds} minutes before sending another message.`);
+        }
+      } finally{
+        setTyping(false);
       }
     },
-    [chatId, sendMessage, dispatch, getCurrentChat, balanceService]
+    [chatId, sendMessage, dispatch, chat, balanceService]
   );
 
   const onDeleteMessage = useCallback(
@@ -80,8 +93,11 @@ export const useMessages = (chatId: string) => {
   );
 
   return {
-    messages: getMessages(),
+    messages,
     onSend,
     onDeleteMessage,
+    typing,
+    errorMessage,
+    retrySend
   };
 };
