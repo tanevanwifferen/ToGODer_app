@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { validate } from 'uuid';
 
 const KEYS_INDEX_KEY = '@storage_keys_index';
 
@@ -46,6 +47,16 @@ class StorageService {
     }
     if (!key.startsWith('/')) {
       throw new Error('Key must start with /');
+    }
+  }
+
+  public keyIsValid(key: string): boolean {
+    try{
+      this.validateKey(key);
+      return true;
+    }
+    catch(e){
+      return false;
     }
   }
 

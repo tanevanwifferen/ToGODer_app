@@ -41,6 +41,10 @@ export function useChat() {
 
       const memories: Record<string,string> = {};
       for(let key of memory_keys) {
+        // always llm quirks
+        if(!StorageService.keyIsValid(key)){
+          continue;
+        }
         var value = await StorageService.get(key);
         value != null && (memories[key] = value);
       }

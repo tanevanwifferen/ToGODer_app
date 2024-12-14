@@ -50,6 +50,9 @@ export function Chat({ chatId, onBack }: ChatProps) {
 
   // Convert API messages to Gifted Chat messages
   const giftedMessages = useMemo(() => {
+    if(apiMessages == null){
+      return [];
+    }
     return [...apiMessages].map(convertToGiftedMessage).reverse();
   }, [apiMessages]);
 
@@ -67,7 +70,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
       const messageIndex = giftedMessages.findIndex(
         (msg) => msg._id === messageId
       );
-      if (messageIndex !== -1) {
+      if (messageIndex !== -1 && apiMessages != null) {
         // Convert from reversed index to original index
         onDeleteMessage(apiMessages.length - 1 - messageIndex);
       }

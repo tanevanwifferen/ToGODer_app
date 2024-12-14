@@ -11,6 +11,7 @@ import { BalanceService } from "../services/BalanceService";
 import { selectChatList, selectCurrentChat, selectCurrentMessages } from "../redux/slices/chatSelectors";
 import { Chat } from "../redux/slices/chatsSlice";
 import { setError } from "@/redux/slices/balanceSlice";
+import StorageService from "@/services/StorageService";
 
 export const useMessages = (chatId: string) => {
   const dispatch = useDispatch();
@@ -59,7 +60,7 @@ export const useMessages = (chatId: string) => {
           // request for memory message
           var keys = (response.requestForMemory as any).keys as string[];
           dispatch(
-            addMemories({ id: chatId, memories: keys })
+            addMemories({ id: chatId, memories: keys.filter(x => StorageService.keyIsValid(x)) })
           );
           onSend(content);
           return;
