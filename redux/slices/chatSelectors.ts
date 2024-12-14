@@ -33,7 +33,7 @@ export const selectCurrentChat = createSelector(
 export const selectCurrentMessages = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
   selectCurrentChatId,
-  (chats, currentChatId) => currentChatId ? chats[currentChatId].messages : null
+  (chats, currentChatId) => currentChatId ? chats[currentChatId].messages : []
 );
 
 export const selectModel = createSelector(

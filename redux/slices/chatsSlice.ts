@@ -57,6 +57,14 @@ const chatsSlice = createSlice({
         chat.messages.splice(messageIndex, 1);
       }
     },
+    deleteMessageByContent: (state, action: PayloadAction<{ chatId: string; content: string }>) => {
+      const { chatId, content } = action.payload;
+      const chat = state.chats[chatId];
+      const messageIndex = chat.messages.findIndex((message) => message.content === content);
+      if (chat && messageIndex >= 0) {
+        chat.messages.splice(messageIndex, 1);
+      }
+    },
     updateSettings: (state, action: PayloadAction<Partial<ChatSettings>>) => {
       console.log("old_state", state.humanPrompt);
       console.log("new_state", action.payload);
@@ -102,6 +110,7 @@ export const {
   addChat, 
   addMessage,
   deleteMessage,
+  deleteMessageByContent,
   updateSettings, 
   setTitle, 
   deleteChat,
