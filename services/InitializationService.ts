@@ -41,7 +41,8 @@ export class InitializationService {
       const newChatId = `chat-${Date.now()}`;
       store.dispatch(addChat({
         id: newChatId,
-        messages: []
+        messages: [],
+        memories: [],
       }));
       store.dispatch(setCurrentChat(newChatId));
       

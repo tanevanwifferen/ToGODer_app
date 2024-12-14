@@ -13,6 +13,7 @@ export const useChatListActions = () => {
         id: newChatId,
         title: null,
         messages: [],
+        memories: []
       })
     );
     dispatch(setCurrentChat(newChatId));

@@ -7,6 +7,7 @@ export interface Chat {
   messages: ApiChatMessage[];
   isRequest: boolean;
   last_update?: number;
+  memories: string[];
 }
 
 export interface ChatsState extends ChatSettings {
@@ -84,6 +85,15 @@ const chatsSlice = createSlice({
     clearAllChats: (state) => {
       state.chats = {};
       state.currentChatId = null;
+    },
+    addMemories: (state, action: PayloadAction<{id: string, memories: string[]}>) =>{
+      var existing = state.chats[action.payload.id].memories;
+      for(let memory in action.payload.memories){
+        if(existing.includes(memory)){
+          continue;
+        }
+        existing.push(memory);
+      }
     }
   },
 });
@@ -96,7 +106,8 @@ export const {
   setTitle, 
   deleteChat,
   setCurrentChat,
-  clearAllChats 
+  clearAllChats, 
+  addMemories,
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;

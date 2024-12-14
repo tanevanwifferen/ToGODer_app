@@ -1,4 +1,10 @@
-export interface ChatResponse {
+export type ChatResponse = MemoryRequestResponse | MessageResponse;
+
+export interface MemoryRequestResponse {
+  requestForMemory: string[];
+}
+
+export interface MessageResponse{
   content: string;
   signature?: string;
   updateData?: string;

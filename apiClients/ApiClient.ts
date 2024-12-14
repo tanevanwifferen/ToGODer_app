@@ -16,10 +16,6 @@ export interface RateLimitError {
 
 export class ApiClient {
   private static get_base_url(){
-    if(Platform.OS === 'web'){
-      return '/api'
-    }
-
     return process.env.EXPO_PUBLIC_API_URL;
   }
   private static axiosInstance: AxiosInstance = axios.create({
