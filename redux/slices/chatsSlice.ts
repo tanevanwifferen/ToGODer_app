@@ -15,6 +15,8 @@ export interface ChatsState extends ChatSettings {
     [id: string]: Chat;
   };
   currentChatId: string | null;
+  // false if a message, got deleted, true when a message just got added
+  auto_generate_answer: boolean;
 }
 
 const initialState: ChatsState = {
@@ -26,7 +28,8 @@ const initialState: ChatsState = {
     outsideBox: true,
     communicationStyle: 2,
     assistant_name: "ToGODer",
-    language: undefined
+    language: undefined,
+    auto_generate_answer:true,
 };
 
 const chatsSlice = createSlice({
@@ -49,6 +52,7 @@ const chatsSlice = createSlice({
         timestamp: new Date().getTime()
       });
       chat.last_update = new Date().getTime();
+      state.auto_generate_answer = true;
     },
     deleteMessage: (state, action: PayloadAction<{ chatId: string; messageIndex: number }>) => {
       const { chatId, messageIndex } = action.payload;
@@ -56,6 +60,7 @@ const chatsSlice = createSlice({
       if (chat && messageIndex >= 0 && messageIndex < chat.messages.length) {
         chat.messages.splice(messageIndex, 1);
       }
+      state.auto_generate_answer = false;
     },
     deleteMessageByContent: (state, action: PayloadAction<{ chatId: string; content: string }>) => {
       const { chatId, content } = action.payload;
@@ -96,10 +101,12 @@ const chatsSlice = createSlice({
     },
     addMemories: (state, action: PayloadAction<{id: string, memories: string[]}>) =>{
       var existing = state.chats[action.payload.id].memories;
-      for(let memory in action.payload.memories){
+      console.log("existing", existing);
+      for(let memory of action.payload.memories){
         if(existing.includes(memory)){
           continue;
         }
+        console.log("adding", memory);
         existing.push(memory);
       }
     }

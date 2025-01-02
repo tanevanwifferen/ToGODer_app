@@ -85,6 +85,7 @@ export function useChat() {
           memories
         );
 
+        setError(null);
         return response;
       } catch (err) {
         const error =
