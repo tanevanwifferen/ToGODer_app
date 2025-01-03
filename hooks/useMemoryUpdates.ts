@@ -1,9 +1,12 @@
 import { useCallback, useRef } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ChatApiClient } from "../apiClients/ChatApiClient";
 import { ApiChatMessage } from "../model/ChatRequest";
 import StorageService from "../services/StorageService";
 import { addMessage, deleteMessageByContent } from "../redux/slices/chatsSlice";
+import { selectCurrentMemories } from "@/redux/slices/chatSelectors";
+import { selectPersonalData } from "@/redux/slices/personalSlice";
+import { useChat } from "@/query-hooks/useChat";
 
 /**
  * Hook for handling asynchronous memory updates.
@@ -11,13 +14,15 @@ import { addMessage, deleteMessageByContent } from "../redux/slices/chatsSlice";
  */
 export const useMemoryUpdates = (chatId: string) => {
   const dispatch = useDispatch();
+  const {staticData} = useChat();
+  const personalData = useSelector(selectPersonalData)
   const pendingMemoryUpdate = useRef<boolean>(false);
 
   const updateMemory = useCallback((
     model: string,
     messages: ApiChatMessage[],
     memories: string[],
-    assistant_name?: string
+    assistant_name?: string,
   ) => {
     if (pendingMemoryUpdate.current) return;
     pendingMemoryUpdate.current = true;
@@ -35,12 +40,16 @@ export const useMemoryUpdates = (chatId: string) => {
 
     // Process memory update without blocking
     getMemories().then(memoryData => {
-      StorageService.listKeys().then(memoryIndex => {
+      let configurableData =
+        typeof personalData == "string"
+          ? personalData
+          : JSON.stringify(personalData);
+      StorageService.listKeys().then(async memoryIndex => {
         ChatApiClient.updateMemory(
           model,
           messages,
-          undefined,
-          undefined,
+          configurableData,
+          await staticData(),
           assistant_name,
           memoryIndex,
           memoryData

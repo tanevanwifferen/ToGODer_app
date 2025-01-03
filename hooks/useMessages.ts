@@ -23,7 +23,7 @@ import { useMemoryUpdates } from "./useMemoryUpdates";
 
 export const useMessages = (chatId: string) => {
   const dispatch = useDispatch();
-  const { sendMessage, error } = useChat();
+  const { sendMessage, error, staticData } = useChat();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [typing, setTyping] = useState(false);
   const chats = useSelector(selectChatList) as Chat[];
@@ -100,7 +100,7 @@ export const useMessages = (chatId: string) => {
     balanceService.updateBalanceIfAuthenticated();
 
     // Trigger memory update asynchronously
-    updateMemory(model, [...messages, apiAssistantMessage], chat?.memories || [], assistant_name);
+    updateMemory(model, [...messages, apiAssistantMessage], chat?.memories || "", assistant_name);
   }, [chatId, sendMessage, dispatch, chat, balanceService, model, assistant_name, messages]);
 
   const onDeleteMessage = useCallback(

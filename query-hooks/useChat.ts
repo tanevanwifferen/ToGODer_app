@@ -32,17 +32,41 @@ export function useChat() {
   const preferredLanguage = useSelector(selectLanguage);
   const communicationStyle = useSelector(selectCommunicationStyle);
   const personalData = useSelector(selectPersonalData);
-  const assistant_name = useSelector((state: RootState) => state.chats.assistant_name);
+  const assistant_name = useSelector(
+    (state: RootState) => state.chats.assistant_name
+  );
+  let staticData: () => Promise<any> = async () => {
+    let sd: any = {
+      preferredLanguage,
+      date: new Date().toDateString() + " " + new Date().toTimeString(),
+    };
+    if (Platform.OS !== "web") {
+      const upcomingEventsInCalendar =
+        await CalendarService.getUpcomingEvents();
+      const pastEventsInCalendar = await CalendarService.getPastWeekEvents();
+      const health = await HealthService.getHealthDataSummerized();
+      sd = {
+        ...sd,
+        upcomingEventsInCalendar,
+        pastEventsInCalendar,
+        health,
+      };
+    }
+    return sd;
+  };
 
   const sendMessage = useCallback(
-    async (messages: ApiChatMessage[], memory_keys: string[]): Promise<ChatResponse> => {
+    async (
+      messages: ApiChatMessage[],
+      memory_keys: string[]
+    ): Promise<ChatResponse> => {
       setIsLoading(true);
       setError(null);
 
-      const memories: Record<string,string> = {};
-      for(let key of memory_keys) {
+      const memories: Record<string, string> = {};
+      for (let key of memory_keys) {
         // always llm quirks
-        if(!StorageService.keyIsValid(key)){
+        if (!StorageService.keyIsValid(key)) {
           continue;
         }
         var value = await StorageService.get(key);
@@ -53,13 +77,6 @@ export function useChat() {
         typeof personalData == "string"
           ? personalData
           : JSON.stringify(personalData);
-      let staticData:any = {preferredLanguage, date: (new Date().toDateString() + ' ' + new Date().toTimeString())};
-      if (Platform.OS !== "web") {
-        const upcomingEventsInCalendar = await CalendarService.getUpcomingEvents();
-        const pastEventsInCalendar = await CalendarService.getPastWeekEvents();
-        const health = await HealthService.getHealthDataSummerized();
-        staticData = {...staticData, upcomingEventsInCalendar, pastEventsInCalendar, health };
-      }
 
       const memory_index = await StorageService.listKeys();
 
@@ -79,7 +96,7 @@ export function useChat() {
           })),
           // legacy of dev
           configurableData,
-          staticData,
+          await staticData(),
           assistant_name,
           memory_index,
           memories
@@ -110,5 +127,6 @@ export function useChat() {
     sendMessage,
     isLoading,
     error,
+    staticData
   };
 }
