@@ -1,3 +1,8 @@
+/**
+ * Redux slice for managing authentication state
+ * Handles storage and updates of auth-related data like tokens and user info
+ */
+
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface AuthState {
@@ -38,9 +43,9 @@ const authSlice = createSlice({
   },
 });
 
-export const { setAuthData, clearAuth, updateTokenRefreshTime } =
-  authSlice.actions;
+export const { setAuthData, clearAuth, updateTokenRefreshTime } = authSlice.actions;
 
+// Memoized selectors for efficiently accessing auth state
 export const selectEmail = createSelector(
   (state: { auth: AuthState }) => state.auth,
   (auth) => auth.email

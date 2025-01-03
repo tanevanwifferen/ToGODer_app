@@ -48,17 +48,15 @@ export const LoggedInView: React.FC<LoggedInViewProps> = ({
         <ThemedText style={styles.buttonText}>Logout</ThemedText>
       </TouchableOpacity>
 
-      {Platform.OS !== "web" && (
-        <TouchableOpacity
-          style={[
-            styles.button,
-            { backgroundColor: colorScheme === "dark" ? "#4A4D50" : "#6c757d" },
-          ]}
-          onPress={handleResetPasscode}
-        >
-          <ThemedText style={styles.buttonText}>Reset Passcode</ThemedText>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        style={[
+          styles.button,
+          { backgroundColor: colorScheme === "dark" ? "#4A4D50" : "#6c757d" },
+        ]}
+        onPress={handleResetPasscode}
+      >
+        <ThemedText style={styles.buttonText}>Reset Passcode</ThemedText>
+      </TouchableOpacity>
     </>
   );
 };

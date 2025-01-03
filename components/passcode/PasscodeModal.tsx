@@ -11,7 +11,7 @@ interface PasscodeModalProps {
   onClose: () => void;
 }
 
-export function PasscodeModal({ visible, onClose }: PasscodeModalProps) {
+export function EditPasscodeModal({ visible, onClose }: PasscodeModalProps) {
   const dispatch = useDispatch();
   const [step, setStep] = useState<'set' | 'verify'>('set');
   const [passcode, setPasscodeValue] = useState('');

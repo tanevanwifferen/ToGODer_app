@@ -1,84 +1,125 @@
-import { useState, useEffect, useCallback } from 'react';
-import { IMessage } from 'react-native-gifted-chat';
-import { useSelector, useDispatch } from 'react-redux';
-import { addMessage, deleteMessage } from '../redux/slices/chatsSlice';
-import { useChat } from '../query-hooks/useChat';
-import { ApiChatMessage } from '../model/ChatRequest';
-import { BalanceService } from '../services/BalanceService';
-import { selectChatList } from '../redux/slices/chatSelectors';
-import { Chat } from '../redux/slices/chatsSlice';
+import { useCallback, useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  addMemories,
+  addMessage,
+  deleteMessage,
+} from "../redux/slices/chatsSlice";
+import { useChat } from "../query-hooks/useChat";
+import { ApiChatMessage } from "../model/ChatRequest";
+import { BalanceService } from "../services/BalanceService";
+import {
+  selectAutoGenerateAnswer,
+  selectChatList,
+  selectCurrentChat,
+  selectCurrentMemories,
+  selectCurrentMessages,
+  selectModel,
+} from "../redux/slices/chatSelectors";
+import { Chat } from "../redux/slices/chatsSlice";
+import { RootState } from "../redux/store";
+import StorageService from "../services/StorageService";
+import { useMemoryUpdates } from "./useMemoryUpdates";
 
 export const useMessages = (chatId: string) => {
   const dispatch = useDispatch();
-  const { sendMessage } = useChat();
+  const { sendMessage, error, staticData } = useChat();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [typing, setTyping] = useState(false);
   const chats = useSelector(selectChatList) as Chat[];
-  const [messages, setMessages] = useState<IMessage[]>([]);
   const balanceService = BalanceService.getInstance();
 
-  useEffect(() => {
-    const currentChat = chats.find(chat => chat.id === chatId);
-    if (currentChat) {
-      const giftedMessages: IMessage[] = currentChat.messages.map((msg: ApiChatMessage, index: number) => {
-        console.log(msg);
-        console.log(new Date(msg.timestamp ?? 0));
-        return ({
-        _id: index.toString(),
-        text: msg.content,
-        createdAt: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-        user: {
-          _id: msg.role === 'user' ? 1 : 2,
-          name: msg.role === 'user' ? 'User' : 'Assistant'
-        }
-      })
-    }).reverse();
-      setMessages(giftedMessages);
+  const chat = useSelector(selectCurrentChat);
+  const memories = useSelector(selectCurrentMemories);
+  const messages = useSelector(selectCurrentMessages);
+  const autoGenerateAnswer = useSelector(selectAutoGenerateAnswer);
+  const model = useSelector(selectModel);
+  const assistant_name = useSelector((state: RootState) => state.chats.assistant_name);
+  const { updateMemory } = useMemoryUpdates(chatId);
+
+  const retrySend = useCallback(() => {
+    setErrorMessage(null);
+    if (!chat) return;
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role == "user") {
+      dispatch(
+        deleteMessage({ chatId, messageIndex: chat.messages.length - 1 })
+      );
+      onSend(lastMessage.content);
     }
-  }, [chatId, chats]);
+  }, [chatId, dispatch, chat]);
 
-  const onSend = useCallback(async (newMessages: IMessage[] = []) => {
-    console.log("sending message", newMessages);
-    const userMessage = newMessages[0];
-    const currentChat = chats.find(chat => chat.id === chatId);
-    
-    if (!currentChat) return;
-    
-    const apiUserMessage: ApiChatMessage = {
-      role: 'user',
-      content: userMessage.text
-    };
-    dispatch(addMessage({ id: chatId, message: apiUserMessage }));
-
-    try {
-      const completeHistory: ApiChatMessage[] = [
-        ...currentChat.messages,
-        apiUserMessage
-      ];
-
-      const response = await sendMessage(completeHistory);
-      
-      const apiAssistantMessage: ApiChatMessage = {
-        role: 'assistant',
-        content: response.content,
-        updateData: response.updateData
+  const onSend = useCallback(
+    async (content: string) => {
+      if (!chat) return;
+      const apiUserMessage: ApiChatMessage = {
+        role: "user",
+        content,
       };
-      console.log("addming message, ", apiAssistantMessage);
-      dispatch(addMessage({ id: chatId, message: apiAssistantMessage }));
+      dispatch(addMessage({ id: chatId, message: apiUserMessage }));
+    },
+    [chatId, dispatch, chat]
+  );
 
-      // Update balance after receiving response
-      await balanceService.updateBalanceIfAuthenticated();
-    } catch (error) {
-      console.error('Failed to send message:', error);
+  useEffect(() => {
+    console.log("messages update, autoGenerateAnswer");
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === "user" && autoGenerateAnswer) {
+        sendMessageAndHandleResponse();
+      }
     }
-  }, [chatId, sendMessage, dispatch, chats, balanceService]);
+  }, [messages, memories]);
 
-  const onDeleteMessage = useCallback((messageId: any) => {
-    const messageIndex = messages.reverse().findIndex(x => x._id === messageId); // Convert from reversed index to original index
-    dispatch(deleteMessage({ chatId, messageIndex }));
-  }, [chatId, dispatch, messages]);
+  const sendMessageAndHandleResponse = useCallback(async () => {
+    if (!chat) return;
+    console.log("sendMessageAndHandleResponse");
+    setTyping(true);
+    const response = await sendMessage(messages, chat.memories);
+
+    if ("requestForMemory" in response) {
+      // request for memory message
+      var keys = (response.requestForMemory as any).keys as string[];
+      keys = keys.filter((x) => StorageService.keyIsValid(x));
+      console.log("addkeys", keys);
+      dispatch(
+        addMemories({
+          id: chatId,
+          memories: keys
+        })
+      );
+      return;
+    }
+    // content message
+    const apiAssistantMessage: ApiChatMessage = {
+      role: "assistant",
+      content: response.content,
+    };
+    dispatch(addMessage({ id: chatId, message: apiAssistantMessage }));
+    setTyping(false);
+    balanceService.updateBalanceIfAuthenticated();
+
+    // Trigger memory update asynchronously
+    updateMemory(model, [...messages, apiAssistantMessage], chat?.memories || "", assistant_name);
+  }, [chatId, sendMessage, dispatch, chat, balanceService, model, assistant_name, messages]);
+
+  const onDeleteMessage = useCallback(
+    (messageIndex: number) => {
+      dispatch(deleteMessage({ chatId, messageIndex }));
+    },
+    [chatId, dispatch]
+  );
+
+  useEffect(() => {
+      setErrorMessage(error?.message ?? null);
+  }, [error]);
 
   return {
     messages,
     onSend,
-    onDeleteMessage
+    onDeleteMessage,
+    typing,
+    errorMessage,
+    retrySend,
   };
 };

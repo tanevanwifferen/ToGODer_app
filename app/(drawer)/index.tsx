@@ -19,6 +19,7 @@ export default function HomeScreen() {
         id: newChatId,
         title: '',
         messages: [],
+        memories: []
       }));
       dispatch(setCurrentChat(newChatId));
     }

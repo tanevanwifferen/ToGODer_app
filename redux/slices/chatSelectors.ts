@@ -30,6 +30,18 @@ export const selectCurrentChat = createSelector(
   (chats, currentChatId) => currentChatId ? chats[currentChatId] : null
 );
 
+export const selectCurrentMessages = createSelector(
+  (state: { chats: ChatsState }) => state.chats.chats,
+  selectCurrentChatId,
+  (chats, currentChatId) => currentChatId ? chats[currentChatId].messages : []
+);
+
+export const selectCurrentMemories = createSelector(
+  (state: { chats: ChatsState }) => state.chats.chats,
+  selectCurrentChatId,
+  (chats, currentChatId) => currentChatId ? chats[currentChatId].memories : []
+);
+
 export const selectModel = createSelector(
   (state: { chats: ChatsState }) => state.chats,
   (chats) => chats.model
@@ -58,4 +70,9 @@ export const selectHumanPrompt = createSelector(
 export const selectLanguage = createSelector(
   (state: { chats: ChatsState }) => state.chats,
   (chats) => chats.language
+);
+
+export const selectAutoGenerateAnswer = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.auto_generate_answer
 );

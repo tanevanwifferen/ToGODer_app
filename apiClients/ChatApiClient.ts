@@ -3,6 +3,32 @@ import { ChatRequestCommunicationStyle, ApiChatMessage } from '../model/ChatRequ
 import { ChatResponse, TitleResponse, ExperienceResponse } from '../model/ChatResponse';
 
 export class ChatApiClient {
+  /**
+   * Updates memory asynchronously for a given set of messages.
+   * This endpoint returns the same updateData object as /chat but processes it asynchronously.
+   */
+  static async updateMemory(
+    model: string,
+    messages: ApiChatMessage[],
+    configurableData?: string,
+    staticData?: Record<string, any> | undefined,
+    assistant_name?: string | undefined,
+    memoryIndex?: string[] | undefined,
+    memories?: Record<string, string> | undefined,
+  ): Promise<ChatResponse> {
+    const response = await ApiClient.post<ChatResponse>('/chat/memory-update', {
+      model,
+      prompts: messages,
+      configurableData,
+      staticData,
+      assistant_name,
+      memoryIndex,
+      memories,
+    });
+
+    return response;
+  }
+
   static async sendMessage(
     model: string,
     humanPrompt: boolean = true,
@@ -12,7 +38,9 @@ export class ChatApiClient {
     messages: ApiChatMessage[],
     configurableData?: string,
     staticData?: Record<string, any> | undefined,
-    assistant_name?: string | undefined
+    assistant_name?: string | undefined,
+    memoryIndex?: string[] | undefined,
+    memories?: Record<string, string> | undefined,
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>('/chat', {
       model,
@@ -23,7 +51,9 @@ export class ChatApiClient {
       prompts: messages,
       configurableData,
       staticData,
-      assistant_name
+      assistant_name,
+      memoryIndex,
+      memories,
     });
 
     return response;

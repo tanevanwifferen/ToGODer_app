@@ -12,15 +12,18 @@ import {
   selectShowLogin,
 } from "../../redux/slices/globalConfigSlice";
 import { usePasscode } from "../../hooks/usePasscode";
-import { PasscodeModal } from "../../components/passcode/PasscodeModal";
+import { EditPasscodeModal } from "../../components/passcode/PasscodeModal";
 import { LockScreen } from "../../components/passcode/LockScreen";
 import { ExternalDrawerLink } from "../../components/drawer/ExternalDrawerLink";
+import { useMemoryCheck } from "../../hooks/useMemoryCheck";
+import { DreamingView } from "../../components/DreamingView";
 
 export default function DrawerLayout() {
   const colorScheme = useColorScheme();
   const donateOptions = useSelector(selectDonateOptions);
   const showLogin = useSelector(selectShowLogin);
   const { showPasscodeModal, setShowPasscodeModal, isLocked } = usePasscode();
+  const { isDreaming } = useMemoryCheck();
 
   // Skip passcode check on web platform
   if (Platform.OS !== 'web' && isLocked) {
@@ -94,12 +97,11 @@ export default function DrawerLayout() {
         />
       </Drawer>
 
-      {Platform.OS !== 'web' && (
-        <PasscodeModal
-          visible={showPasscodeModal}
-          onClose={() => setShowPasscodeModal(false)}
-        />
-      )}
+      <EditPasscodeModal
+        visible={showPasscodeModal}
+        onClose={() => setShowPasscodeModal(false)}
+      />
+      {isDreaming && !isLocked && <DreamingView isDreaming={isDreaming} />}
     </>
   );
 }

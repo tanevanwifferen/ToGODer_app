@@ -4,7 +4,7 @@ import {
   ChatRequestCommunicationStyle,
 } from "../model/ChatRequest";
 import { useSelector } from "react-redux";
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import {
   selectModel,
   selectHumanPrompt,
@@ -19,6 +19,7 @@ import { CalendarService } from "@/services/CalendarService";
 import { Platform } from "react-native";
 import { HealthService } from "@/services/health";
 import { RootState } from "@/redux";
+import StorageService from "@/services/StorageService";
 
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,24 +32,53 @@ export function useChat() {
   const preferredLanguage = useSelector(selectLanguage);
   const communicationStyle = useSelector(selectCommunicationStyle);
   const personalData = useSelector(selectPersonalData);
-  const assistant_name = useSelector((state: RootState) => state.chats.assistant_name);
+  const assistant_name = useSelector(
+    (state: RootState) => state.chats.assistant_name
+  );
+  let staticData: () => Promise<any> = async () => {
+    let sd: any = {
+      preferredLanguage,
+      date: new Date().toDateString() + " " + new Date().toTimeString(),
+    };
+    if (Platform.OS !== "web") {
+      const upcomingEventsInCalendar =
+        await CalendarService.getUpcomingEvents();
+      const pastEventsInCalendar = await CalendarService.getPastWeekEvents();
+      const health = await HealthService.getHealthDataSummerized();
+      sd = {
+        ...sd,
+        upcomingEventsInCalendar,
+        pastEventsInCalendar,
+        health,
+      };
+    }
+    return sd;
+  };
 
   const sendMessage = useCallback(
-    async (messages: ApiChatMessage[]): Promise<ChatResponse> => {
+    async (
+      messages: ApiChatMessage[],
+      memory_keys: string[]
+    ): Promise<ChatResponse> => {
       setIsLoading(true);
       setError(null);
+
+      const memories: Record<string, string> = {};
+      for (let key of memory_keys) {
+        // always llm quirks
+        if (!StorageService.keyIsValid(key)) {
+          continue;
+        }
+        var value = await StorageService.get(key);
+        value != null && (memories[key] = value);
+      }
 
       let configurableData =
         typeof personalData == "string"
           ? personalData
           : JSON.stringify(personalData);
-      let staticData:any = {preferredLanguage, date: new Date().toLocaleString()};
-      if (Platform.OS !== "web") {
-        const upcomingEventsInCalendar = await CalendarService.getUpcomingEvents();
-        const pastEventsInCalendar = await CalendarService.getPastWeekEvents();
-        const health = await HealthService.getHealthDataSummerized();
-        staticData = {...staticData, upcomingEventsInCalendar, pastEventsInCalendar, health };
-      }
+
+      const memory_index = await StorageService.listKeys();
 
       try {
         const response = await ChatApiClient.sendMessage(
@@ -66,11 +96,14 @@ export function useChat() {
           })),
           // legacy of dev
           configurableData,
-          staticData,
-          assistant_name
+          await staticData(),
+          assistant_name,
+          memory_index,
+          memories
         );
 
-        return { ...response, content: response.content ?? "" };
+        setError(null);
+        return response;
       } catch (err) {
         const error =
           err instanceof Error ? err : new Error("Failed to send message");
@@ -94,5 +127,6 @@ export function useChat() {
     sendMessage,
     isLoading,
     error,
+    staticData
   };
 }

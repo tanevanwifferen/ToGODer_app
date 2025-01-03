@@ -8,7 +8,7 @@ import {
 import { Platform } from "react-native";
 
 export const useBackgroundFetch = () => {
-  const enabled = useSelector(selectBackgroundServiceEnabled);
+  const backgroundServiceEnabled = useSelector(selectBackgroundServiceEnabled);
   const preferredHour = useSelector(selectBackgroundServicePreferredHour);
   const [lastFetch, setLastFetch] = useState(new Date());
 
@@ -30,8 +30,6 @@ export const useBackgroundFetch = () => {
             // Check if it's the preferred hour
             const now = new Date();
             const currentHour = now.getHours();
-
-            
 
             try {
               if (currentHour !== preferredHour 
@@ -59,7 +57,7 @@ export const useBackgroundFetch = () => {
         );
 
         // Enable/disable based on settings
-        if (enabled && Platform.OS !== "web") {
+        if (backgroundServiceEnabled && Platform.OS !== "web") {
           await BackgroundFetch.start();
         } else {
           await BackgroundFetch.stop();
@@ -69,15 +67,11 @@ export const useBackgroundFetch = () => {
       }
     };
 
-    if(Platform.OS !== "web") {
-      configureBackgroundFetch();
-    }
+    configureBackgroundFetch();
 
     // Cleanup
     return () => {
-      if(Platform.OS !== "web"){
-        BackgroundFetch.stop();
-      }
+      BackgroundFetch.stop();
     };
-  }, [enabled, preferredHour, lastFetch]);
+  }, [backgroundServiceEnabled, preferredHour, lastFetch]);
 };

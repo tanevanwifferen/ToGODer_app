@@ -16,7 +16,6 @@ const Settings = () => {
       <ScrollView style={[contentStyle]}>
         <ModelSettings />
         <ConversationSettings />
-        {Platform.OS !== "web" && <BackgroundServiceSettings />}
       </ScrollView>
     </View>
   );
