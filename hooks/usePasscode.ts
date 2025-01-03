@@ -13,7 +13,7 @@ export function usePasscode() {
 
   // Show passcode setup modal when user logs in and hasn't set a passcode
   useEffect(() => {
-    if (isAuthenticated && !passcode && Platform.OS !== "web") {
+    if (isAuthenticated && !passcode) {
       setShowPasscodeModal(true);
     }
   }, [isAuthenticated, passcode]);

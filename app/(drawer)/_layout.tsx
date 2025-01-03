@@ -97,12 +97,10 @@ export default function DrawerLayout() {
         />
       </Drawer>
 
-      {Platform.OS !== "web" && (
-        <EditPasscodeModal
-          visible={showPasscodeModal}
-          onClose={() => setShowPasscodeModal(false)}
-        />
-      )}
+      <EditPasscodeModal
+        visible={showPasscodeModal}
+        onClose={() => setShowPasscodeModal(false)}
+      />
       {isDreaming && !isLocked && <DreamingView isDreaming={isDreaming} />}
     </>
   );

@@ -7,6 +7,11 @@ import type {
   BillingResponse 
 } from '../model/AuthRequest';
 
+/**
+ * Client for handling authentication-related API requests.
+ * Provides methods for user authentication, token management, and password recovery.
+ * Tokens obtained through these endpoints do not expire.
+ */
 export class AuthApiClient {
   static async refreshBilling(): Promise<BillingResponse> {
     return ApiClient.get<BillingResponse>('/billing');

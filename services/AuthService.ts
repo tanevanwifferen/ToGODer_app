@@ -1,3 +1,8 @@
+/**
+ * Service class for managing authentication lifecycle
+ * Handles token refresh and re-authentication when needed
+ */
+
 import { clearAuth, selectIsAuthenticated, setAuthData } from '@/redux/slices/authSlice';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { store } from '../redux/store';
@@ -8,20 +13,39 @@ export class AuthService {
   public static get RefreshInterval() {
     return AuthService.refreshInterval;
   }
-  private static readonly REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in milliseconds
-  private static readonly TOKEN_EXPIRY_BUFFER = 60 * 1000; // 1 minute buffer before token expiry
+  // Refresh token every 15 minutes
+  private static readonly REFRESH_INTERVAL = 15 * 60 * 1000;
+  private static readonly TOKEN_EXPIRY_BUFFER = 60 * 1000; // 1 minute buffer
 
   private static storedEmail: string | null = null;
   private static storedPassword: string | null = null;
   private static appStateSubscription: any = null;
 
+  /**
+   * Starts the authentication service
+   * Sets up token refresh and app state monitoring
+   */
+  static startAuthServices() {
+    this.startTokenRefreshService();
+    this.startAppFocusHandler();
+  }
+
+  /**
+   * Stops all authentication services
+   */
+  static stopAuthServices() {
+    this.stopTokenRefreshService();
+    this.stopAppFocusHandler();
+  }
+
+  /**
+   * Starts the automatic token refresh service
+   */
   static startTokenRefreshService() {
-    // Clear any existing interval
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
 
-    // Start new interval
     this.refreshInterval = setInterval(() => {
       this.checkAndRefreshToken();
     }, this.REFRESH_INTERVAL);
@@ -30,15 +54,21 @@ export class AuthService {
     this.checkAndRefreshToken();
   }
 
+  /**
+   * Stops the token refresh service
+   */
   static stopTokenRefreshService() {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
     }
     this.clearStoredCredentials();
-    this.stopAppFocusHandler();
   }
 
+  /**
+   * Checks if token needs refresh and performs refresh if necessary
+   * If refresh fails, attempts re-authentication with stored credentials
+   */
   static async checkAndRefreshToken() {
     const state = store.getState();
     const isAuthenticated = selectIsAuthenticated(state);
@@ -49,7 +79,6 @@ export class AuthService {
       return;
     }
 
-    // Check if token needs refresh (if last refresh was more than 14 minutes ago)
     const shouldRefresh = lastTokenRefresh && 
       (Date.now() - lastTokenRefresh > this.REFRESH_INTERVAL - this.TOKEN_EXPIRY_BUFFER);
 
@@ -58,13 +87,33 @@ export class AuthService {
         const response = await AuthApiClient.refreshToken(userId);
         store.dispatch(setAuthData(response));
       } catch (error) {
-        // If refresh fails, clear auth state
-        store.dispatch(clearAuth());
-        console.error('Token refresh failed:', error);
+        // If refresh fails, try to re-authenticate
+        await this.tryReAuthenticate();
       }
     }
   }
 
+  /**
+   * Attempts to re-authenticate using stored credentials
+   * Clears auth state if re-authentication fails
+   */
+  private static async tryReAuthenticate() {
+    if (this.storedEmail && this.storedPassword) {
+      try {
+        const response = await AuthApiClient.login(this.storedEmail, this.storedPassword);
+        store.dispatch(setAuthData(response));
+      } catch (error) {
+        store.dispatch(clearAuth());
+        console.error('Re-authentication failed:', error);
+      }
+    } else {
+      store.dispatch(clearAuth());
+    }
+  }
+
+  /**
+   * Checks if the current token is still valid
+   */
   static isTokenValid(): boolean {
     const state = store.getState();
     const isAuthenticated = selectIsAuthenticated(state);
@@ -74,19 +123,24 @@ export class AuthService {
       return false;
     }
 
-    // Check if token is within valid timeframe
     const tokenAge = Date.now() - lastTokenRefresh;
     return tokenAge < this.REFRESH_INTERVAL;
   }
 
+  /**
+   * Sets up app focus monitoring
+   */
   static startAppFocusHandler() {
     this.appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
-        this.handleAppFocus();
+        this.checkAndRefreshToken();
       }
     });
   }
 
+  /**
+   * Cleans up app focus monitoring
+   */
   static stopAppFocusHandler() {
     if (this.appStateSubscription) {
       this.appStateSubscription.remove();
@@ -94,25 +148,19 @@ export class AuthService {
     }
   }
 
+  /**
+   * Stores user credentials for re-authentication
+   */
   static storeCredentials(email: string, password: string) {
     this.storedEmail = email;
     this.storedPassword = password;
   }
 
+  /**
+   * Clears stored credentials
+   */
   static clearStoredCredentials() {
     this.storedEmail = null;
     this.storedPassword = null;
-  }
-
-  private static async handleAppFocus() {
-    if (this.storedEmail && this.storedPassword) {
-      try {
-        const response = await AuthApiClient.login(this.storedEmail, this.storedPassword);
-        store.dispatch(setAuthData(response));
-      } catch (error) {
-        store.dispatch(clearAuth());
-        console.error('Re-authentication failed:', error);
-      }
-    }
   }
 }

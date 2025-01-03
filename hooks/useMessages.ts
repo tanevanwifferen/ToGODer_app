@@ -4,7 +4,6 @@ import {
   addMemories,
   addMessage,
   deleteMessage,
-  deleteMessageByContent,
 } from "../redux/slices/chatsSlice";
 import { useChat } from "../query-hooks/useChat";
 import { ApiChatMessage } from "../model/ChatRequest";
@@ -15,9 +14,12 @@ import {
   selectCurrentChat,
   selectCurrentMemories,
   selectCurrentMessages,
+  selectModel,
 } from "../redux/slices/chatSelectors";
 import { Chat } from "../redux/slices/chatsSlice";
+import { RootState } from "../redux/store";
 import StorageService from "../services/StorageService";
+import { useMemoryUpdates } from "./useMemoryUpdates";
 
 export const useMessages = (chatId: string) => {
   const dispatch = useDispatch();
@@ -31,6 +33,9 @@ export const useMessages = (chatId: string) => {
   const memories = useSelector(selectCurrentMemories);
   const messages = useSelector(selectCurrentMessages);
   const autoGenerateAnswer = useSelector(selectAutoGenerateAnswer);
+  const model = useSelector(selectModel);
+  const assistant_name = useSelector((state: RootState) => state.chats.assistant_name);
+  const { updateMemory } = useMemoryUpdates(chatId);
 
   const retrySend = useCallback(() => {
     setErrorMessage(null);
@@ -89,12 +94,14 @@ export const useMessages = (chatId: string) => {
     const apiAssistantMessage: ApiChatMessage = {
       role: "assistant",
       content: response.content,
-      updateData: response.updateData,
     };
     dispatch(addMessage({ id: chatId, message: apiAssistantMessage }));
     setTyping(false);
     balanceService.updateBalanceIfAuthenticated();
-  }, [chatId, sendMessage, dispatch, chat, balanceService]);
+
+    // Trigger memory update asynchronously
+    updateMemory(model, [...messages, apiAssistantMessage], chat?.memories || [], assistant_name);
+  }, [chatId, sendMessage, dispatch, chat, balanceService, model, assistant_name, messages]);
 
   const onDeleteMessage = useCallback(
     (messageIndex: number) => {
