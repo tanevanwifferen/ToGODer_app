@@ -12,6 +12,7 @@ import {
   selectOutsideBox,
   selectCommunicationStyle,
   selectLanguage,
+  selectHolisticTherapist,
 } from "../redux/slices/chatSelectors";
 import { selectPersonalData } from "../redux/slices/personalSlice";
 import { ChatResponse } from "@/model";
@@ -29,6 +30,7 @@ export function useChat() {
   const humanPrompt = useSelector(selectHumanPrompt);
   const keepGoing = useSelector(selectKeepGoing);
   const outsideBox = useSelector(selectOutsideBox);
+  const holisticTherapist = useSelector(selectHolisticTherapist);
   const preferredLanguage = useSelector(selectLanguage);
   const communicationStyle = useSelector(selectCommunicationStyle);
   const personalData = useSelector(selectPersonalData);
@@ -86,6 +88,7 @@ export function useChat() {
           humanPrompt,
           keepGoing,
           outsideBox,
+          holisticTherapist,
           communicationStyle ?? ChatRequestCommunicationStyle.Default,
           messages.map((message) => ({
             ...message,
