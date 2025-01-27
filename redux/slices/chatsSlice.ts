@@ -26,6 +26,7 @@ const initialState: ChatsState = {
     humanPrompt: true,
     keepGoing: true,
     outsideBox: true,
+    holisticTherapist: true,
     communicationStyle: 2,
     assistant_name: "ToGODer",
     language: undefined,

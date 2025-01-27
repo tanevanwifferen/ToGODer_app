@@ -57,6 +57,11 @@ export const selectOutsideBox = createSelector(
   (chats) => chats.outsideBox
 );
 
+export const selectHolisticTherapist = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.holisticTherapist
+);
+
 export const selectCommunicationStyle = createSelector(
   (state: { chats: ChatsState }) => state.chats,
   (chats) => chats.communicationStyle

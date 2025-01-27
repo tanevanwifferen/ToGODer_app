@@ -17,6 +17,7 @@ export interface ChatSettings {
   humanPrompt: boolean | undefined;
   keepGoing: boolean | undefined;
   outsideBox: boolean | undefined;
+  holisticTherapist: boolean | undefined;
   communicationStyle: ChatRequestCommunicationStyle | undefined;
   assistant_name: string | undefined;
   language: string | undefined;

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, TextInput, useColorScheme } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { ChatSettings } from '../../model/ChatRequest';
-import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectLanguage } from '../../redux/slices/chatSelectors';
+import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectLanguage, selectHolisticTherapist } from '../../redux/slices/chatSelectors';
 import { updateSettings } from '../../redux/slices/chatsSlice';
 import { Colors } from '../../constants/Colors';
 import CustomCheckbox from '../ui/CustomCheckbox';
@@ -15,6 +15,7 @@ const ConversationSettings = () => {
   const humanPrompt = useSelector(selectHumanPrompt) ?? false;
   const keepGoing = useSelector(selectKeepGoing) ?? false;
   const outsideBox = useSelector(selectOutsideBox) ?? false;
+  const holisticTherapist = useSelector(selectHolisticTherapist) ?? false;
   const language = useSelector(selectLanguage);
 
   const updateSettingsFn = (newSettings: Partial<ChatSettings>) => {
@@ -69,6 +70,16 @@ const ConversationSettings = () => {
           colorScheme={colorScheme}
         />
         <Text style={[styles.checkboxLabel, { color: theme.text }]}>Think Outside the Box</Text>
+      </View>
+
+      <View style={styles.checkboxSection}>
+        <CustomCheckbox
+          value={holisticTherapist}
+          onValueChange={(value: boolean) => updateSettingsFn({ holisticTherapist: value })}
+          color={theme.tint}
+          colorScheme={colorScheme}
+        />
+        <Text style={[styles.checkboxLabel, { color: theme.text }]}>Use new model to ask questions (Experimental)</Text>
       </View>
     </View>
   );
