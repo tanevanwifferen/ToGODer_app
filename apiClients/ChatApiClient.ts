@@ -1,6 +1,6 @@
 import { ApiClient } from './ApiClient';
 import { ChatRequestCommunicationStyle, ApiChatMessage } from '../model/ChatRequest';
-import { ChatResponse, TitleResponse, ExperienceResponse } from '../model/ChatResponse';
+import { ChatResponse, TitleResponse, ExperienceResponse, UpdateMemoryResponse } from '../model/ChatResponse';
 
 export class ChatApiClient {
   /**
@@ -15,8 +15,8 @@ export class ChatApiClient {
     assistant_name?: string | undefined,
     memoryIndex?: string[] | undefined,
     memories?: Record<string, string> | undefined,
-  ): Promise<ChatResponse> {
-    const response = await ApiClient.post<ChatResponse>('/chat/memory-update', {
+  ): Promise<UpdateMemoryResponse> {
+    const response = await ApiClient.post<UpdateMemoryResponse>('/chat/memory-update', {
       model,
       prompts: messages,
       configurableData,
