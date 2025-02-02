@@ -1,5 +1,9 @@
 export type ChatResponse = MemoryRequestResponse | MessageResponse;
 
+export interface UpdateMemoryResponse {
+  updateData: string;
+}
+
 export interface MemoryRequestResponse {
   requestForMemory: string[];
 }

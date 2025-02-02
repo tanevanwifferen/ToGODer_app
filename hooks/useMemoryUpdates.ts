@@ -54,7 +54,7 @@ export const useMemoryUpdates = (chatId: string) => {
           memoryIndex,
           memoryData
         ).then(response => {
-          if ('content' in response && response.updateData) {
+          if (!!response.updateData && response.updateData.length > 0) {
             const userMessage = messages[messages.length - 1];
             dispatch(deleteMessageByContent({ chatId, content: userMessage.content }));
             dispatch(addMessage({
