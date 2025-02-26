@@ -14,6 +14,7 @@ import { EmptyChat } from "./chat/EmptyChat";
 import { useMessages } from "../hooks/useMessages";
 import { useChatTitle } from "../hooks/useChatTitle";
 import { usePrompts } from "../hooks/usePrompts";
+import { useChatInput } from "../hooks/useChatInput";
 import { useChatActions } from "../hooks/useChatActions";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
@@ -57,13 +58,16 @@ export function Chat({ chatId, onBack }: ChatProps) {
   }, [apiMessages]);
 
   const chatTitle = useChatTitle(chatId, giftedMessages);
+  
+  // Get persistent chat input state from Redux
+  const { inputText, setInputText } = useChatInput(chatId);
+  
   const {
     showPrompts,
-    inputText,
     filteredPrompts,
     handleInputTextChanged,
-    handleSelectPrompt,
-  } = usePrompts(giftedMessages);
+    handleSelectPrompt
+  } = usePrompts(giftedMessages, inputText, setInputText);
   const { onLongPress } = useChatActions(
     giftedMessages,
     (messageId: string) => {
@@ -83,6 +87,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
       onSend={(messages: IMessage[]) => {
         if (messages[0]) {
           sendApiMessage(messages[0].text);
+          setInputText("");
         }
       }}
       showPrompts={showPrompts}
@@ -109,7 +114,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
           onSend={(messages) => {
             if (messages[0]) {
               sendApiMessage(messages[0].text);
-              handleInputTextChanged("");
+              setInputText("");
             }
           }}
           user={{
@@ -117,7 +122,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
           }}
           text={inputText}
           renderChatEmpty={() => (
-            <EmptyChat setInputText={handleInputTextChanged} />
+            <EmptyChat setInputText={setInputText} />
           )}
           renderInputToolbar={renderInputToolbar}
           renderAvatar={null}

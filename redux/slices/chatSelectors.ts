@@ -81,3 +81,9 @@ export const selectAutoGenerateAnswer = createSelector(
   (state: { chats: ChatsState }) => state.chats,
   (chats) => chats.auto_generate_answer
 );
+
+export const selectDraftInputText = createSelector(
+  (state: { chats: ChatsState }) => state.chats.chats,
+  (_: any, chatId: string) => chatId,
+  (chats, chatId) => chatId && chats[chatId] ? (chats[chatId].draftInputText || '') : ''
+);

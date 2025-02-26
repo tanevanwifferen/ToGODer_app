@@ -8,6 +8,7 @@ export interface Chat {
   isRequest: boolean;
   last_update?: number;
   memories: string[];
+  draftInputText?: string;
 }
 
 export interface ChatsState extends ChatSettings {
@@ -110,6 +111,13 @@ const chatsSlice = createSlice({
         console.log("adding", memory);
         existing.push(memory);
       }
+    },
+    updateDraftInputText: (state, action: PayloadAction<{chatId: string; text: string}>) => {
+      const { chatId, text } = action.payload;
+      const chat = state.chats[chatId];
+      if (chat) {
+        chat.draftInputText = text;
+      }
     }
   },
 });
@@ -125,6 +133,7 @@ export const {
   setCurrentChat,
   clearAllChats, 
   addMemories,
+  updateDraftInputText,
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;
