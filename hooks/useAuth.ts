@@ -7,6 +7,7 @@ import { setBalance } from '../redux/slices/balanceSlice';
 import { clearAllChats } from '../redux/slices/chatsSlice';
 import { clearPasscode } from '../redux/slices/passcodeSlice';
 import CustomAlert from '@/components/ui/CustomAlert';
+import { AuthService } from '@/services/AuthService';
 
 export const useAuth = () => {
   const auth = useSelector((state: any) => state.auth);
@@ -25,6 +26,8 @@ export const useAuth = () => {
       setError('');
       const response = await AuthApiClient.login(email, password);
       dispatch(setAuthData({ email, password, ...response }));
+      // Store credentials in AuthService for re-authentication
+      AuthService.storeCredentials(email, password);
       const balanceResponse = await GlobalApiClient.getBalance();
       dispatch(setBalance(balanceResponse.balance));
       if (!response.token) {
@@ -59,6 +62,8 @@ export const useAuth = () => {
                 setError('');
                 dispatch(clearAllChats());
                 dispatch(clearPasscode());
+                // Clear stored credentials from AuthService
+                AuthService.clearStoredCredentials();
                 dispatch(
                   setAuthData({
                     email: '',

@@ -8,6 +8,11 @@ import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { store } from '../redux/store';
 import { AppState } from 'react-native';
 
+/**
+ * Service class for managing authentication lifecycle
+ * Handles token refresh and re-authentication when needed
+ * Stores credentials securely for automatic re-authentication
+ */
 export class AuthService {
   private static refreshInterval: NodeJS.Timeout | null = null;
   public static get RefreshInterval() {
@@ -97,10 +102,17 @@ export class AuthService {
    * Attempts to re-authenticate using stored credentials
    * Clears auth state if re-authentication fails
    */
-  private static async tryReAuthenticate() {
-    if (this.storedEmail && this.storedPassword) {
+  public static async tryReAuthenticate(
+    email: string | null = null, 
+    password: string | null = null
+  ) {
+    // Use provided credentials or fall back to stored ones
+    const useEmail = email || this.storedEmail;
+    const usePassword = password || this.storedPassword;
+    
+    if (useEmail && usePassword) {
       try {
-        const response = await AuthApiClient.login(this.storedEmail, this.storedPassword);
+        const response = await AuthApiClient.login(useEmail, usePassword);
         store.dispatch(setAuthData(response));
       } catch (error) {
         store.dispatch(clearAuth());
@@ -133,7 +145,9 @@ export class AuthService {
   static startAppFocusHandler() {
     this.appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
-        this.checkAndRefreshToken();
+        // When app becomes active, get a fresh token if possible
+        const state = store.getState();
+        this.tryReAuthenticate(state.auth.email, state.auth.password);
       }
     });
   }
@@ -150,8 +164,9 @@ export class AuthService {
 
   /**
    * Stores user credentials for re-authentication
+   * These are kept in memory for security reasons
    */
-  static storeCredentials(email: string, password: string) {
+  public static storeCredentials(email: string, password: string) {
     this.storedEmail = email;
     this.storedPassword = password;
   }
