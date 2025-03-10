@@ -124,7 +124,10 @@ export function ShareModal({
                 <ThemedText
                   style={[
                     styles.visibilityButtonText,
-                    visibility === 'PRIVATE' && styles.visibilityButtonTextActive,
+                    visibility === 'PRIVATE' && [
+                      styles.visibilityButtonTextActive,
+                      { color: colorScheme === 'light' ? 'white' : theme.text }
+                    ],
                   ]}
                 >
                   Private
@@ -142,7 +145,10 @@ export function ShareModal({
                 <ThemedText
                   style={[
                     styles.visibilityButtonText,
-                    visibility === 'PUBLIC' && styles.visibilityButtonTextActive,
+                    visibility === 'PUBLIC' && [
+                      styles.visibilityButtonTextActive,
+                      { color: colorScheme === 'light' ? 'white' : theme.text }
+                    ],
                   ]}
                 >
                   Public
@@ -191,7 +197,11 @@ export function ShareModal({
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={[
+                styles.button,
+                styles.cancelButton,
+                { backgroundColor: theme.background, borderColor: theme.text + '20', borderWidth: 1 }
+              ]}
               onPress={onClose}
               disabled={isLoading}
             >
@@ -209,7 +219,7 @@ export function ShareModal({
               {isLoading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <ThemedText style={styles.shareButtonText}>Share</ThemedText>
+                <ThemedText style={[styles.shareButtonText, { color: colorScheme === 'light' ? 'white' : theme.text }]}>Share</ThemedText>
               )}
             </TouchableOpacity>
           </View>
@@ -239,7 +249,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   visibilityButtonTextActive: {
-    color: 'white',
     fontWeight: 'bold',
   },
   urlContainer: {

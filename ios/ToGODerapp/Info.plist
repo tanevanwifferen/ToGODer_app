@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>myapp</string>
+          <string>togoderapp</string>
           <string>com.vanWifferen.ToGODer-app</string>
         </array>
       </dict>
