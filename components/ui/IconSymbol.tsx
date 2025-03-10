@@ -17,7 +17,8 @@ const MAPPING = {
   'person.fill': 'person',
   'heart.fill': 'favorite',
   'link': 'link',
-  'message.fill': 'message'
+  'message.fill': 'message',
+  'share': 'share' // Added mapping for share icon
 } as const;
 
 export type IconSymbolName = keyof typeof MAPPING;

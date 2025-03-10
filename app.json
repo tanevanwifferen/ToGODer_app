@@ -5,7 +5,7 @@
     "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "togoderapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -38,6 +38,35 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "associatedDomains": ["applinks:dev.togoder.click", "applinks:chat.togoder.click"]
+          },
+          "android": {
+            "intentFilters": [
+              {
+                "action": "VIEW",
+                "autoVerify": true,
+                "data": [
+                  {
+                    "scheme": "https",
+                    "host": "dev.togoder.click",
+                    "pathPrefix": "/shared"
+                  },
+                  {
+                    "scheme": "https",
+                    "host": "chat.togoder.click",
+                    "pathPrefix": "/shared"
+                  }
+                ],
+                "category": ["BROWSABLE", "DEFAULT"]
+              }
+            ]
+          }
         }
       ]
     ],

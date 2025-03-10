@@ -107,7 +107,11 @@ export function Chat({ chatId, onBack }: ChatProps) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <ChatHeader title={chatTitle} onBack={onBack} />
+      <ChatHeader
+        title={chatTitle}
+        onBack={onBack}
+        messages={apiMessages ?? []}
+      />
       <View style={[styles.chatContainer, { backgroundColor }]}>
         <GiftedChat
           messages={giftedMessages}
