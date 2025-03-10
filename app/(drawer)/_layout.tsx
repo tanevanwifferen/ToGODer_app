@@ -33,12 +33,16 @@ export default function DrawerLayout() {
   return (
     <>
       <Drawer
-        screenOptions={{
+        screenOptions={({ route }) => ({
           headerShown: true,
           drawerActiveTintColor: Colors[colorScheme ?? "light"].tint,
           headerTintColor: Colors[colorScheme ?? "light"].tint,
           drawerType: "front",
-        }}
+          drawerItemStyle: {
+            // Hide any routes that start with shared/ except the main shared route
+            display: route.name.startsWith('shared/') && route.name !== 'shared' ? 'none' : undefined
+          }
+        })}
         drawerContent={(props: DrawerContentComponentProps) => (
           <DrawerContentScrollView {...props}>
             <DrawerItemList {...props} />
@@ -61,6 +65,15 @@ export default function DrawerLayout() {
             title: "Chat",
             drawerIcon: ({ color }: { color: string }) => (
               <IconSymbol size={28} name="house.fill" color={color} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="shared"
+          options={{
+            title: "Shared",
+            drawerIcon: ({ color }: { color: string }) => (
+              <IconSymbol size={28} name="share" color={color} />
             ),
           }}
         />

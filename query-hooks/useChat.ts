@@ -66,7 +66,7 @@ export function useChat() {
       setError(null);
 
       const memories: Record<string, string> = {};
-      for (let key of memory_keys) {
+      for (let key of memory_keys ?? []) {
         // always llm quirks
         if (!StorageService.keyIsValid(key)) {
           continue;

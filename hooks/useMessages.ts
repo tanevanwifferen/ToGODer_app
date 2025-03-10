@@ -94,6 +94,7 @@ export const useMessages = (chatId: string) => {
     const apiAssistantMessage: ApiChatMessage = {
       role: "assistant",
       content: response.content,
+      signature: response.signature
     };
     dispatch(addMessage({ id: chatId, message: apiAssistantMessage }));
     setTyping(false);

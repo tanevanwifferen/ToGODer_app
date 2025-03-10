@@ -24,7 +24,6 @@ export class ApiClient {
         'Content-Type': 'application/json',
       },
     });
-;
 
   static initialize(): void {
     // Response interceptor for handling common errors
