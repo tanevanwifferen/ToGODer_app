@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -19,6 +19,7 @@ import { useChatActions } from "../hooks/useChatActions";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "./ThemedText";
+import { useExperienceContext } from "./providers/ExperienceProvider";
 
 interface ChatProps {
   chatId: string;
@@ -40,6 +41,7 @@ const convertToGiftedMessage = (
 
 export function Chat({ chatId, onBack }: ChatProps) {
   const colorScheme = useColorScheme();
+  const { showLanguageInput } = useExperienceContext();
   const {
     messages: apiMessages,
     onSend: sendApiMessage,
@@ -48,6 +50,11 @@ export function Chat({ chatId, onBack }: ChatProps) {
     retrySend,
     typing
   } = useMessages(chatId);
+
+  // Check language configuration when chat component mounts or becomes active
+  useEffect(() => {
+    showLanguageInput();
+  }, [showLanguageInput]);
 
   // Convert API messages to Gifted Chat messages
   const giftedMessages = useMemo(() => {

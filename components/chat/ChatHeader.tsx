@@ -73,14 +73,20 @@ export function ChatHeader({ title = 'Chat', onBack, messages }: ChatHeaderProps
         <View style={styles.titleContainer}>
           <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
         </View>
-        {isAuthenticated && (
-          <TouchableOpacity
-            onPress={() => setIsModalVisible(true)}
-            style={styles.shareButton}
-          >
-            <Text style={[styles.shareButtonText, { color: theme.text }]}>Share</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          onPress={() => isAuthenticated ? setIsModalVisible(true) : null}
+          style={[
+            styles.shareButton,
+            !isAuthenticated && { opacity: 0.5 }
+          ]}
+          accessibilityLabel={isAuthenticated ? "Share conversation" : "Login required to share"}
+          accessibilityHint={isAuthenticated ? "Opens share dialog" : "You must be logged in to share conversations"}
+        >
+          <Text style={[
+            styles.shareButtonText,
+            { color: theme.text }
+          ]}>Share</Text>
+        </TouchableOpacity>
       </View>
 
       <ShareModal

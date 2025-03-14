@@ -16,11 +16,13 @@ import {
   Pressable,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { router } from 'expo-router';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { Colors } from '../../constants/Colors';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ShareRequest, ShareVisibility } from '../../model/ShareTypes';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ShareModalProps {
   visible: boolean;
@@ -68,13 +70,17 @@ export function ShareModal({
     }
   };
 
+  const { isAuthenticated } = useAuth();
+
   const handleShare = async () => {
-    await onShare({
-      title,
-      description: description || undefined,
-      messages,
-      visibility,
-    });
+    if (isAuthenticated) {
+      await onShare({
+        title,
+        description: description || undefined,
+        messages,
+        visibility,
+      });
+    }
   };
 
   return (
@@ -90,6 +96,13 @@ export function ShareModal({
       >
         <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
           <ThemedText style={styles.modalTitle}>Share Conversation</ThemedText>
+          {!isAuthenticated && (
+            <View style={styles.warningContainer}>
+              <ThemedText style={[styles.warningText, { color: theme.tint }]}>
+                ⚠️ You must be logged in to share conversations
+              </ThemedText>
+            </View>
+          )}
           
           <View style={styles.inputContainer}>
             <ThemedText style={styles.label}>Title</ThemedText>
@@ -207,21 +220,49 @@ export function ShareModal({
             >
               <ThemedText>Cancel</ThemedText>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.shareButton,
-                { backgroundColor: theme.tint },
-              ]}
-              onPress={handleShare}
-              disabled={isLoading || !title.trim()}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <ThemedText style={[styles.shareButtonText, { color: colorScheme === 'light' ? 'white' : theme.text }]}>Share</ThemedText>
-              )}
-            </TouchableOpacity>
+            {sharedId ? (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.shareButton,
+                  { backgroundColor: theme.tint },
+                ]}
+                onPress={() => {
+                  onClose();
+                  router.push(`/shared/${sharedId}`);
+                }}
+              >
+                <ThemedText style={[styles.shareButtonText, { color: colorScheme === 'light' ? 'white' : theme.text }]}>
+                  Go to conversation
+                </ThemedText>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.shareButton,
+                  { backgroundColor: theme.tint },
+                  (!isAuthenticated || !title.trim()) && styles.disabledButton
+                ]}
+                onPress={handleShare}
+                disabled={!isAuthenticated || isLoading || !title.trim()}
+                accessibilityHint={!isAuthenticated ? "You must be logged in to share conversations" : ""}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <ThemedText
+                    style={[
+                      styles.shareButtonText,
+                      { color: colorScheme === 'light' ? 'white' : theme.text },
+                      (!isAuthenticated || !title.trim()) && styles.disabledButtonText
+                    ]}
+                  >
+                    Share
+                  </ThemedText>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -230,6 +271,26 @@ export function ShareModal({
 }
 
 const styles = StyleSheet.create({
+  disabledButton: {
+    opacity: 0.5,
+    backgroundColor: Colors.light.tabIconDefault,
+  },
+  disabledButtonText: {
+    opacity: 0.7,
+  },
+  warningContainer: {
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.tint + '40',
+    backgroundColor: Colors.light.tint + '10',
+  },
+  warningText: {
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '500',
+  },
   visibilityContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

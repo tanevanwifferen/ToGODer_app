@@ -1,10 +1,11 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessage, updateSettings } from '../redux/slices/chatsSlice';
-import { selectCurrentChat } from '../redux/slices/chatSelectors';
+import { selectCurrentChat, selectLanguage } from '../redux/slices/chatSelectors';
 import { setModalVisible } from '../redux/slices/experienceSlice';
 import { ExperienceApiClient } from '../apiClients/ExperienceApiClient';
 import { selectPersonalData } from '../redux/slices/personalSlice';
 import { LanguageInputModal } from '../components/experience/LanguageInputModal';
+import { useRoute } from '../components/providers/RouteProvider';
 
 export const useExperience = () => {
   const dispatch = useDispatch();
@@ -37,8 +38,18 @@ export const useExperience = () => {
     }
   };
 
+  const language = useSelector(selectLanguage);
+  const { isSharedRoute } = useRoute();
+  const hasLanguageConfigured = !!language;
+
   return {
-    showLanguageInput: () => dispatch(setModalVisible(true)),
+    showLanguageInput: () => {
+      // Show language input if we're in a chat (selected chat exists) and language isn't configured,
+      // regardless of whether we came from a shared route
+      if (selectedChat && !hasLanguageConfigured) {
+        dispatch(setModalVisible(true));
+      }
+    },
     LanguageInputModal: () => (
       <LanguageInputModal
         onSubmit={handleSubmit}
