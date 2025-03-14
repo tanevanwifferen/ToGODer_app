@@ -44,8 +44,9 @@ export const useExperience = () => {
 
   return {
     showLanguageInput: () => {
-      // Only show language input if we're not on a shared route and language isn't configured
-      if (!isSharedRoute && !hasLanguageConfigured) {
+      // Show language input if we're in a chat (selected chat exists) and language isn't configured,
+      // regardless of whether we came from a shared route
+      if (selectedChat && !hasLanguageConfigured) {
         dispatch(setModalVisible(true));
       }
     },
