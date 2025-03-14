@@ -22,6 +22,12 @@ import { useInitialization } from '../hooks/useInitialization';
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+// Component to handle initialization after RouteProvider is mounted
+function InitializationWrapper({ children }: { children: React.ReactNode }) {
+  useInitialization();
+  return <>{children}</>;
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
@@ -31,7 +37,6 @@ export default function RootLayout() {
     Feather: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf"),
     AntDesign: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf"),
   });
-  useInitialization();
 
   // Handle deep linking
   useEffect(() => {
@@ -87,17 +92,19 @@ export default function RootLayout() {
         <QueryProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <RouteProvider>
-              <ExperienceProvider>
-                <BackgroundFetchProvider>
-                  <GestureHandlerRootView style={styles.container}>
-                  <Stack>
-                    <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-                    <Stack.Screen name="+not-found" />
-                  </Stack>
-                  <StatusBar style="auto" />
-                  </GestureHandlerRootView>
-                </BackgroundFetchProvider>
-              </ExperienceProvider>
+              <InitializationWrapper>
+                <ExperienceProvider>
+                  <BackgroundFetchProvider>
+                    <GestureHandlerRootView style={styles.container}>
+                    <Stack>
+                      <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+                      <Stack.Screen name="+not-found" />
+                    </Stack>
+                    <StatusBar style="auto" />
+                    </GestureHandlerRootView>
+                  </BackgroundFetchProvider>
+                </ExperienceProvider>
+              </InitializationWrapper>
             </RouteProvider>
           </ThemeProvider>
         </QueryProvider>
