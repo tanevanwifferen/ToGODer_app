@@ -15,9 +15,9 @@ import { store, persistor } from '../redux/store';
 import { QueryProvider } from '../components/providers/QueryProvider';
 import { ExperienceProvider } from '../components/providers/ExperienceProvider';
 import { BackgroundFetchProvider } from '../components/providers/BackgroundFetchProvider';
-
+import { RouteProvider } from '../components/providers/RouteProvider';
 import { useColorScheme } from '../hooks/useColorScheme';
-import { useInitialize } from '../hooks/useInitialize';
+import { useInitialization } from '../hooks/useInitialization';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,7 +31,7 @@ export default function RootLayout() {
     Feather: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf"),
     AntDesign: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf"),
   });
-  useInitialize();
+  useInitialization();
 
   // Handle deep linking
   useEffect(() => {
@@ -86,17 +86,19 @@ export default function RootLayout() {
       <PersistGate loading={null} persistor={persistor}>
         <QueryProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <ExperienceProvider>
-              <BackgroundFetchProvider>
-                <GestureHandlerRootView style={styles.container}>
+            <RouteProvider>
+              <ExperienceProvider>
+                <BackgroundFetchProvider>
+                  <GestureHandlerRootView style={styles.container}>
                   <Stack>
                     <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
                     <Stack.Screen name="+not-found" />
                   </Stack>
                   <StatusBar style="auto" />
-                </GestureHandlerRootView>
-              </BackgroundFetchProvider>
-            </ExperienceProvider>
+                  </GestureHandlerRootView>
+                </BackgroundFetchProvider>
+              </ExperienceProvider>
+            </RouteProvider>
           </ThemeProvider>
         </QueryProvider>
       </PersistGate>
