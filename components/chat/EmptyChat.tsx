@@ -19,7 +19,7 @@ export function EmptyChat({setInputText}: {setInputText: (text: string) => void}
   return (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>{quote}</Text>
-      <Button onPress={showLanguageInput} title="Start Experience" />
+      <Button onPress={() => showLanguageInput(true)} title="Start Experience" />
       <Button onPress={startFiveMinuteCheckin} title="5 minute checkin" />
       <Button onPress={startFifteenMinuteCheckin} title="15 minute checkin" />
     </View>

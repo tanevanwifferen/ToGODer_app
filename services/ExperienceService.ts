@@ -11,8 +11,10 @@ export class ExperienceService {
   /**
    * Shows the language input modal if needed based on current app state.
    * This is a non-React version of the showLanguageInput function in useExperience.
+   *
+   * @param forceShow If true, shows the modal even if language is already configured
    */
-  static showLanguageInputIfNeeded() {
+  static showLanguageInputIfNeeded(forceShow = false) {
     const state = store.getState();
     
     // Check if we're at the chat route (root)
@@ -28,9 +30,9 @@ export class ExperienceService {
     
     // Only show language input if:
     // 1. Not on a shared route
-    // 2. Language isn't configured
+    // 2. Language isn't configured OR forceShow is true
     // 3. We're on the chat route
-    if (!isSharedRoute && !hasLanguageConfigured && isChatRoute) {
+    if (!isSharedRoute && (forceShow || !hasLanguageConfigured) && isChatRoute) {
       store.dispatch(setModalVisible(true));
     }
   }

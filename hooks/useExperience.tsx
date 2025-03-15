@@ -56,10 +56,12 @@ export const useExperience = () => {
    * Centralized function to show the language input modal.
    * Shows the modal only if:
    * 1. We're not on a shared route
-   * 2. Language is not already configured
+   * 2. Language is not already configured (unless forceShow is true)
    * 3. We're on the chat route (root)
+   *
+   * @param forceShow If true, shows the modal even if language is already configured
    */
-  const showLanguageInput = () => {
+  const showLanguageInput = (forceShow = false) => {
     // Check if we're at the chat route (root)
     const isChatRoute = pathname === '/' || pathname === '/index';
     const currentRoute = RouteService.getCurrentRoute();
@@ -67,9 +69,9 @@ export const useExperience = () => {
     
     // Only show language input if:
     // 1. Not on a shared route
-    // 2. Language isn't configured
+    // 2. Language isn't configured OR forceShow is true
     // 3. We're on the chat route
-    if (!isSharedRoute && !hasLanguageConfigured && (isChatRoute || isRouteServiceChatRoute)) {
+    if (!isSharedRoute && (forceShow || !hasLanguageConfigured) && (isChatRoute || isRouteServiceChatRoute)) {
       dispatch(setModalVisible(true));
     }
   };

@@ -2,7 +2,7 @@ import React, { createContext, useContext } from 'react';
 import { useExperience } from '../../hooks/useExperience';
 
 interface ExperienceContextType {
-  showLanguageInput: () => void;
+  showLanguageInput: (forceShow?: boolean) => void;
 }
 
 const ExperienceContext = createContext<ExperienceContextType | undefined>(undefined);
