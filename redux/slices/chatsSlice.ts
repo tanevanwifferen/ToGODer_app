@@ -30,7 +30,7 @@ const initialState: ChatsState = {
     holisticTherapist: true,
     communicationStyle: 2,
     assistant_name: "ToGODer",
-    language: undefined,
+    language: '',
     auto_generate_answer:true,
 };
 

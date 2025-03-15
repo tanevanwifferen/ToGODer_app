@@ -1,19 +1,23 @@
+/**
+ * Service responsible for initializing the app
+ * Handles setup of authentication, API services, and initial app state
+ * Note: This service is being phased out in favor of the useInitialization hook
+ * for components that have access to React context.
+ */
 import { store } from '../redux/store';
 import { ApiClient } from '../apiClients/ApiClient';
 import { AuthService } from './AuthService';
 import { BalanceService } from './BalanceService';
 import { setGlobalConfig } from '../redux/slices/globalConfigSlice';
 import { addChat, setCurrentChat } from '../redux/slices/chatsSlice';
-import { setModalVisible } from '../redux/slices/experienceSlice';
 import * as Calendar from 'expo-calendar';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';
 import { RouteService } from './RouteService';
 
-/**
- * Service responsible for initializing the app
- * Handles setup of authentication, API services, and initial app state
- */
+// Import the ExperienceService to handle language input modal
+import { ExperienceService } from './ExperienceService';
+
 export class InitializationService {
   private static readonly selectToken = (state: any) => state.auth.token;
   private static readonly selectIsAuthenticated = (state: any) => Boolean(state.auth.token);
@@ -27,7 +31,6 @@ export class InitializationService {
     // Initialize API client with auth store
     ApiClient.initialize();
     await Calendar.requestCalendarPermissionsAsync();
-
 
     // Wait for state to be rehydrated
     await new Promise<void>((resolve) => {
@@ -44,11 +47,13 @@ export class InitializationService {
     const state = store.getState();
     const isFirstLaunch = InitializationService.selectAppFirstLaunch(state);
     
-    if (isFirstLaunch) {
-      // Only show language input modal if we're not on a shared route
-      if (!RouteService.isSharedRoute()) {
-        store.dispatch(setModalVisible(true));
-      }
+    const currentRoute = RouteService.getCurrentRoute();
+    const isChatRoute = currentRoute === '/' || currentRoute === '/index';
+    
+    if(isFirstLaunch && isChatRoute){
+      // Use the ExperienceService to show language input modal
+      // This will handle all the necessary checks internally
+      ExperienceService.showLanguageInputIfNeeded();
       
       // Create initial chat
       const newChatId = `chat-${Date.now()}`;

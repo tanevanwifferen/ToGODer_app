@@ -2,7 +2,8 @@ import { Modal, View, TextInput, Pressable, Text, StyleSheet } from 'react-nativ
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
-import { setModalVisible, setInputLanguage } from '../../redux/slices/experienceSlice';
+import { setModalVisible } from '../../redux/slices/experienceSlice';
+import { updateSettings } from '../../redux/slices/chatsSlice';
 
 interface LanguageInputModalProps {
   onSubmit: (language: string) => void;
@@ -33,7 +34,7 @@ export const LanguageInputModal = ({ onSubmit }: LanguageInputModalProps) => {
               style={styles.input}
               placeholder="Enter language"
               value={inputLanguage}
-              onChangeText={(text) => dispatch(setInputLanguage(text))}
+              onChangeText={(text) => dispatch(updateSettings({language: text.trim()}))}
               autoFocus
               onSubmitEditing={handleSubmit}
             />

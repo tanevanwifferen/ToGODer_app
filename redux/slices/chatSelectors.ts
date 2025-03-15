@@ -72,14 +72,14 @@ export const selectHumanPrompt = createSelector(
   (chats) => chats.humanPrompt
 );
 
-export const selectLanguage = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.language
-);
-
 export const selectAutoGenerateAnswer = createSelector(
   (state: { chats: ChatsState }) => state.chats,
   (chats) => chats.auto_generate_answer
+);
+
+export const selectLanguage = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.language
 );
 
 export const selectDraftInputText = createSelector(
