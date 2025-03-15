@@ -1,25 +1,52 @@
-import { Modal, View, TextInput, Pressable, Text, StyleSheet } from 'react-native';
+import { Modal, View, TextInput, Pressable, Text, StyleSheet, useColorScheme } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import { setModalVisible } from '../../redux/slices/experienceSlice';
 import { updateSettings } from '../../redux/slices/chatsSlice';
+import { useState, useEffect } from 'react';
+import { Colors } from '../../constants/Colors';
 
+/**
+ * Modal component for language input that maintains its own local state for text input
+ * to prevent re-renders from affecting modal visibility.
+ *
+ * This component uses local state for the input text while typing, rather than updating
+ * Redux on every keystroke. This prevents the modal from re-rendering and losing its
+ * visibility state when the user types. The Redux state is only updated when the form
+ * is submitted.
+ */
 interface LanguageInputModalProps {
   onSubmit: (language: string) => void;
 }
 
 export const LanguageInputModal = ({ onSubmit }: LanguageInputModalProps) => {
   const dispatch = useDispatch();
-  const { modalVisible, inputLanguage } = useSelector((state: RootState) => state.experience);
+  const modalVisible = useSelector((state: RootState) => state.experience.modalVisible);
+  const language = useSelector((state: RootState) => state.chats.language);
+  
+  // Use local state for the input text to prevent re-renders from Redux updates
+  const [localLanguage, setLocalLanguage] = useState('');
+  
+  // Initialize local state when modal becomes visible
+  useEffect(() => {
+    if (modalVisible) {
+      setLocalLanguage(language || '');
+    }
+  }, [modalVisible]);
 
   const handleSubmit = () => {
-    if (inputLanguage.trim()) {
-      onSubmit(inputLanguage);
+    if (localLanguage.trim()) {
+      // Only update Redux when submitting
+      onSubmit(localLanguage.trim());
       dispatch(setModalVisible(false));
     }
   };
 
+  // Get the current color scheme (light or dark)
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme || 'light'];
+  
   return (
     <Modal
       animationType="slide"
@@ -29,27 +56,41 @@ export const LanguageInputModal = ({ onSubmit }: LanguageInputModalProps) => {
     >
       <SafeAreaProvider>
         <SafeAreaView style={styles.centeredView}>
-          <View style={styles.modalView}>
+          <View style={[
+            styles.modalView,
+            { backgroundColor: colors.background }
+          ]}>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Language Settings
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  borderColor: colors.icon,
+                  color: colors.text,
+                  backgroundColor: colors.background
+                }
+              ]}
               placeholder="Enter language"
-              value={inputLanguage}
-              onChangeText={(text) => dispatch(updateSettings({language: text.trim()}))}
+              placeholderTextColor={colors.text + '80'} // 50% opacity
+              value={localLanguage}
+              onChangeText={setLocalLanguage}
               autoFocus
               onSubmitEditing={handleSubmit}
             />
             <View style={styles.buttonContainer}>
-              <Pressable 
-                style={[styles.button, styles.buttonSubmit]}
+              <Pressable
+                style={[styles.button, { backgroundColor: colors.tint }]}
                 onPress={handleSubmit}
               >
-                <Text style={styles.textStyle}>Submit</Text>
+                <Text style={styles.buttonText}>Submit</Text>
               </Pressable>
-              <Pressable 
-                style={[styles.button, styles.buttonCancel]}
+              <Pressable
+                style={[styles.button, { backgroundColor: colors.icon }]}
                 onPress={() => dispatch(setModalVisible(false))}
               >
-                <Text style={styles.textStyle}>Cancel</Text>
+                <Text style={styles.buttonText}>Cancel</Text>
               </Pressable>
             </View>
           </View>
@@ -68,7 +109,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -81,6 +121,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: '80%'
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
   input: {
     width: '100%',
@@ -101,13 +146,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
     marginHorizontal: 5
   },
-  buttonSubmit: {
-    backgroundColor: '#2196F3',
-  },
-  buttonCancel: {
-    backgroundColor: '#F194FF',
-  },
-  textStyle: {
+  buttonText: {
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
