@@ -14,11 +14,10 @@ import * as Calendar from 'expo-calendar';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';
 import { useRoute } from '../components/providers/RouteProvider';
-import { useExperienceContext } from '../components/providers/ExperienceProvider';
+import { ExperienceService } from '../services/ExperienceService';
 
 export function useInitialization() {
   const { isSharedRoute } = useRoute();
-  const { showLanguageInput } = useExperienceContext();
 
   useEffect(() => {
     const initialize = async () => {
@@ -42,9 +41,9 @@ export function useInitialization() {
       const isFirstLaunch = state.globalConfig.appFirstLaunch;
 
       if (isFirstLaunch) {
-        // Use the centralized showLanguageInput function
-        // It will handle all the necessary checks internally
-        showLanguageInput();
+        // Use the ExperienceService to show language input modal
+        // This will handle all the necessary checks internally
+        ExperienceService.showLanguageInputIfNeeded();
 
         // Create initial chat
         const newChatId = `chat-${Date.now()}`;
@@ -104,5 +103,5 @@ export function useInitialization() {
     };
 
     initialize();
-  }, [isSharedRoute, showLanguageInput]);
+  }, [isSharedRoute]);
 }
