@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, TextInput, useColorScheme } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { ChatSettings } from '../../model/ChatRequest';
-import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectLanguage, selectHolisticTherapist } from '../../redux/slices/chatSelectors';
+import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectHolisticTherapist, selectLanguage} from '../../redux/slices/chatSelectors';
 import { updateSettings } from '../../redux/slices/chatsSlice';
 import { Colors } from '../../constants/Colors';
 import CustomCheckbox from '../ui/CustomCheckbox';
@@ -15,8 +15,8 @@ const ConversationSettings = () => {
   const humanPrompt = useSelector(selectHumanPrompt) ?? false;
   const keepGoing = useSelector(selectKeepGoing) ?? false;
   const outsideBox = useSelector(selectOutsideBox) ?? false;
+  const language = useSelector(selectLanguage)
   const holisticTherapist = useSelector(selectHolisticTherapist) ?? false;
-  const language = useSelector(selectLanguage);
 
   const updateSettingsFn = (newSettings: Partial<ChatSettings>) => {
     console.log("updating settings", newSettings);
@@ -36,7 +36,7 @@ const ConversationSettings = () => {
             borderColor: theme.icon
           }]}
           value={language}
-          onChangeText={(value: string) => updateSettingsFn({ language: value })}
+          onChangeText={(value: string) => dispatch(updateSettings({language:value.trim()}))}
           placeholder="Enter language (e.g. English)"
           placeholderTextColor={theme.icon}
         />

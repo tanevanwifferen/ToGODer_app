@@ -10,11 +10,11 @@ import { AuthService } from '../services/AuthService';
 import { BalanceService } from '../services/BalanceService';
 import { setGlobalConfig } from '../redux/slices/globalConfigSlice';
 import { addChat, setCurrentChat } from '../redux/slices/chatsSlice';
-import { setModalVisible } from '../redux/slices/experienceSlice';
 import * as Calendar from 'expo-calendar';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';
 import { useRoute } from '../components/providers/RouteProvider';
+import { ExperienceService } from '../services/ExperienceService';
 
 export function useInitialization() {
   const { isSharedRoute } = useRoute();
@@ -41,10 +41,9 @@ export function useInitialization() {
       const isFirstLaunch = state.globalConfig.appFirstLaunch;
 
       if (isFirstLaunch) {
-        // Only show language input modal if we're not on a shared route
-        if (!isSharedRoute) {
-          store.dispatch(setModalVisible(true));
-        }
+        // Use the ExperienceService to show language input modal
+        // This will handle all the necessary checks internally
+        ExperienceService.showLanguageInputIfNeeded();
 
         // Create initial chat
         const newChatId = `chat-${Date.now()}`;

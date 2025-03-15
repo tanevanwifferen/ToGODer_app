@@ -51,10 +51,15 @@ export function Chat({ chatId, onBack }: ChatProps) {
     typing
   } = useMessages(chatId);
 
-  // Check language configuration when chat component mounts or becomes active
+  // Check language configuration when chat is loaded or changes
   useEffect(() => {
-    showLanguageInput();
-  }, [showLanguageInput]);
+    // Only check language configuration when we have a chat
+    if (chatId) {
+      // This will now use the centralized logic in useExperience.tsx
+      // which checks for chat route, language configuration, and shared route
+      showLanguageInput();
+    }
+  }, [showLanguageInput, chatId]);
 
   // Convert API messages to Gifted Chat messages
   const giftedMessages = useMemo(() => {
