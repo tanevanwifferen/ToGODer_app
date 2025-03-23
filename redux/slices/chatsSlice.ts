@@ -53,6 +53,7 @@ const chatsSlice = createSlice({
         ...message,
         timestamp: new Date().getTime()
       });
+      chat.messages.sort((x,y)=> (x.timestamp as number) - (y.timestamp as number));
       chat.last_update = new Date().getTime();
       state.auto_generate_answer = true;
     },
