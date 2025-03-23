@@ -23,6 +23,16 @@ export function ChatHeader({ title = 'Chat', onBack, messages }: ChatHeaderProps
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
   const { isAuthenticated } = useAuth();
+  const [showLoginHint, setShowLoginHint] = React.useState(false);
+
+  const handleSharePress = () => {
+    if (isAuthenticated) {
+      setIsModalVisible(true);
+    } else {
+      setShowLoginHint(true);
+      setTimeout(() => setShowLoginHint(false), 2000); // Hide after 2 seconds
+    }
+  };
 
   const {
     shareConversation,
@@ -73,20 +83,22 @@ export function ChatHeader({ title = 'Chat', onBack, messages }: ChatHeaderProps
         <View style={styles.titleContainer}>
           <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => isAuthenticated ? setIsModalVisible(true) : null}
-          style={[
-            styles.shareButton,
-            !isAuthenticated && { opacity: 0.5 }
-          ]}
-          accessibilityLabel={isAuthenticated ? "Share conversation" : "Login required to share"}
-          accessibilityHint={isAuthenticated ? "Opens share dialog" : "You must be logged in to share conversations"}
-        >
-          <Text style={[
-            styles.shareButtonText,
-            { color: theme.text }
-          ]}>Share</Text>
-        </TouchableOpacity>
+        <View style={styles.shareContainer}>
+          <TouchableOpacity
+            onPress={handleSharePress}
+            style={[
+              styles.shareButton,
+              !isAuthenticated && { opacity: 0.5 }
+            ]}
+          >
+            <Text style={[styles.shareButtonText, { color: theme.text }]}>Share</Text>
+          </TouchableOpacity>
+          {showLoginHint && !isAuthenticated && (
+            <Text style={[styles.loginHint, { color: theme.text, opacity: 0.7 }]}>
+              Login to share
+            </Text>
+          )}
+        </View>
       </View>
 
       <ShareModal
@@ -134,5 +146,14 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     fontSize: 16,
+  },
+  shareContainer: {
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  loginHint: {
+    fontSize: 10,
+    marginTop: 2,
+    textAlign: 'center',
   },
 });
