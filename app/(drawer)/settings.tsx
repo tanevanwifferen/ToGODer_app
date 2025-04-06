@@ -4,7 +4,6 @@ import { useColorScheme } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import ModelSettings from '../../components/settings/ModelSettings';
 import ConversationSettings from '../../components/settings/ConversationSettings';
-import BackgroundServiceSettings from '../../components/settings/BackgroundServiceSettings';
 
 const Settings = () => {
   const colorScheme = useColorScheme();
