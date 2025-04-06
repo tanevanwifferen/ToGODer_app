@@ -14,10 +14,10 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from '../redux/store';
 import { QueryProvider } from '../components/providers/QueryProvider';
 import { ExperienceProvider } from '../components/providers/ExperienceProvider';
-import { BackgroundFetchProvider } from '../components/providers/BackgroundFetchProvider';
 import { RouteProvider } from '../components/providers/RouteProvider';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { useInitialization } from '../hooks/useInitialization';
+import { useInitialize } from '@/hooks/useInitialize';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -37,6 +37,8 @@ export default function RootLayout() {
     Feather: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf"),
     AntDesign: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf"),
   });
+
+  const init = useInitialize();
 
   // Handle deep linking
   useEffect(() => {
@@ -94,7 +96,6 @@ export default function RootLayout() {
             <RouteProvider>
               <InitializationWrapper>
                 <ExperienceProvider>
-                  <BackgroundFetchProvider>
                     <GestureHandlerRootView style={styles.container}>
                     <Stack>
                       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
@@ -102,7 +103,6 @@ export default function RootLayout() {
                     </Stack>
                     <StatusBar style="auto" />
                     </GestureHandlerRootView>
-                  </BackgroundFetchProvider>
                 </ExperienceProvider>
               </InitializationWrapper>
             </RouteProvider>

@@ -8,12 +8,10 @@ import chatsReducer, { ChatsState } from './slices/chatsSlice';
 import authReducer, { AuthState } from './slices/authSlice';
 import experienceReducer from './slices/experienceSlice';
 import balanceReducer from './slices/balanceSlice';
-import backgroundServiceReducer from './slices/backgroundServiceSlice';
 import passcodeReducer from './slices/passcodeSlice';
 import personalReducer, { PersonalState } from './slices/personalSlice';
 import { personalDataMiddleware } from './middleware/personalDataMiddleware';
 import { GlobalConfig } from '../model/GlobalConfig';
-import { BackgroundServiceConfig } from '../model/BackgroundService';
 
 export interface RootState {
   globalConfig: GlobalConfig;
@@ -21,7 +19,6 @@ export interface RootState {
   auth: AuthState;
   experience: {
     modalVisible: boolean;
-    inputLanguage: string;
   };
   balance: {
     balance: number;
@@ -29,7 +26,6 @@ export interface RootState {
     isLoading: boolean;
     error: string | null;
   };
-  backgroundService: BackgroundServiceConfig;
   passcode: {
     passcode: string | null;
     isLocked: boolean;
@@ -43,7 +39,6 @@ const rootReducer = combineReducers({
   auth: authReducer,
   experience: experienceReducer,
   balance: balanceReducer,
-  backgroundService: backgroundServiceReducer,
   passcode: passcodeReducer,
   personal: personalReducer,
 });
@@ -51,7 +46,7 @@ const rootReducer = combineReducers({
 const persistConfig: PersistConfig<RootState> = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'backgroundService', 'passcode', 'personal'],
+  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'passcode', 'personal'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
