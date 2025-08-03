@@ -10,6 +10,7 @@ import experienceReducer from './slices/experienceSlice';
 import balanceReducer from './slices/balanceSlice';
 import passcodeReducer from './slices/passcodeSlice';
 import personalReducer, { PersonalState } from './slices/personalSlice';
+import systemPromptReducer, { SystemPromptState } from './slices/systemPromptSlice';
 import { personalDataMiddleware } from './middleware/personalDataMiddleware';
 import { GlobalConfig } from '../model/GlobalConfig';
 
@@ -31,6 +32,7 @@ export interface RootState {
     isLocked: boolean;
   };
   personal: PersonalState;
+  systemPrompt: SystemPromptState;
 }
 
 const rootReducer = combineReducers({
@@ -41,12 +43,13 @@ const rootReducer = combineReducers({
   balance: balanceReducer,
   passcode: passcodeReducer,
   personal: personalReducer,
+  systemPrompt: systemPromptReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'passcode', 'personal'],
+  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'passcode', 'personal', 'systemPrompt'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

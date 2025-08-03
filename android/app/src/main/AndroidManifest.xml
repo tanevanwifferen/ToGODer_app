@@ -26,12 +26,8 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="myapp"/>
-        <data android:scheme="com.anonymous.ToGODerapp"/>
-        <data android:scheme="exp+togoderapp"/>
-        <data android:scheme="com.vanWifferen.ToGODerapp"/>
-        <data android:scheme="exp+togoder"/>
         <data android:scheme="togoderapp"/>
+        <data android:scheme="exp+togoder"/>
       </intent-filter>
     </activity>
   </application>
