@@ -25,11 +25,14 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      ["@kingstinct/react-native-healthkit", {
-        "NSHealthShareUsageDescription": "Let ToGODer analyze your physical and mental health",
-        "NSHealthUpdateUsageDescription": "Not used, but I think the library supports it so I'm not sure how to disable this.",  
-        "background": true
-      }],
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Let ToGODer analyze your physical and mental health",
+          "NSHealthUpdateUsageDescription": "Not used, but I think the library supports it so I'm not sure how to disable this.",
+          "background": true
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -44,7 +47,10 @@
         "expo-build-properties",
         {
           "ios": {
-            "associatedDomains": ["applinks:dev.togoder.click", "applinks:chat.togoder.click"]
+            "associatedDomains": [
+              "applinks:dev.togoder.click",
+              "applinks:chat.togoder.click"
+            ]
           },
           "android": {
             "intentFilters": [
@@ -63,12 +69,17 @@
                     "pathPrefix": "/shared"
                   }
                 ],
-                "category": ["BROWSABLE", "DEFAULT"]
+                "category": [
+                  "BROWSABLE",
+                  "DEFAULT"
+                ]
               }
             ]
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

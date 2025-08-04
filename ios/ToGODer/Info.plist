@@ -54,7 +54,7 @@
     <key>NSCalendarsFullAccessUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your calendars</string>
     <key>NSCalendarsUsageDescription</key>
-    <string>Allow ToGODer to read your calendar and respond to events.</string>
+    <string>Allow $(PRODUCT_NAME) to access your calendars</string>
     <key>NSHealthShareUsageDescription</key>
     <string>Let ToGODer analyze your physical and mental health</string>
     <key>NSHealthUpdateUsageDescription</key>

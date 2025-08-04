@@ -22,6 +22,7 @@ export interface ChatSettings {
   communicationStyle: ChatRequestCommunicationStyle | undefined;
   assistant_name: string | undefined;
   language: string | undefined;
+  customSystemPrompt?: string;
 }
 
 export interface ChatRequest extends ChatSettings {

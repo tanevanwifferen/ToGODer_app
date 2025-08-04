@@ -1,6 +1,6 @@
 import { ApiClient } from './ApiClient';
 import { ChatRequestCommunicationStyle, ApiChatMessage } from '../model/ChatRequest';
-import { ChatResponse, TitleResponse, ExperienceResponse, UpdateMemoryResponse } from '../model/ChatResponse';
+import { ChatResponse, TitleResponse, ExperienceResponse, UpdateMemoryResponse, SystemPromptResponse } from '../model/ChatResponse';
 
 export class ChatApiClient {
   /**
@@ -42,8 +42,69 @@ export class ChatApiClient {
     assistant_name?: string | undefined,
     memoryIndex?: string[] | undefined,
     memories?: Record<string, string> | undefined,
+    customSystemPrompt?: string | undefined,
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>('/chat', {
+      model,
+      humanPrompt,
+      keepGoing,
+      outsideBox,
+      holisticTherapist,
+      communicationStyle,
+      prompts: messages,
+      configurableData,
+      staticData,
+      assistant_name,
+      memoryIndex,
+      memories,
+      customSystemPrompt,
+    });
+
+    return response;
+  }
+
+  static async getTitle(messages: ApiChatMessage[]): Promise<string> {
+    const response = await ApiClient.post<TitleResponse>('/title', {
+      content: messages
+    });
+
+    return response.content;
+  }
+
+  static async startExperience(
+    model: string,
+    language: string,
+    data?: Record<string, any>
+  ): Promise<string> {
+    const response = await ApiClient.post<ExperienceResponse>('/experience', {
+      model,
+      language,
+      data
+    });
+
+    return response.content;
+  }
+
+  /**
+   * Generates a personalized system prompt based on user data and memories.
+   * This method handles the memory request loop automatically by fetching required memories
+   * and re-sending the request until a system prompt is generated.
+   */
+  static async generateSystemPrompt(
+    model: string,
+    humanPrompt: boolean = true,
+    keepGoing: boolean = true,
+    outsideBox: boolean = true,
+    holisticTherapist: boolean = true,
+    communicationStyle: ChatRequestCommunicationStyle,
+    messages: ApiChatMessage[],
+    configurableData?: string,
+    staticData?: Record<string, any> | undefined,
+    assistant_name?: string | undefined,
+    memoryIndex?: string[] | undefined,
+    memories?: Record<string, string> | undefined,
+  ): Promise<SystemPromptResponse> {
+    const response = await ApiClient.post<SystemPromptResponse>('/generate-system-prompt', {
       model,
       humanPrompt,
       keepGoing,
@@ -59,27 +120,5 @@ export class ChatApiClient {
     });
 
     return response;
-  }
-
-  static async getTitle(messages: ApiChatMessage[]): Promise<string> {
-    const response = await ApiClient.post<TitleResponse>('/title', {
-      content: messages
-    });
-
-    return response.content;
-  }
-
-  static async startExperience(
-    model: string, 
-    language: string,
-    data?: Record<string, any>
-  ): Promise<string> {
-    const response = await ApiClient.post<ExperienceResponse>('/experience', {
-      model,
-      language,
-      data
-    });
-
-    return response.content;
   }
 }
