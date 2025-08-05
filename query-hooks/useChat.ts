@@ -240,14 +240,14 @@ export function useSystemPrompt() {
         } while (currentResponse.requestForMemory?.keys && currentResponse.requestForMemory.keys.length > 0);
 
         if (!currentResponse.systemPrompt) {
-          throw new Error("Failed to generate system prompt");
+          throw new Error(currentResponse.error ?? "Failed to generate system prompt");
         }
 
         setError(null);
         return currentResponse.systemPrompt;
-      } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error("Failed to generate system prompt");
+      } catch (err: any) {
+        const error = err instanceof Error ? err : new Error(err as string ?? "Failed to generate system prompt");
+        console.log(error);
         setError(error);
         throw error;
       } finally {
