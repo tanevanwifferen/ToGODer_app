@@ -41,7 +41,7 @@ export class ApiClient {
           } as RateLimitError);
         }
         console.error('API error:', error);
-        return Promise.reject((error as any).response?.data);
+        return Promise.reject((error as any)?.error ?? (error as any).response?.data);
       }
     );
   }
@@ -55,7 +55,7 @@ export class ApiClient {
     if (!!token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    var toreturn = {
+    const toreturn = {
       ...config,
       headers
     };
@@ -70,7 +70,7 @@ export class ApiClient {
     return response.data;
   }
 
-  static async post<T>(url: string, data: unknown = {}, config: AxiosRequestConfig = {}): Promise<T> {
+  static async post<T>(url: string, data: unknown = {}, config: AxiosRequestConfig = {}): Promise<T|Error> {
     if (!ApiClient.axiosInstance) {
       throw new Error('ApiClient not initialized');
     }
