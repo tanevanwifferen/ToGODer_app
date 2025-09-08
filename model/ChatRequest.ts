@@ -7,7 +7,7 @@ export enum ChatRequestCommunicationStyle {
 
 export interface ApiChatMessage {
   content: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   signature?: string;
   timestamp?: Date | number;
   updateData?: string;
@@ -23,6 +23,7 @@ export interface ChatSettings {
   assistant_name: string | undefined;
   language: string | undefined;
   customSystemPrompt?: string;
+  persona?: string;
 }
 
 export interface ChatRequest extends ChatSettings {

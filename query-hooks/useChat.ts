@@ -39,6 +39,7 @@ export function useChat() {
     (state: RootState) => state.chats.assistant_name
   );
   const customSystemPrompt = useSelector(selectCustomSystemPrompt);
+  const persona = useSelector((state: RootState) => state.personal.persona);
   let staticData: () => Promise<any> = async () => {
     let sd: any = {
       preferredLanguage,
@@ -85,8 +86,9 @@ export function useChat() {
       const memory_index = await StorageService.listKeys();
 
       // Check if the first message starts with /custom to use custom system prompt
-      const shouldUseCustomPrompt = messages.length > 0 &&
-        messages[0].content.startsWith('/custom') &&
+      const shouldUseCustomPrompt =
+        messages.length > 0 &&
+        messages[0].content.startsWith("/custom") &&
         customSystemPrompt;
 
       try {
@@ -110,7 +112,8 @@ export function useChat() {
           assistant_name,
           memory_index,
           memories,
-          shouldUseCustomPrompt ? customSystemPrompt : undefined
+          shouldUseCustomPrompt ? customSystemPrompt : undefined,
+          persona && persona.length > 0 ? persona : undefined
         );
 
         setError(null);
@@ -132,6 +135,7 @@ export function useChat() {
       communicationStyle,
       personalData,
       customSystemPrompt,
+      persona,
     ]
   );
 
@@ -139,7 +143,7 @@ export function useChat() {
     sendMessage,
     isLoading,
     error,
-    staticData
+    staticData,
   };
 }
 
@@ -185,9 +189,7 @@ export function useSystemPrompt() {
   };
 
   const generateSystemPrompt = useCallback(
-    async (
-      messages: ApiChatMessage[] = []
-    ): Promise<string> => {
+    async (messages: ApiChatMessage[] = []): Promise<string> => {
       setIsLoading(true);
       setError(null);
 
@@ -237,16 +239,22 @@ export function useSystemPrompt() {
               }
             }
           }
-        } while (currentResponse.requestForMemory?.keys && currentResponse.requestForMemory.keys.length > 0);
+        } while (
+          currentResponse.requestForMemory?.keys &&
+          currentResponse.requestForMemory.keys.length > 0
+        );
 
         if (!currentResponse.systemPrompt) {
-          throw new Error(currentResponse.error ?? "Failed to generate system prompt");
+          throw new Error("Failed to generate system prompt");
         }
 
         setError(null);
         return currentResponse.systemPrompt;
       } catch (err: any) {
-        const error = err instanceof Error ? err : new Error(err as string ?? "Failed to generate system prompt");
+        const error =
+          err instanceof Error
+            ? err
+            : new Error((err as string) ?? "Failed to generate system prompt");
         console.log(error);
         setError(error);
         throw error;

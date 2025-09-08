@@ -1,6 +1,15 @@
-import { ApiClient } from './ApiClient';
-import { ChatRequestCommunicationStyle, ApiChatMessage } from '../model/ChatRequest';
-import { ChatResponse, TitleResponse, ExperienceResponse, UpdateMemoryResponse, SystemPromptResponse } from '../model/ChatResponse';
+import { ApiClient } from "./ApiClient";
+import {
+  ChatRequestCommunicationStyle,
+  ApiChatMessage,
+} from "../model/ChatRequest";
+import {
+  ChatResponse,
+  TitleResponse,
+  ExperienceResponse,
+  UpdateMemoryResponse,
+  SystemPromptResponse,
+} from "../model/ChatResponse";
 
 export class ChatApiClient {
   /**
@@ -14,19 +23,25 @@ export class ChatApiClient {
     staticData?: Record<string, any> | undefined,
     assistant_name?: string | undefined,
     memoryIndex?: string[] | undefined,
-    memories?: Record<string, string> | undefined,
+    memories?: Record<string, string> | undefined
   ): Promise<UpdateMemoryResponse> {
-    const response = await ApiClient.post<UpdateMemoryResponse>('/chat/memory-update', {
-      model,
-      prompts: messages,
-      configurableData,
-      staticData,
-      assistant_name,
-      memoryIndex,
-      memories,
-    });
+    const response = await ApiClient.post<UpdateMemoryResponse>(
+      "/chat/memory-update",
+      {
+        model,
+        prompts: messages,
+        configurableData,
+        staticData,
+        assistant_name,
+        memoryIndex,
+        memories,
+      }
+    );
 
-    return response;
+    if (response instanceof Error) {
+      throw response;
+    }
+    return response as UpdateMemoryResponse;
   }
 
   static async sendMessage(
@@ -43,8 +58,9 @@ export class ChatApiClient {
     memoryIndex?: string[] | undefined,
     memories?: Record<string, string> | undefined,
     customSystemPrompt?: string | undefined,
+    persona?: string | undefined
   ): Promise<ChatResponse> {
-    const response = await ApiClient.post<ChatResponse>('/chat', {
+    const response = await ApiClient.post<ChatResponse>("/chat", {
       model,
       humanPrompt,
       keepGoing,
@@ -58,17 +74,24 @@ export class ChatApiClient {
       memoryIndex,
       memories,
       customSystemPrompt,
+      persona,
     });
 
-    return response;
+    if (response instanceof Error) {
+      throw response;
+    }
+    return response as ChatResponse;
   }
 
   static async getTitle(messages: ApiChatMessage[]): Promise<string> {
-    const response = await ApiClient.post<TitleResponse>('/title', {
-      content: messages
+    const response = await ApiClient.post<TitleResponse>("/title", {
+      content: messages,
     });
 
-    return response.content;
+    if (response instanceof Error) {
+      throw response;
+    }
+    return (response as TitleResponse).content;
   }
 
   static async startExperience(
@@ -76,13 +99,16 @@ export class ChatApiClient {
     language: string,
     data?: Record<string, any>
   ): Promise<string> {
-    const response = await ApiClient.post<ExperienceResponse>('/experience', {
+    const response = await ApiClient.post<ExperienceResponse>("/experience", {
       model,
       language,
-      data
+      data,
     });
 
-    return response.content;
+    if (response instanceof Error) {
+      throw response;
+    }
+    return (response as ExperienceResponse).content;
   }
 
   /**
@@ -102,23 +128,29 @@ export class ChatApiClient {
     staticData?: Record<string, any> | undefined,
     assistant_name?: string | undefined,
     memoryIndex?: string[] | undefined,
-    memories?: Record<string, string> | undefined,
+    memories?: Record<string, string> | undefined
   ): Promise<SystemPromptResponse> {
-    const response = await ApiClient.post<SystemPromptResponse>('/generate-system-prompt', {
-      model,
-      humanPrompt,
-      keepGoing,
-      outsideBox,
-      holisticTherapist,
-      communicationStyle,
-      prompts: messages,
-      configurableData,
-      staticData,
-      assistant_name,
-      memoryIndex,
-      memories,
-    });
+    const response = await ApiClient.post<SystemPromptResponse>(
+      "/generate-system-prompt",
+      {
+        model,
+        humanPrompt,
+        keepGoing,
+        outsideBox,
+        holisticTherapist,
+        communicationStyle,
+        prompts: messages,
+        configurableData,
+        staticData,
+        assistant_name,
+        memoryIndex,
+        memories,
+      }
+    );
 
-    return response;
+    if (response instanceof Error) {
+      throw response;
+    }
+    return response as SystemPromptResponse;
   }
 }
