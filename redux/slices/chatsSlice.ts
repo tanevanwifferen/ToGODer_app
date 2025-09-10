@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ApiChatMessage, ChatSettings } from '../../model/ChatRequest';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ApiChatMessage, ChatSettings } from "../../model/ChatRequest";
 
 export interface Chat {
   id: string;
@@ -21,43 +21,83 @@ export interface ChatsState extends ChatSettings {
 }
 
 const initialState: ChatsState = {
-    chats: {},
-    currentChatId: null,
-    model: 'meta-llama/llama-3.2-90b-vision-instruct',
-    humanPrompt: true,
-    keepGoing: true,
-    outsideBox: true,
-    holisticTherapist: true,
-    communicationStyle: 2,
-    assistant_name: "ToGODer",
-    language: '',
-    auto_generate_answer:true,
+  chats: {},
+  currentChatId: null,
+  model: "meta-llama/llama-3.2-90b-vision-instruct",
+  humanPrompt: true,
+  keepGoing: true,
+  outsideBox: true,
+  holisticTherapist: true,
+  communicationStyle: 2,
+  assistant_name: "ToGODer",
+  language: "",
+  auto_generate_answer: true,
 };
 
 const chatsSlice = createSlice({
-  name:"chats",
+  name: "chats",
   initialState,
   reducers: {
-    addChat: (state, action: PayloadAction<Omit<Chat, 'isRequest'> & { isRequest?: boolean }>) => {
+    addChat: (
+      state,
+      action: PayloadAction<Omit<Chat, "isRequest"> & { isRequest?: boolean }>
+    ) => {
       state.chats[action.payload.id] = {
         ...action.payload,
         isRequest: action.payload.isRequest ?? false,
-        last_update: new Date().getTime()
+        last_update: new Date().getTime(),
       };
     },
-    addMessage: (state, action: PayloadAction<{ id: string; message: ApiChatMessage }>) => {
+    addMessage: (
+      state,
+      action: PayloadAction<{ id: string; message: ApiChatMessage }>
+    ) => {
       const { id, message } = action.payload;
       const chat = state.chats[id];
       delete message.updateData;
       chat.messages.push({
         ...message,
-        timestamp: new Date().getTime()
+        timestamp: new Date().getTime(),
       });
-      chat.messages.sort((x,y)=> (x.timestamp as number) - (y.timestamp as number));
+      // Do not sort messages here; keep insertion order so streaming updates
+      // using messageIndex remain stable for the just-appended placeholder.
       chat.last_update = new Date().getTime();
       state.auto_generate_answer = true;
     },
-    deleteMessage: (state, action: PayloadAction<{ chatId: string; messageIndex: number }>) => {
+    // New: update message content/signature at a specific index (for streaming)
+    updateMessageAtIndex: (
+      state,
+      action: PayloadAction<{
+        chatId: string;
+        messageIndex: number;
+        content?: string;
+        signature?: string;
+      }>
+    ) => {
+      const { chatId, messageIndex, content, signature } = action.payload;
+      const chat = state.chats[chatId];
+      if (!chat) return;
+      if (messageIndex < 0 || messageIndex >= chat.messages.length) return;
+
+      // Important: produce a NEW array reference so useSelector(selectCurrentMessages)
+      // sees a changed value and components re-render (RN iOS was not updating).
+      const newMessages = chat.messages.map((m, i) =>
+        i === messageIndex
+          ? {
+              ...m,
+              content: content != null ? content : m.content,
+              signature: signature != null ? signature : (m as any).signature,
+            }
+          : m
+      );
+
+      chat.messages = newMessages;
+      chat.last_update = new Date().getTime();
+    },
+    deleteMessage: (
+      state,
+      action: PayloadAction<{ chatId: string; messageIndex: number }>
+    ) => {
       const { chatId, messageIndex } = action.payload;
       const chat = state.chats[chatId];
       if (chat && messageIndex >= 0 && messageIndex < chat.messages.length) {
@@ -65,10 +105,15 @@ const chatsSlice = createSlice({
       }
       state.auto_generate_answer = false;
     },
-    deleteMessageByContent: (state, action: PayloadAction<{ chatId: string; content: string }>) => {
+    deleteMessageByContent: (
+      state,
+      action: PayloadAction<{ chatId: string; content: string }>
+    ) => {
       const { chatId, content } = action.payload;
       const chat = state.chats[chatId];
-      const messageIndex = chat.messages.findIndex((message) => message.content === content);
+      const messageIndex = chat.messages.findIndex(
+        (message) => message.content === content
+      );
       if (chat && messageIndex >= 0) {
         chat.messages.splice(messageIndex, 1);
       }
@@ -80,10 +125,10 @@ const chatsSlice = createSlice({
         ...state,
         ...action.payload,
         chats: state.chats, // Preserve existing chats
-        currentChatId: state.currentChatId // Preserve current chat id
+        currentChatId: state.currentChatId, // Preserve current chat id
       };
     },
-    setTitle: (state, action: PayloadAction<{id: string, title: string}>) => {
+    setTitle: (state, action: PayloadAction<{ id: string; title: string }>) => {
       const chat = state.chats[action.payload.id];
       if (chat) {
         chat.title = action.payload.title;
@@ -102,37 +147,44 @@ const chatsSlice = createSlice({
       state.chats = {};
       state.currentChatId = null;
     },
-    addMemories: (state, action: PayloadAction<{id: string, memories: string[]}>) =>{
+    addMemories: (
+      state,
+      action: PayloadAction<{ id: string; memories: string[] }>
+    ) => {
       var existing = state.chats[action.payload.id].memories;
       console.log("existing", existing);
-      for(let memory of action.payload.memories){
-        if(existing.includes(memory)){
+      for (let memory of action.payload.memories) {
+        if (existing.includes(memory)) {
           continue;
         }
         console.log("adding", memory);
         existing.push(memory);
       }
     },
-    updateDraftInputText: (state, action: PayloadAction<{chatId: string; text: string}>) => {
+    updateDraftInputText: (
+      state,
+      action: PayloadAction<{ chatId: string; text: string }>
+    ) => {
       const { chatId, text } = action.payload;
       const chat = state.chats[chatId];
       if (chat) {
         chat.draftInputText = text;
       }
-    }
+    },
   },
 });
 
-export const { 
-  addChat, 
+export const {
+  addChat,
   addMessage,
+  updateMessageAtIndex,
   deleteMessage,
   deleteMessageByContent,
-  updateSettings, 
-  setTitle, 
+  updateSettings,
+  setTitle,
   deleteChat,
   setCurrentChat,
-  clearAllChats, 
+  clearAllChats,
   addMemories,
   updateDraftInputText,
 } = chatsSlice.actions;
