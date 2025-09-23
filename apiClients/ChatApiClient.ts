@@ -279,6 +279,8 @@ export class ChatApiClient {
         };
 
         const eventsQueue: StreamEvent[] = [];
+        // Track how much of xhr.responseText we've already consumed to avoid duplication
+        let lastIndex = 0;
 
         xhr.open("POST", streamUrl, true);
         xhr.setRequestHeader("Content-Type", "application/json");
@@ -293,7 +295,11 @@ export class ChatApiClient {
         xhr.onreadystatechange = () => {
           // readyState 3 => receiving, 4 => done
           if (xhr.readyState === 3 || xhr.readyState === 4) {
-            const chunk = xhr.responseText?.slice(buffer.length) ?? "";
+            const resp = xhr.responseText ?? "";
+            // Append only the new data since last callback
+            const chunk = resp.substring(lastIndex);
+            // Update lastIndex to the total received so far
+            lastIndex = resp.length;
             if (chunk) {
               buffer += chunk;
               for (const evt of parseBuffer()) {
