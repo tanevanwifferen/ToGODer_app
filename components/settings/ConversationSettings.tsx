@@ -6,6 +6,7 @@ import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectHolisticThe
 import { updateSettings } from '../../redux/slices/chatsSlice';
 import { Colors } from '../../constants/Colors';
 import CustomCheckbox from '../ui/CustomCheckbox';
+import { selectPersona, setPersona } from '../../redux/slices/personalSlice';
 
 const ConversationSettings = () => {
   const dispatch = useDispatch();
@@ -17,6 +18,7 @@ const ConversationSettings = () => {
   const outsideBox = useSelector(selectOutsideBox) ?? false;
   const language = useSelector(selectLanguage)
   const holisticTherapist = useSelector(selectHolisticTherapist) ?? false;
+  const persona = useSelector(selectPersona);
 
   const updateSettingsFn = (newSettings: Partial<ChatSettings>) => {
     console.log("updating settings", newSettings);
@@ -30,7 +32,7 @@ const ConversationSettings = () => {
       <View style={styles.inputSection}>
         <Text style={[styles.label, { color: theme.text }]}>Language</Text>
         <TextInput
-          style={[styles.input, { 
+          style={[styles.input, {
             backgroundColor: theme.background,
             color: theme.text,
             borderColor: theme.icon
@@ -40,6 +42,26 @@ const ConversationSettings = () => {
           placeholder="Enter language (e.g. English)"
           placeholderTextColor={theme.icon}
         />
+      </View>
+
+      <View style={styles.inputSection}>
+        <Text style={[styles.label, { color: theme.text }]}>Persona (used to personalize responses)</Text>
+        <TextInput
+          style={[styles.multilineInput, {
+            backgroundColor: theme.background,
+            color: theme.text,
+            borderColor: theme.icon
+          }]}
+          value={persona}
+          onChangeText={(value: string) => dispatch(setPersona(value))}
+          placeholder='e.g. I am a 28-year-old software engineer who prefers concise answers and Typescript code examples.'
+          placeholderTextColor={theme.icon}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+          maxLength={1000}
+        />
+        <Text style={[styles.charCount, { color: theme.icon }]}>{persona?.length ?? 0}/1000</Text>
       </View>
 
       <View style={styles.checkboxSection}>
@@ -115,6 +137,20 @@ const styles = StyleSheet.create({
     minHeight: 48,
     width: '100%',
     maxWidth: 400,
+  },
+  multilineInput: {
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 12,
+    fontSize: 14,
+    minHeight: 96,
+    width: '100%',
+    maxWidth: 600,
+  },
+  charCount: {
+    marginTop: 8,
+    fontSize: 12,
+    textAlign: 'right',
   },
 });
 

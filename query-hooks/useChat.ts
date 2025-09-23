@@ -4,7 +4,7 @@ import {
   ChatRequestCommunicationStyle,
 } from "../model/ChatRequest";
 import { useSelector } from "react-redux";
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback } from "react";
 import {
   selectModel,
   selectHumanPrompt,
@@ -22,6 +22,7 @@ import { Platform } from "react-native";
 import { HealthService } from "../services/health";
 import { RootState } from "../redux";
 import StorageService from "../services/StorageService";
+import type { StreamEvent } from "../apiClients/ChatApiClient";
 
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
@@ -39,6 +40,7 @@ export function useChat() {
     (state: RootState) => state.chats.assistant_name
   );
   const customSystemPrompt = useSelector(selectCustomSystemPrompt);
+  const persona = useSelector((state: RootState) => state.personal.persona);
   let staticData: () => Promise<any> = async () => {
     let sd: any = {
       preferredLanguage,
@@ -59,6 +61,55 @@ export function useChat() {
     return sd;
   };
 
+  const buildCommonPayload = useCallback(
+    async (
+      messages: ApiChatMessage[],
+      memory_keys: string[]
+    ): Promise<{
+      messagesWithDates: ApiChatMessage[];
+      configurableData: string;
+      memory_index: string[];
+      memories: Record<string, string>;
+      useCustomPrompt: boolean;
+    }> => {
+      const memories: Record<string, string> = {};
+      for (let key of memory_keys ?? []) {
+        if (!StorageService.keyIsValid(key)) continue;
+        const value = await StorageService.get(key);
+        if (value != null) memories[key] = value;
+      }
+
+      const configurableData =
+        typeof personalData == "string"
+          ? personalData
+          : JSON.stringify(personalData);
+
+      const memory_index = await StorageService.listKeys();
+
+      const useCustomPrompt =
+        messages.length > 0 &&
+        messages[0].content.startsWith("/custom") &&
+        !!customSystemPrompt;
+
+      const messagesWithDates = messages.map((message) => ({
+        ...message,
+        timestamp:
+          typeof message.timestamp == "number"
+            ? new Date(message.timestamp as number)
+            : message.timestamp,
+      }));
+
+      return {
+        messagesWithDates,
+        configurableData,
+        memory_index,
+        memories,
+        useCustomPrompt,
+      };
+    },
+    [personalData, customSystemPrompt]
+  );
+
   const sendMessage = useCallback(
     async (
       messages: ApiChatMessage[],
@@ -67,27 +118,13 @@ export function useChat() {
       setIsLoading(true);
       setError(null);
 
-      const memories: Record<string, string> = {};
-      for (let key of memory_keys ?? []) {
-        // always llm quirks
-        if (!StorageService.keyIsValid(key)) {
-          continue;
-        }
-        var value = await StorageService.get(key);
-        value != null && (memories[key] = value);
-      }
-
-      let configurableData =
-        typeof personalData == "string"
-          ? personalData
-          : JSON.stringify(personalData);
-
-      const memory_index = await StorageService.listKeys();
-
-      // Check if the first message starts with /custom to use custom system prompt
-      const shouldUseCustomPrompt = messages.length > 0 &&
-        messages[0].content.startsWith('/custom') &&
-        customSystemPrompt;
+      const {
+        messagesWithDates,
+        configurableData,
+        memory_index,
+        memories,
+        useCustomPrompt,
+      } = await buildCommonPayload(messages, memory_keys);
 
       try {
         const response = await ChatApiClient.sendMessage(
@@ -97,20 +134,16 @@ export function useChat() {
           outsideBox,
           holisticTherapist,
           communicationStyle ?? ChatRequestCommunicationStyle.Default,
-          messages.map((message) => ({
-            ...message,
-            timestamp:
-              typeof message.timestamp == "number"
-                ? new Date(message.timestamp as number)
-                : message.timestamp,
-          })),
-          // legacy of dev
+          messagesWithDates,
           configurableData,
           await staticData(),
           assistant_name,
           memory_index,
           memories,
-          shouldUseCustomPrompt ? customSystemPrompt : undefined
+          useCustomPrompt && customSystemPrompt
+            ? customSystemPrompt
+            : undefined,
+          persona && persona.length > 0 ? persona : undefined
         );
 
         setError(null);
@@ -132,14 +165,65 @@ export function useChat() {
       communicationStyle,
       personalData,
       customSystemPrompt,
+      persona,
+      buildCommonPayload,
+    ]
+  );
+
+  // Expose streaming generator for graceful migration
+  const sendMessageStream = useCallback(
+    async function* (
+      messages: ApiChatMessage[],
+      memory_keys: string[],
+      signal?: AbortSignal
+    ): AsyncGenerator<StreamEvent> {
+      const {
+        messagesWithDates,
+        configurableData,
+        memory_index,
+        memories,
+        useCustomPrompt,
+      } = await buildCommonPayload(messages, memory_keys);
+
+      for await (const evt of ChatApiClient.sendMessageStream(
+        model,
+        humanPrompt,
+        keepGoing,
+        outsideBox,
+        holisticTherapist,
+        communicationStyle ?? ChatRequestCommunicationStyle.Default,
+        messagesWithDates,
+        configurableData,
+        await staticData(),
+        assistant_name,
+        memory_index,
+        memories,
+        useCustomPrompt && customSystemPrompt ? customSystemPrompt : undefined,
+        persona && persona.length > 0 ? persona : undefined,
+        signal
+      )) {
+        yield evt;
+      }
+    },
+    [
+      model,
+      humanPrompt,
+      keepGoing,
+      outsideBox,
+      communicationStyle,
+      buildCommonPayload,
+      customSystemPrompt,
+      persona,
+      assistant_name,
     ]
   );
 
   return {
     sendMessage,
+    sendMessageStream,
     isLoading,
     error,
-    staticData
+    staticData,
   };
 }
 
@@ -185,9 +269,7 @@ export function useSystemPrompt() {
   };
 
   const generateSystemPrompt = useCallback(
-    async (
-      messages: ApiChatMessage[] = []
-    ): Promise<string> => {
+    async (messages: ApiChatMessage[] = []): Promise<string> => {
       setIsLoading(true);
       setError(null);
 
@@ -237,16 +319,22 @@ export function useSystemPrompt() {
               }
             }
           }
-        } while (currentResponse.requestForMemory?.keys && currentResponse.requestForMemory.keys.length > 0);
+        } while (
+          currentResponse.requestForMemory?.keys &&
+          currentResponse.requestForMemory.keys.length > 0
+        );
 
         if (!currentResponse.systemPrompt) {
-          throw new Error(currentResponse.error ?? "Failed to generate system prompt");
+          throw new Error("Failed to generate system prompt");
         }
 
         setError(null);
         return currentResponse.systemPrompt;
       } catch (err: any) {
-        const error = err instanceof Error ? err : new Error(err as string ?? "Failed to generate system prompt");
+        const error =
+          err instanceof Error
+            ? err
+            : new Error((err as string) ?? "Failed to generate system prompt");
         console.log(error);
         setError(error);
         throw error;
