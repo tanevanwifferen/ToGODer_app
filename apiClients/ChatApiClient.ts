@@ -281,6 +281,7 @@ export class ChatApiClient {
         const eventsQueue: StreamEvent[] = [];
         // Track how much of xhr.responseText we've already consumed to avoid duplication
         let lastIndex = 0;
+        let isDone = false;
 
         xhr.open("POST", streamUrl, true);
         xhr.setRequestHeader("Content-Type", "application/json");
@@ -304,6 +305,10 @@ export class ChatApiClient {
               buffer += chunk;
               for (const evt of parseBuffer()) {
                 eventsQueue.push(evt);
+                // Mark done if we receive done event
+                if (evt.type === "done") {
+                  isDone = true;
+                }
               }
             }
           }
@@ -325,9 +330,14 @@ export class ChatApiClient {
             // Final parse on completion
             for (const evt of parseBuffer()) {
               eventsQueue.push(evt);
+              if (evt.type === "done") {
+                isDone = true;
+              }
             }
             // Ensure a final done frame if not already emitted
-            eventsQueue.push({ type: "done", data: null });
+            if (!isDone) {
+              eventsQueue.push({ type: "done", data: null });
+            }
             cleanup();
             resolve();
           };
@@ -342,7 +352,7 @@ export class ChatApiClient {
             while (eventsQueue.length > 0) {
               const evt = eventsQueue.shift()!;
               yield evt;
-              if (evt.type === "done") {
+              if (evt.type === "done" || evt.type === "error") {
                 return;
               }
             }

@@ -54,10 +54,14 @@ const chatsSlice = createSlice({
     ) => {
       const { id, message } = action.payload;
       const chat = state.chats[id];
+      if (!chat) {
+        console.warn(`Chat ${id} not found when adding message`);
+        return;
+      }
       delete message.updateData;
       chat.messages.push({
         ...message,
-        timestamp: new Date().getTime(),
+        timestamp: message.timestamp || new Date().getTime(),
       });
       // Do not sort messages here; keep insertion order so streaming updates
       // using messageIndex remain stable for the just-appended placeholder.
@@ -76,8 +80,16 @@ const chatsSlice = createSlice({
     ) => {
       const { chatId, messageIndex, content, signature } = action.payload;
       const chat = state.chats[chatId];
-      if (!chat) return;
-      if (messageIndex < 0 || messageIndex >= chat.messages.length) return;
+      if (!chat) {
+        console.warn(`Chat ${chatId} not found when updating message`);
+        return;
+      }
+      if (messageIndex < 0 || messageIndex >= chat.messages.length) {
+        console.warn(
+          `Invalid message index ${messageIndex} for chat ${chatId}`
+        );
+        return;
+      }
 
       // Important: produce a NEW array reference so useSelector(selectCurrentMessages)
       // sees a changed value and components re-render (RN iOS was not updating).
@@ -85,14 +97,17 @@ const chatsSlice = createSlice({
         i === messageIndex
           ? {
               ...m,
-              content: content != null ? content : m.content,
-              signature: signature != null ? signature : (m as any).signature,
+              content: content !== undefined ? content : m.content,
+              signature:
+                signature !== undefined ? signature : (m as any).signature,
+              timestamp: m.timestamp || new Date().getTime(),
             }
           : m
       );
 
       chat.messages = newMessages;
       chat.last_update = new Date().getTime();
+      // Don't change auto_generate_answer when updating message content
     },
     deleteMessage: (
       state,
@@ -100,8 +115,14 @@ const chatsSlice = createSlice({
     ) => {
       const { chatId, messageIndex } = action.payload;
       const chat = state.chats[chatId];
-      if (chat && messageIndex >= 0 && messageIndex < chat.messages.length) {
-        chat.messages.splice(messageIndex, 1);
+      if (!chat) {
+        console.warn(`Chat ${chatId} not found when deleting message`);
+        return;
+      }
+      if (messageIndex >= 0 && messageIndex < chat.messages.length) {
+        // Create new array to trigger re-render
+        chat.messages = chat.messages.filter((_, i) => i !== messageIndex);
+        chat.last_update = new Date().getTime();
       }
       state.auto_generate_answer = false;
     },
