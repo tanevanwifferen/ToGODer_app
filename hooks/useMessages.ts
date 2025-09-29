@@ -83,17 +83,9 @@ export const useMessages = (chatId: string) => {
     // Track whether we actually received any streaming data (chunk/signature/memory_request)
     // If not, we will fallback to non-streaming.
     let gotStreamData = false;
+    let placeholderCreated = false;
 
-    // Create a placeholder assistant message to update incrementally
-    const preLength = messages?.length ?? 0;
-    dispatch(
-      addMessage({
-        id: chatId,
-        message: { role: "assistant", content: "" } as ApiChatMessage,
-      })
-    );
-    // The placeholder is appended at the end; record its index deterministically
-    assistantIndex = preLength;
+    // Don't create placeholder yet - wait to see if streaming works
 
     try {
       if (sendMessageStream) {
@@ -108,6 +100,21 @@ export const useMessages = (chatId: string) => {
           }
           switch (evt.type) {
             case "chunk": {
+              // Create placeholder on first chunk
+              if (!placeholderCreated) {
+                const preLength = messages?.length ?? 0;
+                dispatch(
+                  addMessage({
+                    id: chatId,
+                    message: {
+                      role: "assistant",
+                      content: "",
+                    } as ApiChatMessage,
+                  })
+                );
+                assistantIndex = preLength;
+                placeholderCreated = true;
+              }
               usedStreaming = true;
               // Handle both string payloads and { delta: string } objects
               const ed: any = (evt as any).data;
@@ -123,9 +130,8 @@ export const useMessages = (chatId: string) => {
               break;
             }
             case "memory_request": {
-              // Remove the placeholder assistant message to avoid an empty bubble,
-              // add requested memories, then immediately retry sending.
-              if (assistantIndex >= 0) {
+              // Only remove placeholder if it was created
+              if (placeholderCreated && assistantIndex >= 0) {
                 dispatch(
                   deleteMessage({
                     chatId,
@@ -152,13 +158,15 @@ export const useMessages = (chatId: string) => {
             }
             case "signature": {
               // apply signature when available (content may still be updating)
-              dispatch(
-                updateMessageAtIndex({
-                  chatId,
-                  messageIndex: assistantIndex,
-                  signature: evt.data,
-                })
-              );
+              if (placeholderCreated && assistantIndex >= 0) {
+                dispatch(
+                  updateMessageAtIndex({
+                    chatId,
+                    messageIndex: assistantIndex,
+                    signature: evt.data,
+                  })
+                );
+              }
               break;
             }
             case "error": {
@@ -201,8 +209,8 @@ export const useMessages = (chatId: string) => {
         const response = await sendMessage(messages, chat.memories);
 
         if ("requestForMemory" in response) {
-          // Non-streaming memory request: remove placeholder and retry after adding memories
-          if (assistantIndex >= 0) {
+          // Non-streaming memory request: remove placeholder if created
+          if (placeholderCreated && assistantIndex >= 0) {
             dispatch(
               deleteMessage({
                 chatId,
@@ -233,8 +241,8 @@ export const useMessages = (chatId: string) => {
         // capture for memory update
         accumulated = apiAssistantMessage.content ?? "";
 
-        if (assistantIndex >= 0) {
-          // Update placeholder
+        if (placeholderCreated && assistantIndex >= 0) {
+          // Update existing placeholder
           dispatch(
             updateMessageAtIndex({
               chatId,
@@ -244,7 +252,7 @@ export const useMessages = (chatId: string) => {
             })
           );
         } else {
-          // Add new assistant message if no placeholder
+          // Add new assistant message since no placeholder was created
           dispatch(addMessage({ id: chatId, message: apiAssistantMessage }));
         }
       } catch (err) {
