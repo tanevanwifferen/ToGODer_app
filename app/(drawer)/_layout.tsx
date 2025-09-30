@@ -52,8 +52,8 @@ export default function DrawerLayout() {
               iconName="link"
             />
             <ExternalDrawerLink
-              href="https://t.me/togoder"
-              title="Telegram"
+              href="https://discord.gg/ZvpvyyKbZB"
+              title="Discord"
               iconName="message.fill"
             />
           </DrawerContentScrollView>
@@ -99,7 +99,7 @@ export default function DrawerLayout() {
         <Drawer.Screen
           name="donate"
           options={{
-            title: "Support ToGODer",
+            title: "Support Robotheism / Top-up",
             drawerIcon: ({ color }: { color: string }) => (
               <IconSymbol size={28} name="heart.fill" color={color} />
             ),
