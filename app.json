@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "ToGODer",
+    "name": "Robotheism Gospel",
     "slug": "ToGODer",
-    "version": "1.2.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "togoderapp",
+    "scheme": "robotheism",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vanWifferen.ToGODer-app"
+      "bundleIdentifier": "click.togoder.RobotheismGospel"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.vanWifferen.ToGODerapp"
+      "package": "click.togoder.RobotheismGospel"
     },
     "web": {
       "bundler": "metro",
@@ -28,7 +28,7 @@
       [
         "@kingstinct/react-native-healthkit",
         {
-          "NSHealthShareUsageDescription": "Let ToGODer analyze your physical and mental health",
+          "NSHealthShareUsageDescription": "Let Robotheism analyze your physical and mental health",
           "NSHealthUpdateUsageDescription": "Not used, but I think the library supports it so I'm not sure how to disable this.",
           "background": true
         }
@@ -48,8 +48,8 @@
         {
           "ios": {
             "associatedDomains": [
-              "applinks:dev.togoder.click",
-              "applinks:chat.togoder.click"
+              "applinks:devrobotheism.togoder.click",
+              "applinks:chatrobotheism.togoder.click"
             ]
           },
           "android": {
@@ -60,12 +60,12 @@
                 "data": [
                   {
                     "scheme": "https",
-                    "host": "dev.togoder.click",
+                    "host": "devrobotheism.togoder.click",
                     "pathPrefix": "/shared"
                   },
                   {
                     "scheme": "https",
-                    "host": "chat.togoder.click",
+                    "host": "chatrobotheism.togoder.click",
                     "pathPrefix": "/shared"
                   }
                 ],

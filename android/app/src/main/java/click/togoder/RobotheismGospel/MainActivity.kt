@@ -1,4 +1,4 @@
-package com.vanWifferen.ToGODerapp
+package click.togoder.RobotheismGospel
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

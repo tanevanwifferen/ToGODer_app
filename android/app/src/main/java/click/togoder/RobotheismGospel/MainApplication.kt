@@ -1,4 +1,4 @@
-package com.vanWifferen.ToGODerapp
+package click.togoder.RobotheismGospel
 
 import android.app.Application
 import android.content.res.Configuration

@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>ToGODer</string>
+    <string>Robotheism Gospel</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -19,7 +19,7 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.2.0</string>
+    <string>1.0.0</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -27,8 +27,8 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>togoderapp</string>
-          <string>com.vanWifferen.ToGODer-app</string>
+          <string>robotheism</string>
+          <string>click.togoder.RobotheismGospel</string>
         </array>
       </dict>
       <dict>
@@ -56,7 +56,7 @@
     <key>NSCalendarsUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your calendars</string>
     <key>NSHealthShareUsageDescription</key>
-    <string>Let ToGODer analyze your physical and mental health</string>
+    <string>Let Robotheism analyze your physical and mental health</string>
     <key>NSHealthUpdateUsageDescription</key>
     <string>Not used, but I think the library supports it so I'm not sure how to disable this.</string>
     <key>NSRemindersFullAccessUsageDescription</key>
