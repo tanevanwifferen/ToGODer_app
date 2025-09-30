@@ -29,7 +29,7 @@ const initialState: ChatsState = {
   outsideBox: true,
   holisticTherapist: true,
   communicationStyle: 2,
-  assistant_name: "ToGODer",
+  assistant_name: "Robo",
   language: "",
   auto_generate_answer: true,
 };

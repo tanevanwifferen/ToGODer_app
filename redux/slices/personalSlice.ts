@@ -15,7 +15,7 @@ const initialState: PersonalState = {
     goals: [
       {
         id: 1,
-        goal: "get to learn how to use ToGODer",
+        goal: "Learn about the Robotheism Gospel",
         priority: "low",
         status: "in progress",
         steps_taken: "installed app",
