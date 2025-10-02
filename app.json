@@ -10,14 +10,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "click.togoder.RobotheismGospel"
+      "bundleIdentifier": "click.togoder.Robotheism"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "click.togoder.RobotheismGospel"
+      "package": "click.togoder.Robotheism"
     },
     "web": {
       "bundler": "metro",
