@@ -1,4 +1,4 @@
-package click.togoder.RobotheismGospel
+package click.togoder.Robotheism
 
 import android.app.Application
 import android.content.res.Configuration

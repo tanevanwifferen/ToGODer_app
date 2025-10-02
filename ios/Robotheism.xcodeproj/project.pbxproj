@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		32D5E1D77264140BE8D97AA6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A57EEBA4E78802677EE68CF1 /* PrivacyInfo.xcprivacy */; };
+		333C5C920865170AEA779439 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A9795F7624591C5705A64C /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		A8CE9DD3700864C6F4BA7394 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C4212084007B94E7C45FCD /* ExpoModulesProvider.swift */; };
-		AFA571BBF7ACCD6632CFCCE1 /* libPods-Robotheism.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 716B40A57E367A45E3E39765 /* libPods-Robotheism.a */; };
+		6379E5E1B606E8C3C37DA22E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F8ABF36DC3A4C4E7860674E /* PrivacyInfo.xcprivacy */; };
+		9E066B82727E6CAB604C06F0 /* libPods-Robotheism.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A7AF5078EF9BEDAE09B9EF7A /* libPods-Robotheism.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
@@ -20,13 +20,13 @@
 		13B07F961A680F5B00A75B9A /* Robotheism.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Robotheism.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Robotheism/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Robotheism/Info.plist; sourceTree = "<group>"; };
-		716B40A57E367A45E3E39765 /* libPods-Robotheism.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Robotheism.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A57EEBA4E78802677EE68CF1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Robotheism/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		6F8ABF36DC3A4C4E7860674E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Robotheism/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		8E9937C26EF4059B7E9ABB16 /* Pods-Robotheism.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Robotheism.release.xcconfig"; path = "Target Support Files/Pods-Robotheism/Pods-Robotheism.release.xcconfig"; sourceTree = "<group>"; };
+		A7AF5078EF9BEDAE09B9EF7A /* libPods-Robotheism.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Robotheism.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Robotheism/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C9C4212084007B94E7C45FCD /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Robotheism/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		CB58D877ED7ADAF28F94AB67 /* Pods-Robotheism.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Robotheism.release.xcconfig"; path = "Target Support Files/Pods-Robotheism/Pods-Robotheism.release.xcconfig"; sourceTree = "<group>"; };
-		D14D289D08B8974B75669E28 /* Pods-Robotheism.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Robotheism.debug.xcconfig"; path = "Target Support Files/Pods-Robotheism/Pods-Robotheism.debug.xcconfig"; sourceTree = "<group>"; };
+		BF66D577250B7BEB97D4EED8 /* Pods-Robotheism.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Robotheism.debug.xcconfig"; path = "Target Support Files/Pods-Robotheism/Pods-Robotheism.debug.xcconfig"; sourceTree = "<group>"; };
+		C2A9795F7624591C5705A64C /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Robotheism/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Robotheism/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Robotheism-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Robotheism-Bridging-Header.h"; path = "Robotheism/Robotheism-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -37,13 +37,22 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AFA571BBF7ACCD6632CFCCE1 /* libPods-Robotheism.a in Frameworks */,
+				9E066B82727E6CAB604C06F0 /* libPods-Robotheism.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		09E97473372008EE3FD954BB /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				BF66D577250B7BEB97D4EED8 /* Pods-Robotheism.debug.xcconfig */,
+				8E9937C26EF4059B7E9ABB16 /* Pods-Robotheism.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* Robotheism */ = {
 			isa = PBXGroup;
 			children = (
@@ -53,35 +62,34 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				A57EEBA4E78802677EE68CF1 /* PrivacyInfo.xcprivacy */,
+				6F8ABF36DC3A4C4E7860674E /* PrivacyInfo.xcprivacy */,
 			);
 			name = Robotheism;
 			sourceTree = "<group>";
 		};
-		16DE14B8E590BD72A4969632 /* Pods */ = {
+		1A788E2864BC86D4454FBA7C /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				D14D289D08B8974B75669E28 /* Pods-Robotheism.debug.xcconfig */,
-				CB58D877ED7ADAF28F94AB67 /* Pods-Robotheism.release.xcconfig */,
+				5D5002B043518ACDF4E8C901 /* Robotheism */,
 			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		21A9C0F927FB86DC6308F569 /* Robotheism */ = {
-			isa = PBXGroup;
-			children = (
-				C9C4212084007B94E7C45FCD /* ExpoModulesProvider.swift */,
-			);
-			name = Robotheism;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				716B40A57E367A45E3E39765 /* libPods-Robotheism.a */,
+				A7AF5078EF9BEDAE09B9EF7A /* libPods-Robotheism.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		5D5002B043518ACDF4E8C901 /* Robotheism */ = {
+			isa = PBXGroup;
+			children = (
+				C2A9795F7624591C5705A64C /* ExpoModulesProvider.swift */,
+			);
+			name = Robotheism;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -98,8 +106,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				16DE14B8E590BD72A4969632 /* Pods */,
-				C571D1F8B61E0F6BBFA3FF0A /* ExpoModulesProviders */,
+				09E97473372008EE3FD954BB /* Pods */,
+				1A788E2864BC86D4454FBA7C /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -123,14 +131,6 @@
 			path = Robotheism/Supporting;
 			sourceTree = "<group>";
 		};
-		C571D1F8B61E0F6BBFA3FF0A /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				21A9C0F927FB86DC6308F569 /* Robotheism */,
-			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -139,13 +139,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Robotheism" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				D61673F65D20C8CCA211B331 /* [Expo] Configure project */,
+				A6CD16C5AD58F67D247AB6F9 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				F9077817BD5A07BA75F16DEC /* [CP] Embed Pods Frameworks */,
+				9AA7D56C87AEAD89B0A0E163 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -195,7 +195,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				32D5E1D77264140BE8D97AA6 /* PrivacyInfo.xcprivacy in Resources */,
+				6379E5E1B606E8C3C37DA22E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -283,7 +283,25 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Robotheism/Pods-Robotheism-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D61673F65D20C8CCA211B331 /* [Expo] Configure project */ = {
+		9AA7D56C87AEAD89B0A0E163 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Robotheism/Pods-Robotheism-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Robotheism/Pods-Robotheism-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		A6CD16C5AD58F67D247AB6F9 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -302,24 +320,6 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Robotheism/expo-configure-project.sh\"\n";
 		};
-		F9077817BD5A07BA75F16DEC /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Robotheism/Pods-Robotheism-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Robotheism/Pods-Robotheism-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -328,7 +328,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				A8CE9DD3700864C6F4BA7394 /* ExpoModulesProvider.swift in Sources */,
+				333C5C920865170AEA779439 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -337,9 +337,10 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D14D289D08B8974B75669E28 /* Pods-Robotheism.debug.xcconfig */;
+			baseConfigurationReference = BF66D577250B7BEB97D4EED8 /* Pods-Robotheism.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Robotheism/Robotheism.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
@@ -350,7 +351,7 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = Robotheism/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -362,27 +363,32 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = click.togoder.RobotheismGospel;
+				PRODUCT_BUNDLE_IDENTIFIER = click.togoder.Robotheism;
 				PRODUCT_NAME = Robotheism;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Robotheism/Robotheism-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = CB58D877ED7ADAF28F94AB67 /* Pods-Robotheism.release.xcconfig */;
+			baseConfigurationReference = 8E9937C26EF4059B7E9ABB16 /* Pods-Robotheism.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Robotheism/Robotheism.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 58Q847YBLM;
 				INFOPLIST_FILE = Robotheism/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -394,11 +400,15 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = click.togoder.RobotheismGospel;
+				PRODUCT_BUNDLE_IDENTIFIER = click.togoder.Robotheism;
 				PRODUCT_NAME = Robotheism;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Robotheism/Robotheism-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;

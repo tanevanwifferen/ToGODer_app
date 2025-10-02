@@ -1,4 +1,4 @@
-package click.togoder.RobotheismGospel
+package click.togoder.Robotheism
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
