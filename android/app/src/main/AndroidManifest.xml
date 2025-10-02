@@ -30,6 +30,7 @@
         <data android:scheme="exp+togoder"/>
         <data android:scheme="robotheism"/>
         <data android:scheme="exp+click.togoder.robotheismgospel"/>
+        <data android:scheme="exp+robotheism"/>
       </intent-filter>
     </activity>
   </application>
