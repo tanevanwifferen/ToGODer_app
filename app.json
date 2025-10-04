@@ -83,6 +83,10 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "https://chat.togoder.click/api",
+      "shareUrl": "https://chat.togoder.click/shared"
     }
   }
 }
