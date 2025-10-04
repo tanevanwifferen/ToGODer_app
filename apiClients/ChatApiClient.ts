@@ -11,6 +11,7 @@ import {
   SystemPromptResponse,
 } from "../model/ChatResponse";
 import { store } from "../redux";
+import { getApiUrl } from "../constants/Env";
 
 export type StreamEvent =
   | { type: "chunk"; data: string }
@@ -112,8 +113,10 @@ export class ChatApiClient {
     persona?: string | undefined,
     signal?: AbortSignal
   ): AsyncGenerator<StreamEvent> {
-    const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+    const baseUrl = getApiUrl();
     if (!baseUrl) {
+      // getApiUrl() already provides sensible web fallbacks (origin + '/api')
+      // If still empty, fail fast so configuration issues are visible
       throw new Error("Missing API base URL");
     }
     // Auth
