@@ -2,7 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
-import Constants from 'expo-constants';
+import { getShareUrl } from '@/constants/Env';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -63,8 +63,8 @@ export default function RootLayout() {
   const handleDeepLink = (url: string) => {
     const { hostname, path } = Linking.parse(url);
     
-    // Get hostname from EXPO_PUBLIC_SHARE_URL
-    const shareUrl = process.env.EXPO_PUBLIC_SHARE_URL;
+    // Get hostname from config (app.json -> expo.extra.shareUrl)
+    const shareUrl = getShareUrl();
     const validHostname = shareUrl ? new URL(shareUrl).hostname : null;
     
     // Check if it's a shared chat URL from either the app scheme or web URL
