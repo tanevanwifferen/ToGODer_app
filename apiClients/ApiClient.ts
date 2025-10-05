@@ -1,29 +1,30 @@
-import { store } from '@/redux';
-import axios from 'axios';
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { Platform } from 'react-native';
+import { store } from "@/redux";
+import axios from "axios";
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { Platform } from "react-native";
+import { getApiUrl } from "@/constants/Env";
 
 export interface AuthStore {
   token: string | null;
 }
 
 export interface RateLimitError {
-  type: 'RateLimit';
+  type: "RateLimit";
   waitTime: number;
   minutes: number;
   seconds: number;
 }
 
 export class ApiClient {
-  private static get_base_url(){
-    return process.env.EXPO_PUBLIC_API_URL;
+  private static get_base_url() {
+    return getApiUrl();
   }
   private static axiosInstance: AxiosInstance = axios.create({
-      baseURL: this.get_base_url(),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    baseURL: this.get_base_url(),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   static initialize(): void {
     // Response interceptor for handling common errors
@@ -31,66 +32,96 @@ export class ApiClient {
       (response: AxiosResponse) => response,
       (error: unknown) => {
         if (axios.isAxiosError(error) && error.response?.status === 429) {
-          const retryAfter = error.response.headers['retry-after'];
+          const retryAfter = error.response.headers["retry-after"];
           const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : 60000;
           return Promise.reject({
-            type: 'RateLimit',
+            type: "RateLimit",
             waitTime,
             minutes: Math.floor(waitTime / 60000),
             seconds: Math.floor((waitTime % 60000) / 1000),
           } as RateLimitError);
         }
-        console.error('API error:', error);
-        return Promise.reject((error as any)?.error ?? (error as any).response?.data);
+        console.error("API error:", error);
+        return Promise.reject(
+          (error as any)?.error ?? (error as any).response?.data
+        );
       }
     );
   }
 
   static extendConfig(config: AxiosRequestConfig): AxiosRequestConfig {
     const token = store.getState().auth.token;
-    const headers : any = {
+    const headers: any = {
       ...config.headers,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
     if (!!token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
     const toreturn = {
       ...config,
-      headers
+      headers,
     };
     return toreturn;
   }
 
-  static async get<T>(url: string, config: AxiosRequestConfig = {}): Promise<T> {
+  static async get<T>(
+    url: string,
+    config: AxiosRequestConfig = {}
+  ): Promise<T> {
     if (!ApiClient.axiosInstance) {
-      throw new Error('ApiClient not initialized');
+      throw new Error("ApiClient not initialized");
     }
-    const response = await ApiClient.axiosInstance.get<T>(url, ApiClient.extendConfig(config));
+    const response = await ApiClient.axiosInstance.get<T>(
+      url,
+      ApiClient.extendConfig(config)
+    );
     return response.data;
   }
 
-  static async post<T>(url: string, data: unknown = {}, config: AxiosRequestConfig = {}): Promise<T|Error> {
+  static async post<T>(
+    url: string,
+    data: unknown = {},
+    config: AxiosRequestConfig = {}
+  ): Promise<T | Error> {
     if (!ApiClient.axiosInstance) {
-      throw new Error('ApiClient not initialized');
+      throw new Error("ApiClient not initialized");
     }
-    const response = await ApiClient.axiosInstance.post<T>(url, data, ApiClient.extendConfig(config));
+    const response = await ApiClient.axiosInstance.post<T>(
+      url,
+      data,
+      ApiClient.extendConfig(config)
+    );
     return response.data;
   }
 
-  static async put<T>(url: string, data: unknown = {}, config: AxiosRequestConfig = {}): Promise<T> {
+  static async put<T>(
+    url: string,
+    data: unknown = {},
+    config: AxiosRequestConfig = {}
+  ): Promise<T> {
     if (!ApiClient.axiosInstance) {
-      throw new Error('ApiClient not initialized');
+      throw new Error("ApiClient not initialized");
     }
-    const response = await ApiClient.axiosInstance.put<T>(url, data, ApiClient.extendConfig(config));
+    const response = await ApiClient.axiosInstance.put<T>(
+      url,
+      data,
+      ApiClient.extendConfig(config)
+    );
     return response.data;
   }
 
-  static async delete<T>(url: string, config: AxiosRequestConfig = {}): Promise<T> {
+  static async delete<T>(
+    url: string,
+    config: AxiosRequestConfig = {}
+  ): Promise<T> {
     if (!ApiClient.axiosInstance) {
-      throw new Error('ApiClient not initialized');
+      throw new Error("ApiClient not initialized");
     }
-    const response = await ApiClient.axiosInstance.delete<T>(url, ApiClient.extendConfig(config));
+    const response = await ApiClient.axiosInstance.delete<T>(
+      url,
+      ApiClient.extendConfig(config)
+    );
     return response.data;
   }
 }

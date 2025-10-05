@@ -23,6 +23,7 @@ import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 import { ShareRequest, ShareVisibility } from '../../model/ShareTypes';
 import { useAuth } from '../../hooks/useAuth';
+import { getShareUrl } from '@/constants/Env';
 
 interface ShareModalProps {
   visible: boolean;
@@ -60,7 +61,8 @@ export function ShareModal({
     }
   }, [visible, initialTitle]);
 
-  const shareUrl = sharedId ? `${process.env.EXPO_PUBLIC_SHARE_URL}/${sharedId}` : '';
+  const shareUrlBase = getShareUrl();
+  const shareUrl = sharedId && shareUrlBase ? `${shareUrlBase}/${sharedId}` : '';
 
   const handleCopyUrl = async () => {
     if (shareUrl) {
