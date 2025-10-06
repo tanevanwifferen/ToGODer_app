@@ -52,6 +52,7 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ isAuthenticated 
       <ThemedText style={[styles.balanceValue, { color: colors.tint }]}>
         {Number(globalBalance).toFixed(2)}$
       </ThemedText>
+      <br />
       <ThemedText style={styles.balanceLabel}>Balance:</ThemedText>
       <ThemedText style={[styles.balanceValue, { color: colors.tint }]}>
         {Number(balance).toFixed(2)}$
