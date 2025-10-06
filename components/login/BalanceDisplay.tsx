@@ -45,6 +45,7 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ isAuthenticated 
   }
 
   return (
+    <>
     <ThemedView style={[styles.balanceContainer, { 
       backgroundColor: colorScheme === 'dark' ? 'rgba(155, 161, 166, 0.1)' : '#f5f5f5'
     }]}>
@@ -52,12 +53,16 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ isAuthenticated 
       <ThemedText style={[styles.balanceValue, { color: colors.tint }]}>
         {Number(globalBalance).toFixed(2)}$
       </ThemedText>
-      <br />
+    </ThemedView>
+    <ThemedView style={[styles.balanceContainer, { 
+      backgroundColor: colorScheme === 'dark' ? 'rgba(155, 161, 166, 0.1)' : '#f5f5f5'
+    }]}>
       <ThemedText style={styles.balanceLabel}>Balance:</ThemedText>
       <ThemedText style={[styles.balanceValue, { color: colors.tint }]}>
         {Number(balance).toFixed(2)}$
       </ThemedText>
     </ThemedView>
+    </>
   );
 };
 
