@@ -12,6 +12,7 @@ interface BalanceDisplayProps {
 export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ isAuthenticated }) => {
   const {
     balance,
+    globalBalance,
     isLoading: isBalanceLoading,
     error: balanceError,
   } = useBalance();
@@ -44,14 +45,24 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ isAuthenticated 
   }
 
   return (
+    <>
+    <ThemedView style={[styles.balanceContainer, { 
+      backgroundColor: colorScheme === 'dark' ? 'rgba(155, 161, 166, 0.1)' : '#f5f5f5'
+    }]}>
+      <ThemedText style={styles.balanceLabel}>Donated Balance:</ThemedText>
+      <ThemedText style={[styles.balanceValue, { color: colors.tint }]}>
+        ${Number(globalBalance).toFixed(2)}
+      </ThemedText>
+    </ThemedView>
     <ThemedView style={[styles.balanceContainer, { 
       backgroundColor: colorScheme === 'dark' ? 'rgba(155, 161, 166, 0.1)' : '#f5f5f5'
     }]}>
       <ThemedText style={styles.balanceLabel}>Balance:</ThemedText>
       <ThemedText style={[styles.balanceValue, { color: colors.tint }]}>
-        {Number(balance).toFixed(2)}$
+        ${Number(balance).toFixed(2)}
       </ThemedText>
     </ThemedView>
+    </>
   );
 };
 

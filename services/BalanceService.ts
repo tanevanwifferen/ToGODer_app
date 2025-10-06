@@ -1,5 +1,10 @@
 import { store } from "../redux/store";
-import { setBalance, setLoading, setError } from "../redux/slices/balanceSlice";
+import {
+  setBalance,
+  setGlobalBalance,
+  setLoading,
+  setError,
+} from "../redux/slices/balanceSlice";
 import { GlobalApiClient } from "../apiClients/GlobalApiClient";
 import Toast from "react-native-toast-message";
 import { selectIsAuthenticated } from "@/redux/slices/authSlice";
@@ -25,6 +30,7 @@ export class BalanceService {
       const newBalance = response.balance;
 
       store.dispatch(setBalance(newBalance));
+      store.dispatch(setGlobalBalance(response.globalBalance));
 
       // Show donation toast if balance is negative and crossing a whole number threshold
       if (
