@@ -1,8 +1,9 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '../store';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "../store";
 
-interface BalanceState {
+export interface BalanceState {
   balance: number;
+  globalBalance: number;
   lastUpdated: string;
   isLoading: boolean;
   error: string | null;
@@ -10,17 +11,23 @@ interface BalanceState {
 
 const initialState: BalanceState = {
   balance: 0,
-  lastUpdated: '',
+  globalBalance: 0,
+  lastUpdated: "",
   isLoading: false,
   error: null,
 };
 
 const balanceSlice = createSlice({
-  name: 'balance',
+  name: "balance",
   initialState,
   reducers: {
     setBalance: (state, action: PayloadAction<number>) => {
       state.balance = action.payload;
+      state.lastUpdated = new Date().toISOString();
+      state.error = null;
+    },
+    setGlobalBalance: (state, action: PayloadAction<number>) => {
+      state.globalBalance = action.payload;
       state.lastUpdated = new Date().toISOString();
       state.error = null;
     },

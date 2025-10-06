@@ -1,18 +1,19 @@
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import { persistStore, persistReducer, PersistConfig } from "redux-persist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
-import globalConfigReducer from './slices/globalConfigSlice';
-import chatsReducer, { ChatsState } from './slices/chatsSlice';
-import authReducer, { AuthState } from './slices/authSlice';
-import experienceReducer from './slices/experienceSlice';
-import balanceReducer from './slices/balanceSlice';
-import passcodeReducer from './slices/passcodeSlice';
-import personalReducer, { PersonalState } from './slices/personalSlice';
-import systemPromptReducer, { SystemPromptState } from './slices/systemPromptSlice';
-import { personalDataMiddleware } from './middleware/personalDataMiddleware';
-import { GlobalConfig } from '../model/GlobalConfig';
+import globalConfigReducer from "./slices/globalConfigSlice";
+import chatsReducer, { ChatsState } from "./slices/chatsSlice";
+import authReducer, { AuthState } from "./slices/authSlice";
+import experienceReducer from "./slices/experienceSlice";
+import balanceReducer, { BalanceState } from "./slices/balanceSlice";
+import passcodeReducer from "./slices/passcodeSlice";
+import personalReducer, { PersonalState } from "./slices/personalSlice";
+import systemPromptReducer, {
+  SystemPromptState,
+} from "./slices/systemPromptSlice";
+import { personalDataMiddleware } from "./middleware/personalDataMiddleware";
+import { GlobalConfig } from "../model/GlobalConfig";
 
 export interface RootState {
   globalConfig: GlobalConfig;
@@ -21,12 +22,7 @@ export interface RootState {
   experience: {
     modalVisible: boolean;
   };
-  balance: {
-    balance: number;
-    lastUpdated: string;
-    isLoading: boolean;
-    error: string | null;
-  };
+  balance: BalanceState;
   passcode: {
     passcode: string | null;
     isLocked: boolean;
@@ -47,9 +43,17 @@ const rootReducer = combineReducers({
 });
 
 const persistConfig: PersistConfig<RootState> = {
-  key: 'root',
+  key: "root",
   storage: AsyncStorage,
-  whitelist: ['globalConfig', 'chats', 'auth', 'balance', 'passcode', 'personal', 'systemPrompt'],
+  whitelist: [
+    "globalConfig",
+    "chats",
+    "auth",
+    "balance",
+    "passcode",
+    "personal",
+    "systemPrompt",
+  ],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -59,7 +63,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
       },
     }).concat(personalDataMiddleware),
 });
