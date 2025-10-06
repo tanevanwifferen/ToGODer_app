@@ -51,7 +51,7 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ isAuthenticated 
     }]}>
       <ThemedText style={styles.balanceLabel}>Donated Balance:</ThemedText>
       <ThemedText style={[styles.balanceValue, { color: colors.tint }]}>
-        {Number(globalBalance).toFixed(2)}$
+        ${Number(globalBalance).toFixed(2)}
       </ThemedText>
     </ThemedView>
     <ThemedView style={[styles.balanceContainer, { 
@@ -59,7 +59,7 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ isAuthenticated 
     }]}>
       <ThemedText style={styles.balanceLabel}>Balance:</ThemedText>
       <ThemedText style={[styles.balanceValue, { color: colors.tint }]}>
-        {Number(balance).toFixed(2)}$
+        ${Number(balance).toFixed(2)}
       </ThemedText>
     </ThemedView>
     </>
