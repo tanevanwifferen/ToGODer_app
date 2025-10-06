@@ -41,6 +41,7 @@ const balanceSlice = createSlice({
   },
 });
 
-export const { setBalance, setLoading, setError } = balanceSlice.actions;
+export const { setBalance, setGlobalBalance, setLoading, setError } =
+  balanceSlice.actions;
 export const selectBalance = (state: RootState) => state.balance;
 export default balanceSlice.reducer;
