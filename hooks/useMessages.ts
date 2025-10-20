@@ -5,6 +5,7 @@ import {
   addMessage,
   deleteMessage,
   updateMessageAtIndex,
+  setAutoGenerateAnswer,
 } from "../redux/slices/chatsSlice";
 import { useChat } from "../query-hooks/useChat";
 import { ApiChatMessage } from "../model/ChatRequest";
@@ -62,18 +63,25 @@ export const useMessages = (chatId: string) => {
   );
 
   useEffect(() => {
-    console.log("messages update, autoGenerateAnswer");
+    // Only trigger auto-send when the last message is from the user AND
+    // auto_generate_answer is enabled. We also rely on setAutoGenerateAnswer(false)
+    // at send start to prevent re-entrant duplicates.
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.role === "user" && autoGenerateAnswer) {
         sendMessageAndHandleResponse();
       }
     }
-  }, [messages, memories]);
+    // Important: do NOT depend on memories; that caused re-triggers while last message
+    // was still a user message (before assistant placeholder/response arrived).
+  }, [messages]);
 
   const sendMessageAndHandleResponse = useCallback(async () => {
     if (!chat) return;
     console.log("sendMessageAndHandleResponse");
+    // Prevent any further auto-triggers until a NEW user message is appended.
+    // addMessage(user) will set auto_generate_answer back to true.
+    dispatch(setAutoGenerateAnswer(false));
     setTyping(true);
 
     // Try streaming first; fall back to non-streaming otherwise

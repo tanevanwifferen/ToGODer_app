@@ -66,7 +66,8 @@ const chatsSlice = createSlice({
       // Do not sort messages here; keep insertion order so streaming updates
       // using messageIndex remain stable for the just-appended placeholder.
       chat.last_update = new Date().getTime();
-      state.auto_generate_answer = true;
+      // Only auto-generate when a USER message is appended; assistant/system should not flip this on
+      state.auto_generate_answer = message.role === "user";
     },
     // New: update message content/signature at a specific index (for streaming)
     updateMessageAtIndex: (
@@ -192,6 +193,11 @@ const chatsSlice = createSlice({
         chat.draftInputText = text;
       }
     },
+    // Explicitly control whether the UI should auto-trigger a response.
+    // This lets us turn it off as soon as a send starts to prevent duplicates.
+    setAutoGenerateAnswer: (state, action: PayloadAction<boolean>) => {
+      state.auto_generate_answer = action.payload;
+    },
   },
 });
 
@@ -208,6 +214,7 @@ export const {
   clearAllChats,
   addMemories,
   updateDraftInputText,
+  setAutoGenerateAnswer,
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;
