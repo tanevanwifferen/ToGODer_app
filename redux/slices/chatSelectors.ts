@@ -82,6 +82,11 @@ export const selectLanguage = createSelector(
   (chats) => chats.language
 );
 
+export const selectLibraryIntegrationEnabled = createSelector(
+  (state: { chats: ChatsState }) => state.chats,
+  (chats) => chats.libraryIntegrationEnabled ?? false
+);
+
 export const selectDraftInputText = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
   (_: any, chatId: string) => chatId,

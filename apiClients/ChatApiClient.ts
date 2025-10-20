@@ -67,7 +67,8 @@ export class ChatApiClient {
     memoryIndex?: string[] | undefined,
     memories?: Record<string, string> | undefined,
     customSystemPrompt?: string | undefined,
-    persona?: string | undefined
+    persona?: string | undefined,
+    libraryIntegrationEnabled: boolean = false
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>("/chat", {
       model,
@@ -84,6 +85,7 @@ export class ChatApiClient {
       memories,
       customSystemPrompt,
       persona,
+      libraryIntegrationEnabled,
     });
 
     if (response instanceof Error) {
@@ -111,6 +113,7 @@ export class ChatApiClient {
     memories?: Record<string, string> | undefined,
     customSystemPrompt?: string | undefined,
     persona?: string | undefined,
+    libraryIntegrationEnabled: boolean = false,
     signal?: AbortSignal
   ): AsyncGenerator<StreamEvent> {
     const baseUrl = getApiUrl();
@@ -146,6 +149,7 @@ export class ChatApiClient {
       memories,
       customSystemPrompt,
       persona,
+      libraryIntegrationEnabled,
     };
 
     // Use correct API prefix for streaming endpoint

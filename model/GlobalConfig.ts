@@ -29,4 +29,6 @@ export interface GlobalConfig {
   showLogin: boolean;
   userOnboarded: boolean;
   appFirstLaunch: boolean;
+  libraryIntegrationEnabled: boolean;
+  librarianApiUrl: string;
 }

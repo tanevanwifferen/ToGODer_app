@@ -8,7 +8,9 @@ const initialState: GlobalConfig = {
   prompts: {},
   showLogin: false,
   userOnboarded: false,
-  appFirstLaunch: true
+  appFirstLaunch: true,
+  libraryIntegrationEnabled: false,
+  librarianApiUrl: '',
 };
 
 const globalConfigSlice = createSlice({

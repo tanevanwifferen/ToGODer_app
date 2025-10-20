@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -20,6 +20,9 @@ import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "./ThemedText";
 import { useExperienceContext } from "./providers/ExperienceProvider";
+import { useDispatch, useSelector } from "react-redux";
+import { updateSettings } from "../redux/slices/chatsSlice";
+import { selectLibraryIntegrationEnabled } from "../redux/slices/chatSelectors";
 
 interface ChatProps {
   chatId: string;
@@ -42,6 +45,7 @@ const convertToGiftedMessage = (
 export function Chat({ chatId, onBack }: ChatProps) {
   const colorScheme = useColorScheme();
   const { showLanguageInput } = useExperienceContext();
+  const dispatch = useDispatch();
   const {
     messages: apiMessages,
     onSend: sendApiMessage,
@@ -73,6 +77,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
   
   // Get persistent chat input state from Redux
   const { inputText, setInputText } = useChatInput(chatId);
+  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled);
   
   const {
     showPrompts,
@@ -93,6 +98,13 @@ export function Chat({ chatId, onBack }: ChatProps) {
     }
   );
 
+  const handleLibraryIntegrationToggle = useCallback(
+    (value: boolean) => {
+      dispatch(updateSettings({ libraryIntegrationEnabled: value }));
+    },
+    [dispatch]
+  );
+
   const renderInputToolbar = (toolbarProps: any) => (
     <CustomInputToolbar
       {...toolbarProps}
@@ -105,6 +117,8 @@ export function Chat({ chatId, onBack }: ChatProps) {
       showPrompts={showPrompts}
       inputText={inputText}
       filteredPrompts={filteredPrompts}
+      libraryIntegrationEnabled={libraryIntegrationEnabled}
+      onToggleLibraryIntegration={handleLibraryIntegrationToggle}
       onInputTextChanged={handleInputTextChanged}
       onSelectPrompt={handleSelectPrompt}
     />

@@ -31,6 +31,7 @@ const initialState: ChatsState = {
   communicationStyle: 2,
   assistant_name: "ToGODer",
   language: "",
+  libraryIntegrationEnabled: false,
   auto_generate_answer: true,
 };
 

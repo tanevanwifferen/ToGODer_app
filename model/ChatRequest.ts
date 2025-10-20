@@ -22,6 +22,7 @@ export interface ChatSettings {
   communicationStyle: ChatRequestCommunicationStyle | undefined;
   assistant_name: string | undefined;
   language: string | undefined;
+  libraryIntegrationEnabled: boolean | undefined;
   customSystemPrompt?: string;
   persona?: string;
 }
