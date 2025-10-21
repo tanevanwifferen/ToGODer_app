@@ -13,6 +13,7 @@ import {
   selectCommunicationStyle,
   selectLanguage,
   selectHolisticTherapist,
+  selectLibraryIntegrationEnabled,
 } from "../redux/slices/chatSelectors";
 import { selectPersonalData } from "../redux/slices/personalSlice";
 import { selectCustomSystemPrompt } from "../redux/slices/systemPromptSlice";
@@ -35,6 +36,7 @@ export function useChat() {
   const holisticTherapist = useSelector(selectHolisticTherapist);
   const preferredLanguage = useSelector(selectLanguage);
   const communicationStyle = useSelector(selectCommunicationStyle);
+  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled);
   const personalData = useSelector(selectPersonalData);
   const assistant_name = useSelector(
     (state: RootState) => state.chats.assistant_name
@@ -143,7 +145,8 @@ export function useChat() {
           useCustomPrompt && customSystemPrompt
             ? customSystemPrompt
             : undefined,
-          persona && persona.length > 0 ? persona : undefined
+          persona && persona.length > 0 ? persona : undefined,
+          libraryIntegrationEnabled ?? false
         );
 
         setError(null);
@@ -200,6 +203,7 @@ export function useChat() {
         memories,
         useCustomPrompt && customSystemPrompt ? customSystemPrompt : undefined,
         persona && persona.length > 0 ? persona : undefined,
+        libraryIntegrationEnabled ?? false,
         signal
       )) {
         yield evt;

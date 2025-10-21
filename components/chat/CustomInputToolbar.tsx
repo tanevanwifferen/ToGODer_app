@@ -16,6 +16,8 @@ interface CustomInputToolbarProps extends InputToolbarProps<IMessage> {
   showPrompts: boolean;
   inputText: string;
   filteredPrompts: [string, { description: string }][];
+  libraryIntegrationEnabled: boolean;
+  onToggleLibraryIntegration: (value: boolean) => void;
   onInputTextChanged: (text: string) => void;
   onSelectPrompt: (key: string) => void;
   onSend: (messages: {text:string}[]) => void;
@@ -25,6 +27,8 @@ export function CustomInputToolbar({
   showPrompts,
   inputText,
   filteredPrompts,
+  libraryIntegrationEnabled,
+  onToggleLibraryIntegration,
   onInputTextChanged,
   onSelectPrompt,
   onSend,
@@ -83,12 +87,13 @@ export function CustomInputToolbar({
 
   return (
     <View>
-      {showPrompts && (
-        <PromptSuggestions
-          prompts={filteredPrompts}
-          onSelectPrompt={onSelectPrompt}
-        />
-      )}
+      <PromptSuggestions
+        prompts={filteredPrompts}
+        showPrompts={showPrompts}
+        libraryIntegrationEnabled={libraryIntegrationEnabled}
+        onToggleLibraryIntegration={onToggleLibraryIntegration}
+        onSelectPrompt={onSelectPrompt}
+      />
       <InputToolbar
         {...toolbarProps}
         containerStyle={[

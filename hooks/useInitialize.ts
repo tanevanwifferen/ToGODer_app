@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { GlobalApiClient } from "../apiClients/GlobalApiClient";
 import { setGlobalConfig } from "../redux/slices/globalConfigSlice";
+import { updateSettings } from "../redux/slices/chatsSlice";
 import { store } from "../redux/store";
 import { InitializationService } from "../services/InitializationService";
 
@@ -13,6 +14,13 @@ export function useInitialize() {
         // Fetch global config
         const globalConfig = await GlobalApiClient.getGlobalConfig();
         store.dispatch(setGlobalConfig(globalConfig));
+        if (typeof globalConfig.libraryIntegrationEnabled === "boolean") {
+          store.dispatch(
+            updateSettings({
+              libraryIntegrationEnabled: globalConfig.libraryIntegrationEnabled,
+            })
+          );
+        }
 
         const prompts = await GlobalApiClient.getPrompts();
         store.dispatch(setGlobalConfig({prompts}));

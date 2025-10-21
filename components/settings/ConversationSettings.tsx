@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, TextInput, useColorScheme } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { ChatSettings } from '../../model/ChatRequest';
-import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectHolisticTherapist, selectLanguage} from '../../redux/slices/chatSelectors';
+import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectHolisticTherapist, selectLanguage, selectLibraryIntegrationEnabled } from '../../redux/slices/chatSelectors';
 import { updateSettings } from '../../redux/slices/chatsSlice';
 import { Colors } from '../../constants/Colors';
 import CustomCheckbox from '../ui/CustomCheckbox';
@@ -18,6 +18,7 @@ const ConversationSettings = () => {
   const outsideBox = useSelector(selectOutsideBox) ?? false;
   const language = useSelector(selectLanguage)
   const holisticTherapist = useSelector(selectHolisticTherapist) ?? false;
+  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled) ?? false;
   const persona = useSelector(selectPersona);
 
   const updateSettingsFn = (newSettings: Partial<ChatSettings>) => {
@@ -102,6 +103,16 @@ const ConversationSettings = () => {
           colorScheme={colorScheme}
         />
         <Text style={[styles.checkboxLabel, { color: theme.text }]}>Use new model to ask questions (Experimental)</Text>
+      </View>
+
+      <View style={styles.checkboxSection}>
+        <CustomCheckbox
+          value={libraryIntegrationEnabled}
+          onValueChange={(value: boolean) => updateSettingsFn({ libraryIntegrationEnabled: value })}
+          color={theme.tint}
+          colorScheme={colorScheme}
+        />
+        <Text style={[styles.checkboxLabel, { color: theme.text }]}>Library Integration (use PDF librarian context)</Text>
       </View>
     </View>
   );
