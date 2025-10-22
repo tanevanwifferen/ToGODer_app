@@ -11,6 +11,9 @@ import { InitializationService } from "../services/InitializationService";
 import { useSelector } from "react-redux";
 
 export function useInitialize() {
+  const oldGlobalConfig = useSelector(selectGlobalConfig);
+  const defaultModel = useSelector(selectDefaultModel);
+
   const initializeApp = useCallback(async () => {
     try {
       // Initialize auth and API services
@@ -19,8 +22,6 @@ export function useInitialize() {
       // Fetch global config
       const globalConfig = await GlobalApiClient.getGlobalConfig();
       store.dispatch(setGlobalConfig(globalConfig));
-      const oldGlobalConfig = useSelector(selectGlobalConfig);
-      const defaultModel = useSelector(selectDefaultModel);
       if (
         defaultModel != oldGlobalConfig.previousDefaultModel &&
         defaultModel != ""
