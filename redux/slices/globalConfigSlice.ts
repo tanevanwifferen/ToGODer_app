@@ -1,26 +1,27 @@
-import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { GlobalConfig } from '../../model/GlobalConfig';
+import { createSlice, PayloadAction, createSelector } from "@reduxjs/toolkit";
+import { GlobalConfig } from "../../model/GlobalConfig";
 
 const initialState: GlobalConfig = {
   donateOptions: [],
-  quote: '',
+  quote: "",
   models: [],
   prompts: {},
   showLogin: false,
   userOnboarded: false,
   appFirstLaunch: true,
   libraryIntegrationEnabled: false,
-  librarianApiUrl: '',
+  librarianApiUrl: "",
+  previousDefaultModel: "",
 };
 
 const globalConfigSlice = createSlice({
-  name: 'globalConfig',
+  name: "globalConfig",
   initialState,
   reducers: {
     setGlobalConfig: (state, action: PayloadAction<Partial<GlobalConfig>>) => {
       return {
         ...state,
-        ...action.payload
+        ...action.payload,
       };
     },
   },
@@ -28,8 +29,9 @@ const globalConfigSlice = createSlice({
 
 export const { setGlobalConfig } = globalConfigSlice.actions;
 
-export const selectGlobalConfig = (state: { globalConfig: GlobalConfig }): GlobalConfig => 
-  state.globalConfig;
+export const selectGlobalConfig = (state: {
+  globalConfig: GlobalConfig;
+}): GlobalConfig => state.globalConfig;
 
 export const selectModels = createSelector(
   [selectGlobalConfig],
@@ -64,6 +66,14 @@ export const selectUserOnboarded = createSelector(
 export const selectAppFirstLaunch = createSelector(
   [selectGlobalConfig],
   (globalConfig) => globalConfig.appFirstLaunch
+);
+
+export const selectDefaultModel = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => {
+    // Return the first model in the list as the default, or a hardcoded fallback
+    return globalConfig.models[0]?.model || "deepseek/deepseek-chat-v3.1";
+  }
 );
 
 export default globalConfigSlice.reducer;

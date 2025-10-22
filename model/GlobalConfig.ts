@@ -25,10 +25,11 @@ export interface GlobalConfig {
   models: Model[];
   prompts: {
     [promptId: string]: Prompt;
-  },
+  };
   showLogin: boolean;
   userOnboarded: boolean;
   appFirstLaunch: boolean;
   libraryIntegrationEnabled: boolean;
   librarianApiUrl: string;
+  previousDefaultModel: string;
 }
