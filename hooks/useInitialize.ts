@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import { GlobalApiClient } from "../apiClients/GlobalApiClient";
 import {
   selectDefaultModel,
-  selectGlobalConfig,
+  selectOldDefaultModel,
   setGlobalConfig,
 } from "../redux/slices/globalConfigSlice";
 import { updateSettings } from "../redux/slices/chatsSlice";
@@ -11,7 +11,7 @@ import { InitializationService } from "../services/InitializationService";
 import { useSelector } from "react-redux";
 
 export function useInitialize() {
-  const oldGlobalConfig = useSelector(selectGlobalConfig);
+  const oldDefualtModel = useSelector(selectOldDefaultModel);
   const defaultModel = useSelector(selectDefaultModel);
 
   const initializeApp = useCallback(async () => {
@@ -22,10 +22,7 @@ export function useInitialize() {
       // Fetch global config
       const globalConfig = await GlobalApiClient.getGlobalConfig();
       store.dispatch(setGlobalConfig(globalConfig));
-      if (
-        defaultModel != oldGlobalConfig.previousDefaultModel &&
-        defaultModel != ""
-      ) {
+      if (defaultModel != oldDefualtModel && defaultModel != "") {
         store.dispatch(
           updateSettings({
             model: defaultModel,

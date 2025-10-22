@@ -33,6 +33,11 @@ export const selectGlobalConfig = (state: {
   globalConfig: GlobalConfig;
 }): GlobalConfig => state.globalConfig;
 
+export const selectOldDefaultModel = createSelector(
+  [selectGlobalConfig],
+  (globalConfig) => globalConfig.previousDefaultModel
+);
+
 export const selectModels = createSelector(
   [selectGlobalConfig],
   (globalConfig) => globalConfig.models
