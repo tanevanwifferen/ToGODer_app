@@ -21,6 +21,8 @@ import { RootState } from "../redux/store";
 import StorageService from "../services/StorageService";
 import { useMemoryUpdates } from "./useMemoryUpdates";
 
+const MAX_MEMORY_FETCH_LOOPS = 4;
+
 export const useMessages = (chatId: string) => {
   const dispatch = useDispatch();
   const { sendMessage, sendMessageStream, error } = useChat();
@@ -76,13 +78,14 @@ export const useMessages = (chatId: string) => {
     // was still a user message (before assistant placeholder/response arrived).
   }, [messages]);
 
-  const sendMessageAndHandleResponse = useCallback(async () => {
-    if (!chat) return;
-    console.log("sendMessageAndHandleResponse");
-    // Prevent any further auto-triggers until a NEW user message is appended.
-    // addMessage(user) will set auto_generate_answer back to true.
-    dispatch(setAutoGenerateAnswer(false));
-    setTyping(true);
+  const sendMessageAndHandleResponse = useCallback(
+    async (loopCount = 0, forceLimit = false) => {
+      if (!chat) return;
+      console.log("sendMessageAndHandleResponse", { loopCount, forceLimit });
+      // Prevent any further auto-triggers until a NEW user message is appended.
+      // addMessage(user) will set auto_generate_answer back to true.
+      dispatch(setAutoGenerateAnswer(false));
+      setTyping(true);
 
     // Try streaming first; fall back to non-streaming otherwise
     let usedStreaming = false;
@@ -90,23 +93,36 @@ export const useMessages = (chatId: string) => {
     let accumulated = "";
     // Track whether we actually received any streaming data (chunk/signature/memory_request)
     // If not, we will fallback to non-streaming.
-    let gotStreamData = false;
-    let placeholderCreated = false;
+      let gotStreamData = false;
+      let placeholderCreated = false;
 
-    // Don't create placeholder yet - wait to see if streaming works
+      const requestOptions = {
+        memoryLoopCount: loopCount,
+        memoryLoopLimitReached:
+          forceLimit || loopCount >= MAX_MEMORY_FETCH_LOOPS,
+      };
 
-    try {
-      if (sendMessageStream) {
-        // Only consider streaming "used" if we actually get data
-        usedStreaming = false;
-        console.log("useMessages: starting streaming attempt");
-        // Consume the SSE stream (or compatible transport)
-        for await (const evt of sendMessageStream(messages, chat.memories)) {
-          // Mark that we received something from the stream (even signature/memory_request)
-          if (evt?.type) {
-            gotStreamData = true;
-          }
-          switch (evt.type) {
+      // Don't create placeholder yet - wait to see if streaming works
+
+      try {
+        if (sendMessageStream) {
+          // Only consider streaming "used" if we actually get data
+          usedStreaming = false;
+          console.log(
+            "useMessages: starting streaming attempt",
+            requestOptions
+          );
+          // Consume the SSE stream (or compatible transport)
+          for await (const evt of sendMessageStream(
+            messages,
+            chat.memories,
+            requestOptions
+          )) {
+            // Mark that we received something from the stream (even signature/memory_request)
+            if (evt?.type) {
+              gotStreamData = true;
+            }
+            switch (evt.type) {
             case "chunk": {
               // Create placeholder on first chunk
               if (!placeholderCreated) {
@@ -158,10 +174,25 @@ export const useMessages = (chatId: string) => {
                 })
               );
               setTyping(false);
-              console.log("useMessages: streaming memory_request, re-sending");
+              if (forceLimit || loopCount >= MAX_MEMORY_FETCH_LOOPS) {
+                console.warn(
+                  "useMessages: memory request received but fetch limit reached"
+                );
+                return;
+              }
+              const nextLoopCount = loopCount + 1;
+              const nextLimitReached =
+                nextLoopCount >= MAX_MEMORY_FETCH_LOOPS;
+              console.log(
+                "useMessages: streaming memory_request, re-sending",
+                {
+                  nextLoopCount,
+                  nextLimitReached,
+                }
+              );
               // Re-trigger send with updated memories.
               // Fire-and-forget to avoid blocking the current loop.
-              sendMessageAndHandleResponse();
+              sendMessageAndHandleResponse(nextLoopCount, nextLimitReached);
               return;
             }
             case "signature": {
@@ -178,12 +209,30 @@ export const useMessages = (chatId: string) => {
               break;
             }
             case "error": {
-              // Stop streaming and fallback
-              throw new Error(
+              // Handle streaming error - display to user and stop streaming
+              const errorMsg =
                 typeof evt.data === "string"
                   ? evt.data
-                  : evt.data?.message ?? "Streaming error"
-              );
+                  : evt.data?.message ?? "Streaming error occurred";
+
+              console.error("Streaming error received:", evt.data);
+
+              // Remove placeholder if created
+              if (placeholderCreated && assistantIndex >= 0) {
+                dispatch(
+                  deleteMessage({
+                    chatId,
+                    messageIndex: assistantIndex,
+                  })
+                );
+              }
+
+              // Set error message for user display
+              setErrorMessage(errorMsg);
+              setTyping(false);
+
+              // Don't throw - just stop streaming gracefully
+              return;
             }
             case "done": {
               // finalize
@@ -214,7 +263,11 @@ export const useMessages = (chatId: string) => {
     if (!usedStreaming) {
       try {
         console.log("useMessages: invoking non-streaming fallback");
-        const response = await sendMessage(messages, chat.memories);
+        const response = await sendMessage(
+          messages,
+          chat.memories,
+          requestOptions
+        );
 
         if ("requestForMemory" in response) {
           // Non-streaming memory request: remove placeholder if created
@@ -236,7 +289,16 @@ export const useMessages = (chatId: string) => {
             })
           );
           setTyping(false);
-          await sendMessageAndHandleResponse();
+          if (forceLimit || loopCount >= MAX_MEMORY_FETCH_LOOPS) {
+            console.warn(
+              "useMessages: non-streaming memory request ignored - limit reached"
+            );
+            return;
+          }
+          const nextLoopCount = loopCount + 1;
+          const nextLimitReached =
+            nextLoopCount >= MAX_MEMORY_FETCH_LOOPS;
+          await sendMessageAndHandleResponse(nextLoopCount, nextLimitReached);
           return;
         }
 
@@ -287,17 +349,19 @@ export const useMessages = (chatId: string) => {
       chat?.memories || "",
       assistant_name
     );
-  }, [
-    chatId,
-    sendMessage,
-    sendMessageStream,
-    dispatch,
-    chat,
-    balanceService,
-    model,
-    assistant_name,
-    messages,
-  ]);
+    },
+    [
+      chatId,
+      sendMessage,
+      sendMessageStream,
+      dispatch,
+      chat,
+      balanceService,
+      model,
+      assistant_name,
+      messages,
+    ]
+  );
 
   const onDeleteMessage = useCallback(
     (messageIndex: number) => {
