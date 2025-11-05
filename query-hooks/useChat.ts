@@ -25,6 +25,13 @@ import { RootState } from "../redux";
 import StorageService from "../services/StorageService";
 import type { StreamEvent } from "../apiClients/ChatApiClient";
 
+type SendMessageOptions = {
+  memoryLoopCount?: number;
+  memoryLoopLimitReached?: boolean;
+};
+
+const MAX_MEMORY_FETCH_LOOPS = 4;
+
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -66,13 +73,16 @@ export function useChat() {
   const buildCommonPayload = useCallback(
     async (
       messages: ApiChatMessage[],
-      memory_keys: string[]
+      memory_keys: string[],
+      options?: SendMessageOptions
     ): Promise<{
       messagesWithDates: ApiChatMessage[];
       configurableData: string;
       memory_index: string[];
       memories: Record<string, string>;
       useCustomPrompt: boolean;
+      memoryLoopCount: number;
+      memoryLoopLimitReached: boolean;
     }> => {
       const memories: Record<string, string> = {};
       for (let key of memory_keys ?? []) {
@@ -107,6 +117,8 @@ export function useChat() {
         memory_index,
         memories,
         useCustomPrompt,
+        memoryLoopCount: options?.memoryLoopCount ?? 0,
+        memoryLoopLimitReached: options?.memoryLoopLimitReached ?? false,
       };
     },
     [personalData, customSystemPrompt]
@@ -115,7 +127,8 @@ export function useChat() {
   const sendMessage = useCallback(
     async (
       messages: ApiChatMessage[],
-      memory_keys: string[]
+      memory_keys: string[],
+      options?: SendMessageOptions
     ): Promise<ChatResponse> => {
       setIsLoading(true);
       setError(null);
@@ -126,7 +139,9 @@ export function useChat() {
         memory_index,
         memories,
         useCustomPrompt,
-      } = await buildCommonPayload(messages, memory_keys);
+        memoryLoopCount,
+        memoryLoopLimitReached,
+      } = await buildCommonPayload(messages, memory_keys, options);
 
       try {
         const response = await ChatApiClient.sendMessage(
@@ -146,7 +161,9 @@ export function useChat() {
             ? customSystemPrompt
             : undefined,
           persona && persona.length > 0 ? persona : undefined,
-          libraryIntegrationEnabled ?? false
+          libraryIntegrationEnabled ?? false,
+          memoryLoopCount,
+          memoryLoopLimitReached
         );
 
         setError(null);
@@ -170,6 +187,7 @@ export function useChat() {
       customSystemPrompt,
       persona,
       buildCommonPayload,
+      libraryIntegrationEnabled,
     ]
   );
 
@@ -178,6 +196,7 @@ export function useChat() {
     async function* (
       messages: ApiChatMessage[],
       memory_keys: string[],
+      options?: SendMessageOptions,
       signal?: AbortSignal
     ): AsyncGenerator<StreamEvent> {
       const {
@@ -186,7 +205,9 @@ export function useChat() {
         memory_index,
         memories,
         useCustomPrompt,
-      } = await buildCommonPayload(messages, memory_keys);
+        memoryLoopCount,
+        memoryLoopLimitReached,
+      } = await buildCommonPayload(messages, memory_keys, options);
 
       for await (const evt of ChatApiClient.sendMessageStream(
         model,
@@ -204,6 +225,8 @@ export function useChat() {
         useCustomPrompt && customSystemPrompt ? customSystemPrompt : undefined,
         persona && persona.length > 0 ? persona : undefined,
         libraryIntegrationEnabled ?? false,
+        memoryLoopCount,
+        memoryLoopLimitReached,
         signal
       )) {
         yield evt;
@@ -214,10 +237,12 @@ export function useChat() {
       humanPrompt,
       keepGoing,
       outsideBox,
+      holisticTherapist,
       communicationStyle,
       buildCommonPayload,
       customSystemPrompt,
       persona,
+      libraryIntegrationEnabled,
       assistant_name,
     ]
   );
@@ -286,9 +311,10 @@ export function useSystemPrompt() {
 
         const memory_index = await StorageService.listKeys();
         let currentResponse: SystemPromptResponse;
+        let loopCount = 0;
+        let limitReached = false;
 
-        // Keep requesting until we get a system prompt (no more memory requests)
-        do {
+        while (true) {
           currentResponse = await ChatApiClient.generateSystemPrompt(
             model,
             humanPrompt,
@@ -307,26 +333,39 @@ export function useSystemPrompt() {
             await staticData(),
             assistant_name,
             memory_index,
-            memories
+            memories,
+            loopCount,
+            limitReached
           );
 
-          // If memory is requested, fetch it and continue the loop
-          if (currentResponse.requestForMemory?.keys) {
-            for (let key of currentResponse.requestForMemory.keys) {
-              // Validate key format (same as in useChat)
-              if (!StorageService.keyIsValid(key)) {
-                continue;
-              }
-              const value = await StorageService.get(key);
-              if (value != null) {
-                memories[key] = value;
-              }
+          const requestedKeys = currentResponse.requestForMemory?.keys ?? [];
+          if (requestedKeys.length === 0) {
+            break;
+          }
+
+          if (limitReached) {
+            console.warn(
+              "useSystemPrompt: memory fetch limit reached, ignoring additional requests"
+            );
+            break;
+          }
+
+          for (let key of requestedKeys) {
+            // Validate key format (same as in useChat)
+            if (!StorageService.keyIsValid(key)) {
+              continue;
+            }
+            const value = await StorageService.get(key);
+            if (value != null) {
+              memories[key] = value;
             }
           }
-        } while (
-          currentResponse.requestForMemory?.keys &&
-          currentResponse.requestForMemory.keys.length > 0
-        );
+
+          loopCount += 1;
+          if (loopCount >= MAX_MEMORY_FETCH_LOOPS) {
+            limitReached = true;
+          }
+        }
 
         if (!currentResponse.systemPrompt) {
           throw new Error("Failed to generate system prompt");

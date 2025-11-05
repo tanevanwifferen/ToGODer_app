@@ -29,6 +29,8 @@ export interface ChatSettings {
 
 export interface ChatRequest extends ChatSettings {
   prompts: ApiChatMessage[];
+  memoryLoopCount?: number;
+  memoryLoopLimitReached?: boolean;
 }
 
 export interface ExperienceRequest {

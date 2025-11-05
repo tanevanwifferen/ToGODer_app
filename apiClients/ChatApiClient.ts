@@ -68,7 +68,9 @@ export class ChatApiClient {
     memories?: Record<string, string> | undefined,
     customSystemPrompt?: string | undefined,
     persona?: string | undefined,
-    libraryIntegrationEnabled: boolean = false
+    libraryIntegrationEnabled: boolean = false,
+    memoryLoopCount?: number,
+    memoryLoopLimitReached?: boolean
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>("/chat", {
       model,
@@ -86,6 +88,8 @@ export class ChatApiClient {
       customSystemPrompt,
       persona,
       libraryIntegrationEnabled,
+      memoryLoopCount,
+      memoryLoopLimitReached,
     });
 
     if (response instanceof Error) {
@@ -114,6 +118,8 @@ export class ChatApiClient {
     customSystemPrompt?: string | undefined,
     persona?: string | undefined,
     libraryIntegrationEnabled: boolean = false,
+    memoryLoopCount?: number,
+    memoryLoopLimitReached?: boolean,
     signal?: AbortSignal
   ): AsyncGenerator<StreamEvent> {
     const baseUrl = getApiUrl();
@@ -150,6 +156,8 @@ export class ChatApiClient {
       customSystemPrompt,
       persona,
       libraryIntegrationEnabled,
+      memoryLoopCount,
+      memoryLoopLimitReached,
     };
 
     // Use correct API prefix for streaming endpoint
@@ -534,7 +542,9 @@ export class ChatApiClient {
     staticData?: Record<string, any> | undefined,
     assistant_name?: string | undefined,
     memoryIndex?: string[] | undefined,
-    memories?: Record<string, string> | undefined
+    memories?: Record<string, string> | undefined,
+    memoryLoopCount?: number,
+    memoryLoopLimitReached?: boolean
   ): Promise<SystemPromptResponse> {
     const response = await ApiClient.post<SystemPromptResponse>(
       "/generate-system-prompt",
@@ -551,6 +561,8 @@ export class ChatApiClient {
         assistant_name,
         memoryIndex,
         memories,
+        memoryLoopCount,
+        memoryLoopLimitReached,
       }
     );
 
