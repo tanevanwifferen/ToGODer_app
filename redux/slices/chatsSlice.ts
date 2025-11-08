@@ -51,9 +51,13 @@ const chatsSlice = createSlice({
     },
     addMessage: (
       state,
-      action: PayloadAction<{ id: string; message: ApiChatMessage }>
+      action: PayloadAction<{
+        id: string;
+        message: ApiChatMessage;
+        skipAutoGenerate?: boolean;
+      }>
     ) => {
-      const { id, message } = action.payload;
+      const { id, message, skipAutoGenerate = false } = action.payload;
       const chat = state.chats[id];
       if (!chat) {
         console.warn(`Chat ${id} not found when adding message`);
@@ -64,11 +68,11 @@ const chatsSlice = createSlice({
         ...message,
         timestamp: message.timestamp || new Date().getTime(),
       });
-      // Do not sort messages here; keep insertion order so streaming updates
-      // using messageIndex remain stable for the just-appended placeholder.
       chat.last_update = new Date().getTime();
-      // Only auto-generate when a USER message is appended; assistant/system should not flip this on
-      state.auto_generate_answer = message.role === "user";
+      // Only auto-generate when a USER message is appended (unless explicitly skipped, e.g., for voice transcripts)
+      if (!skipAutoGenerate && message.role === "user") {
+        state.auto_generate_answer = true;
+      }
     },
     // New: update message content/signature at a specific index (for streaming)
     updateMessageAtIndex: (

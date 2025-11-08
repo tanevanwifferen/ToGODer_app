@@ -59,6 +59,8 @@
     <string>Let ToGODer analyze your physical and mental health</string>
     <key>NSHealthUpdateUsageDescription</key>
     <string>Not used, but I think the library supports it so I'm not sure how to disable this.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSRemindersFullAccessUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your reminders</string>
     <key>NSRemindersUsageDescription</key>
@@ -66,6 +68,29 @@
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
+    </array>
+    <key>RCTNewArchEnabled</key>
+    <true/>
+    <key>UIApplicationShortcutItems</key>
+    <array>
+      <dict>
+        <key>UIApplicationShortcutItemType</key>
+        <string>com.vanWifferen.ToGODer-app.voicechat</string>
+        <key>UIApplicationShortcutItemTitle</key>
+        <string>Voice Chat</string>
+        <key>UIApplicationShortcutItemIconType</key>
+        <string>UIApplicationShortcutIconTypeMicrophone</string>
+      </dict>
+      <dict>
+        <key>UIApplicationShortcutItemType</key>
+        <string>com.vanWifferen.ToGODer-app.morningroutine</string>
+        <key>UIApplicationShortcutItemTitle</key>
+        <string>Morning Routine</string>
+        <key>UIApplicationShortcutItemSubtitle</key>
+        <string>Start your day with intention</string>
+        <key>UIApplicationShortcutItemIconType</key>
+        <string>UIApplicationShortcutIconTypeSunrise</string>
+      </dict>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>

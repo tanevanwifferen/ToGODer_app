@@ -4,8 +4,9 @@
  */
 
 import React from 'react';
-import { StyleSheet, View, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, Platform } from 'react-native';
 import { router } from 'expo-router';
+import { useSelector } from 'react-redux';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { Colors } from '../../constants/Colors';
 import { ThemedText } from '../../components/ThemedText';
@@ -13,6 +14,8 @@ import { ThemedView } from '../../components/ThemedView';
 import { useSharedConversationsList } from '../../query-hooks/useSharedConversations';
 import { SharedConversation } from '../../model/ShareTypes';
 import { SharedConversationView } from '../../components/shared/SharedConversationView';
+import { selectIsLocked } from '../../redux/slices/passcodeSlice';
+import { LockScreen } from '../../components/passcode/LockScreen';
 
 function SharedConversationItem({
   conversation,
@@ -50,6 +53,7 @@ function SharedConversationItem({
 export default function SharedScreen() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
+  const isLocked = useSelector(selectIsLocked);
 
   const {
     data,
@@ -67,6 +71,11 @@ export default function SharedScreen() {
       fetchNextPage();
     }
   };
+
+  // Show lock screen if app is locked (skip on web)
+  if (Platform.OS !== 'web' && isLocked) {
+    return <LockScreen />;
+  }
 
   if (isLoading) {
     return (
