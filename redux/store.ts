@@ -26,6 +26,7 @@ export interface RootState {
   passcode: {
     passcode: string | null;
     isLocked: boolean;
+    bypassLock: boolean;
   };
   personal: PersonalState;
   systemPrompt: SystemPromptState;

@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { Colors } from '../constants/Colors';
 import { useRouter } from 'expo-router';
+import { store } from '../redux/store';
+import { resetBypassLock } from '../redux/slices/passcodeSlice';
 
 interface VoiceChatScreenProps {
   /** Mode for the voice chat (e.g., '/wakeUp' for morning routine) */
@@ -43,6 +45,10 @@ export function VoiceChatScreen({ mode, title = 'Voice Chat' }: VoiceChatScreenP
 
   const handleClose = () => {
     stopVoiceChat();
+    // Reset bypass lock when leaving morning routine
+    if (mode === '/wakeUp') {
+      store.dispatch(resetBypassLock());
+    }
     router.back();
   };
 
