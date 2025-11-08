@@ -49,6 +49,16 @@ target 'ToGODer' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
+    
+    installer.pods_project.targets.each do |t|
+        t.build_configurations.each do |config|
+          # Make sure all C++ in pods uses a modern standard + libc++
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
+          config.build_settings['CLANG_CXX_LIBRARY'] = 'libc++'
+          # (Optional but helpful) make sure we’re not accidentally compiling as C
+          config.build_settings['GCC_INPUT_FILETYPE'] = 'automatic'
+        end
+      end
 
     # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.
@@ -60,5 +70,12 @@ target 'ToGODer' do
         end
       end
     end
+      
+    system("chmod -R u+w Pods/RCT-Folly")
+      Dir.glob("Pods/RCT-Folly/folly/Portability.h").each do |file|
+        text = File.read(file)
+        new_contents = text.gsub('#define FOLLY_HAS_COROUTINES 1', '#define FOLLY_HAS_COROUTINES 0')
+        File.open(file, "w") { |file| file.puts new_contents }
+      end
   end
 end
