@@ -10,22 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vanWifferen.ToGODer-app",
-      "infoPlist": {
-        "UIApplicationShortcutItems": [
-          {
-            "UIApplicationShortcutItemType": "com.vanWifferen.ToGODer-app.voicechat",
-            "UIApplicationShortcutItemTitle": "Voice Chat",
-            "UIApplicationShortcutItemIconType": "UIApplicationShortcutIconTypeMicrophone"
-          },
-          {
-            "UIApplicationShortcutItemType": "com.vanWifferen.ToGODer-app.morningroutine",
-            "UIApplicationShortcutItemTitle": "Morning Routine",
-            "UIApplicationShortcutItemSubtitle": "Start your day with intention",
-            "UIApplicationShortcutItemIconType": "UIApplicationShortcutIconTypeSunrise"
-          }
-        ]
-      }
+      "bundleIdentifier": "com.vanWifferen.ToGODer-app"
     },
     "android": {
       "adaptiveIcon": {
