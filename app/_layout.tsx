@@ -11,7 +11,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { useDispatch } from 'react-redux';
 import { store, persistor } from '../redux/store';
 import { QueryProvider } from '../components/providers/QueryProvider';
 import { ExperienceProvider } from '../components/providers/ExperienceProvider';
@@ -20,7 +19,6 @@ import { useColorScheme } from '../hooks/useColorScheme';
 import { useInitialization } from '../hooks/useInitialization';
 import { useInitialize } from '@/hooks/useInitialize';
 import { useQuickActions, QuickActionType } from '@/hooks/useQuickActions';
-import { bypassLockForQuickAction } from '../redux/slices/passcodeSlice';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -71,8 +69,6 @@ export default function RootLayout() {
         router.push('/(drawer)/voice-chat' as any);
         break;
       case 'morningroutine':
-        // Bypass passcode lock for morning routine
-        store.dispatch(bypassLockForQuickAction());
         router.push('/(drawer)/morning-routine' as any);
         break;
     }

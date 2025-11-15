@@ -401,14 +401,6 @@ export function useVoiceChat(options?: UseVoiceChatOptions) {
         }
         break;
 
-      case "response.audio.done":
-        // Flush any remaining audio chunks when response is complete
-        console.log("Audio response complete, flushing remaining chunks");
-        deviceHandlers.flushPlayback().catch((err) => {
-          console.error("Error flushing audio playback:", err);
-        });
-        break;
-
       case "error":
         console.error("Realtime API error:", message.error);
         setError(message.error?.message || "An error occurred");
@@ -440,7 +432,8 @@ export function useVoiceChat(options?: UseVoiceChatOptions) {
     const transcriptHistory = transcriptsRef.current;
 
     if (currentTranscriptRef.current.user) {
-      const lastTranscript = transcriptHistory[transcriptHistory.length - 1];
+      const lastTranscript =
+        transcriptHistory[transcriptHistory.length - 1];
       if (
         !lastTranscript ||
         lastTranscript.role !== "user" ||
@@ -450,7 +443,8 @@ export function useVoiceChat(options?: UseVoiceChatOptions) {
       }
     }
     if (currentTranscriptRef.current.assistant) {
-      const lastTranscript = transcriptHistory[transcriptHistory.length - 1];
+      const lastTranscript =
+        transcriptHistory[transcriptHistory.length - 1];
       if (
         !lastTranscript ||
         lastTranscript.role !== "assistant" ||
