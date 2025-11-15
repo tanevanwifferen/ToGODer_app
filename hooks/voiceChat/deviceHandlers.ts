@@ -5,7 +5,6 @@ import type { MutableRefObject } from "react";
 export interface DeviceAudioHandlers {
   startCapture: (ws: WebSocket) => Promise<void>;
   enqueuePlayback: (base64Audio: string) => void;
-  flushPlayback: () => Promise<void>;
   cleanup: () => Promise<void>;
 }
 
@@ -138,13 +137,6 @@ export function createWebAudioHandlers({
     }
   };
 
-  const flushPlayback = async () => {
-    // For web, just wait for the queue to finish processing
-    while (audioQueueRef.current.length > 0 || isPlayingRef.current) {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-  };
-
   const cleanup = async () => {
     if (audioContextRef.current) {
       try {
@@ -164,7 +156,7 @@ export function createWebAudioHandlers({
     isPlayingRef.current = false;
   };
 
-  return { startCapture, enqueuePlayback, flushPlayback, cleanup };
+  return { startCapture, enqueuePlayback, cleanup };
 }
 
 export function createMobileAudioHandlers({
@@ -174,23 +166,17 @@ export function createMobileAudioHandlers({
 }: MobileAudioDeps): DeviceAudioHandlers {
   let hasPrimedPlayback = false;
   let stopCapture: (() => void) | null = null;
-  let audioModeSet = false;
 
   const playMobileWavFile = async (wavDataUri: string): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       try {
-        // Only set audio mode once at the start
-        if (!audioModeSet) {
-          console.log("Setting audio mode for iOS playback");
-          await Audio.setAudioModeAsync({
-            allowsRecordingIOS: true,
-            playsInSilentModeIOS: true,
-            staysActiveInBackground: false,
-            shouldDuckAndroid: true,
-            playThroughEarpieceAndroid: false,
-          });
-          audioModeSet = true;
-        }
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+        });
 
         const { sound } = await Audio.Sound.createAsync(
           { uri: wavDataUri },
@@ -236,56 +222,30 @@ export function createMobileAudioHandlers({
     });
   };
 
-  const processMobileAudioQueue = async (flushMode = false) => {
-    if (processingAudioRef.current) {
-      console.log("Already processing audio, skipping");
+  const processMobileAudioQueue = async () => {
+    if (processingAudioRef.current || pcmChunkQueueRef.current.length === 0) {
       return;
     }
 
-    if (pcmChunkQueueRef.current.length === 0) {
-      console.log("Audio queue empty, nothing to process");
-      return;
-    }
-
-    // Reduced initial buffer for faster first response, lower threshold for ongoing
-    const MIN_CHUNKS_TO_START = 5;
-    const MIN_CHUNKS_ONGOING = 3;
+    const MIN_CHUNKS_TO_START = 8;
+    const MIN_CHUNKS_ONGOING = 8;
     const minChunks = hasPrimedPlayback
       ? MIN_CHUNKS_ONGOING
       : MIN_CHUNKS_TO_START;
 
-    console.log(
-      `Queue has ${pcmChunkQueueRef.current.length} chunks, min required: ${minChunks}, flush mode: ${flushMode}`
-    );
-
-    // In flush mode, process any remaining chunks regardless of count
-    if (!flushMode && pcmChunkQueueRef.current.length < minChunks) {
-      console.log(
-        `Waiting for more chunks (have ${pcmChunkQueueRef.current.length}, need ${minChunks})`
-      );
-      // Only use setTimeout for normal mode, not flush mode
+    if (pcmChunkQueueRef.current.length < minChunks) {
       setTimeout(() => processMobileAudioQueue(), 50);
       return;
-    }
-
-    if (flushMode) {
-      console.log(
-        `FLUSH MODE: Processing all ${pcmChunkQueueRef.current.length} remaining chunks`
-      );
     }
 
     processingAudioRef.current = true;
 
     try {
-      const chunksToProcess = flushMode
-        ? pcmChunkQueueRef.current.length
-        : Math.min(10, pcmChunkQueueRef.current.length);
+      const chunksToProcess = Math.min(12, pcmChunkQueueRef.current.length);
       const chunks = pcmChunkQueueRef.current.splice(0, chunksToProcess);
       const combinedPcm = chunks.join("");
       console.log(
-        `Processing ${chunksToProcess} mobile audio chunks (${
-          pcmChunkQueueRef.current.length
-        } remaining)${flushMode ? " [FLUSH MODE]" : ""}`
+        `Processing ${chunksToProcess} mobile audio chunks (${pcmChunkQueueRef.current.length} remaining)`
       );
 
       const wavDataUri = pcm16ToWav(combinedPcm);
@@ -293,16 +253,11 @@ export function createMobileAudioHandlers({
       hasPrimedPlayback = true;
     } catch (err) {
       console.error("Error in mobile audio queue processing:", err);
-      setTimeout(() => processMobileAudioQueue(flushMode), 100);
+      setTimeout(() => processMobileAudioQueue(), 100);
     } finally {
       processingAudioRef.current = false;
       if (pcmChunkQueueRef.current.length > 0) {
-        // Only pass flushMode if we're in flush mode, otherwise continue normal processing
-        if (flushMode) {
-          processMobileAudioQueue(true);
-        } else {
-          processMobileAudioQueue();
-        }
+        processMobileAudioQueue();
       }
     }
   };
@@ -333,9 +288,7 @@ export function createMobileAudioHandlers({
         }
 
         if (Math.random() < 0.01) {
-          console.log(
-            `Sending mobile audio chunk: ${data.length} bytes (base64)`
-          );
+          console.log(`Sending mobile audio chunk: ${data.length} bytes (base64)`);
         }
 
         ws.send(
@@ -363,38 +316,7 @@ export function createMobileAudioHandlers({
 
   const enqueuePlayback = (base64Audio: string) => {
     pcmChunkQueueRef.current.push(base64Audio);
-    // Always trigger processing check, even if currently processing
-    // This ensures the queue continues after the current batch finishes
-    if (!processingAudioRef.current) {
-      processMobileAudioQueue();
-    }
-  };
-
-  const flushPlayback = async () => {
-    // Process any remaining chunks in flush mode
-    if (pcmChunkQueueRef.current.length > 0) {
-      console.log(
-        `Flushing ${pcmChunkQueueRef.current.length} remaining audio chunks`
-      );
-
-      // Wait for any current processing to finish first
-      while (processingAudioRef.current) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-
-      // Now process remaining chunks in flush mode
-      if (pcmChunkQueueRef.current.length > 0) {
-        processMobileAudioQueue(true);
-
-        // Wait for all chunks to be processed
-        while (
-          processingAudioRef.current ||
-          pcmChunkQueueRef.current.length > 0
-        ) {
-          await new Promise((resolve) => setTimeout(resolve, 50));
-        }
-      }
-    }
+    processMobileAudioQueue();
   };
 
   const cleanup = async () => {
@@ -420,10 +342,9 @@ export function createMobileAudioHandlers({
     pcmChunkQueueRef.current = [];
     processingAudioRef.current = false;
     hasPrimedPlayback = false;
-    audioModeSet = false;
   };
 
-  return { startCapture, enqueuePlayback, flushPlayback, cleanup };
+  return { startCapture, enqueuePlayback, cleanup };
 }
 
 function convertFloat32ToPCM16(float32Array: Float32Array): Int16Array {
