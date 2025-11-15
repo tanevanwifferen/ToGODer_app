@@ -16,13 +16,12 @@ import { useChatTitle } from "../hooks/useChatTitle";
 import { usePrompts } from "../hooks/usePrompts";
 import { useChatInput } from "../hooks/useChatInput";
 import { useChatActions } from "../hooks/useChatActions";
-import { useVoiceChat } from "../hooks/useVoiceChat";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "./ThemedText";
 import { useExperienceContext } from "./providers/ExperienceProvider";
 import { useDispatch, useSelector } from "react-redux";
-import { updateSettings, addMessage } from "../redux/slices/chatsSlice";
+import { updateSettings } from "../redux/slices/chatsSlice";
 import { selectLibraryIntegrationEnabled } from "../redux/slices/chatSelectors";
 
 interface ChatProps {
@@ -56,16 +55,6 @@ export function Chat({ chatId, onBack }: ChatProps) {
     typing
   } = useMessages(chatId);
 
-  // Voice chat functionality
-  const {
-    isActive: isVoiceActive,
-    isConnecting: isVoiceConnecting,
-    error: voiceError,
-    transcripts,
-    startVoiceChat,
-    stopVoiceChat,
-  } = useVoiceChat();
-
   // Check language configuration when chat is loaded or changes
   useEffect(() => {
     // Only check language configuration when we have a chat
@@ -75,44 +64,6 @@ export function Chat({ chatId, onBack }: ChatProps) {
       showLanguageInput();
     }
   }, [showLanguageInput, chatId]);
-
-  // Save voice transcripts to chat when they come in
-  useEffect(() => {
-    if (transcripts.length > 0 && chatId) {
-      const lastTranscript = transcripts[transcripts.length - 1];
-      dispatch(
-        addMessage({
-          id: chatId,
-          message: {
-            role: lastTranscript.role,
-            content: lastTranscript.text,
-            timestamp: lastTranscript.timestamp,
-          },
-          skipAutoGenerate: true, // Voice chat handles its own AI responses
-        })
-      );
-    }
-  }, [transcripts, chatId, dispatch]);
-
-  // Show voice errors via toast
-  useEffect(() => {
-    if (voiceError) {
-      Toast.show({
-        type: 'error',
-        text1: 'Voice Chat Error',
-        text2: voiceError,
-      });
-    }
-  }, [voiceError]);
-
-  // Handle voice chat toggle
-  const handleVoicePress = useCallback(() => {
-    if (isVoiceActive) {
-      stopVoiceChat();
-    } else {
-      startVoiceChat();
-    }
-  }, [isVoiceActive, startVoiceChat, stopVoiceChat]);
 
   // Convert API messages to Gifted Chat messages
   const giftedMessages = useMemo(() => {
@@ -186,8 +137,6 @@ export function Chat({ chatId, onBack }: ChatProps) {
         title={chatTitle}
         onBack={onBack}
         messages={apiMessages ?? []}
-        onVoicePress={handleVoicePress}
-        isVoiceActive={isVoiceActive || isVoiceConnecting}
       />
       <View style={[styles.chatContainer, { backgroundColor }]}>
         <GiftedChat

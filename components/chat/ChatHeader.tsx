@@ -1,6 +1,6 @@
 /**
  * Header component for the chat screen.
- * Displays the chat title and provides navigation, sharing, and voice chat functionality.
+ * Displays the chat title and provides navigation and sharing functionality.
  */
 
 import React from 'react';
@@ -12,23 +12,14 @@ import { ApiChatMessage } from '../../model/ChatRequest';
 import { ShareRequest, SignedMessage } from '../../model/ShareTypes';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../../hooks/useAuth';
-import { Ionicons } from '@expo/vector-icons';
 
 interface ChatHeaderProps {
   title: string | undefined;
   onBack: () => void;
   messages: ApiChatMessage[];
-  onVoicePress?: () => void;
-  isVoiceActive?: boolean;
 }
 
-export function ChatHeader({
-  title = 'Chat',
-  onBack,
-  messages,
-  onVoicePress,
-  isVoiceActive = false
-}: ChatHeaderProps) {
+export function ChatHeader({ title = 'Chat', onBack, messages }: ChatHeaderProps) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
   const { isAuthenticated } = useAuth();
@@ -92,30 +83,15 @@ export function ChatHeader({
         <View style={styles.titleContainer}>
           <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
         </View>
-        <View style={styles.rightActions}>
-          {onVoicePress && (
-            <TouchableOpacity
-              onPress={onVoicePress}
-              style={[
-                styles.iconButton,
-                isVoiceActive && styles.activeIconButton
-              ]}
-            >
-              <Ionicons
-                name={isVoiceActive ? "call" : "call-outline"}
-                size={24}
-                color={isVoiceActive ? '#4CAF50' : theme.text}
-              />
-            </TouchableOpacity>
-          )}
+        <View style={styles.shareContainer}>
           <TouchableOpacity
             onPress={handleSharePress}
             style={[
-              styles.iconButton,
+              styles.shareButton,
               !isAuthenticated && { opacity: 0.5 }
             ]}
           >
-            <Ionicons name="share-outline" size={24} color={theme.text} />
+            <Text style={[styles.shareButtonText, { color: theme.text }]}>Share</Text>
           </TouchableOpacity>
           {showLoginHint && !isAuthenticated && (
             <Text style={[styles.loginHint, { color: theme.text, opacity: 0.7 }]}>
@@ -163,25 +139,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  rightActions: {
-    flexDirection: 'row',
+  shareButton: {
+    paddingVertical: 8,
+    minWidth: 60,
+    alignItems: 'flex-end',
+  },
+  shareButtonText: {
+    fontSize: 16,
+  },
+  shareContainer: {
     alignItems: 'center',
-    gap: 12,
-    minWidth: 80,
-  },
-  iconButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  activeIconButton: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    minWidth: 60,
   },
   loginHint: {
     fontSize: 10,
     marginTop: 2,
     textAlign: 'center',
-    position: 'absolute',
-    bottom: -15,
-    right: 0,
   },
 });

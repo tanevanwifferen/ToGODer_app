@@ -18,7 +18,6 @@ import { RouteProvider } from '../components/providers/RouteProvider';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { useInitialization } from '../hooks/useInitialization';
 import { useInitialize } from '@/hooks/useInitialize';
-import { useQuickActions, QuickActionType } from '@/hooks/useQuickActions';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -59,23 +58,6 @@ export default function RootLayout() {
       subscription.remove();
     };
   }, []);
-
-  // Handle Quick Actions from iOS
-  const handleQuickAction = (actionType: QuickActionType) => {
-    if (!actionType) return;
-
-    switch (actionType) {
-      case 'voicechat':
-        router.push('/(drawer)/voice-chat' as any);
-        break;
-      case 'morningroutine':
-        router.push('/(drawer)/morning-routine' as any);
-        break;
-    }
-  };
-
-  // Use Quick Actions hook
-  useQuickActions(handleQuickAction);
 
   // Parse and handle the deep link URL
   const handleDeepLink = (url: string) => {

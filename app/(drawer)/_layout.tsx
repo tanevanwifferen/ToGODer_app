@@ -22,8 +22,13 @@ export default function DrawerLayout() {
   const colorScheme = useColorScheme();
   const donateOptions = useSelector(selectDonateOptions);
   const showLogin = useSelector(selectShowLogin);
-  const { showPasscodeModal, setShowPasscodeModal } = usePasscode();
+  const { showPasscodeModal, setShowPasscodeModal, isLocked } = usePasscode();
   const { isDreaming } = useMemoryCheck();
+
+  // Skip passcode check on web platform
+  if (Platform.OS !== 'web' && isLocked) {
+    return <LockScreen />;
+  }
 
   return (
     <>
@@ -109,7 +114,7 @@ export default function DrawerLayout() {
         visible={showPasscodeModal}
         onClose={() => setShowPasscodeModal(false)}
       />
-      {isDreaming && <DreamingView isDreaming={isDreaming} />}
+      {isDreaming && !isLocked && <DreamingView isDreaming={isDreaming} />}
     </>
   );
 }
