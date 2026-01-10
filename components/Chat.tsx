@@ -146,7 +146,6 @@ export function Chat({ chatId, onBack }: ChatProps) {
           renderInputToolbar={renderInputToolbar}
           renderAvatar={null}
           alwaysShowSend
-          scrollToBottom
           maxComposerHeight={200}
           minComposerHeight={60}
           inverted={true}

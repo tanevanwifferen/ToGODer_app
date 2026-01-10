@@ -83,7 +83,7 @@ export class ApiClient {
     url: string,
     data: unknown = {},
     config: AxiosRequestConfig = {}
-  ): Promise<T | Error> {
+  ): Promise<T> {
     if (!ApiClient.axiosInstance) {
       throw new Error("ApiClient not initialized");
     }
