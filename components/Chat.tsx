@@ -80,6 +80,17 @@ export function Chat({ chatId, onBack }: ChatProps) {
         // Convert from reversed index to original index
         onDeleteMessage(apiMessages.length - 1 - messageIndex);
       }
+    },
+    (messageId: string, content: string) => {
+      // Edit: set message content in input field and delete the message
+      setInputText(content);
+      const messageIndex = giftedMessages.findIndex(
+        (msg) => msg._id === messageId
+      );
+      if (messageIndex !== -1 && apiMessages != null) {
+        // Convert from reversed index to original index
+        onDeleteMessage(apiMessages.length - 1 - messageIndex);
+      }
     }
   );
 
