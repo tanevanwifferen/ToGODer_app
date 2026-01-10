@@ -16,6 +16,7 @@ import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';
 import { useRoute } from '../components/providers/RouteProvider';
 import { ExperienceService } from '../services/ExperienceService';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useInitialization() {
   const { isSharedRoute } = useRoute();
@@ -47,7 +48,7 @@ export function useInitialization() {
         ExperienceService.showLanguageInputIfNeeded();
 
         // Create initial chat
-        const newChatId = `chat-${Date.now()}`;
+        const newChatId = uuidv4();
         store.dispatch(addChat({
           id: newChatId,
           messages: [],
