@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import globalConfigReducer from "./slices/globalConfigSlice";
 import chatsReducer, { ChatsState } from "./slices/chatsSlice";
+import chatUIReducer, { ChatUIState } from "./slices/chatUISlice";
 import authReducer, { AuthState } from "./slices/authSlice";
 import experienceReducer from "./slices/experienceSlice";
 import balanceReducer, { BalanceState } from "./slices/balanceSlice";
@@ -18,6 +19,7 @@ import { GlobalConfig } from "../model/GlobalConfig";
 export interface RootState {
   globalConfig: GlobalConfig;
   chats: ChatsState;
+  chatUI: ChatUIState;
   auth: AuthState;
   experience: {
     modalVisible: boolean;
@@ -34,6 +36,7 @@ export interface RootState {
 const rootReducer = combineReducers({
   globalConfig: globalConfigReducer,
   chats: chatsReducer,
+  chatUI: chatUIReducer,
   auth: authReducer,
   experience: experienceReducer,
   balance: balanceReducer,
@@ -48,6 +51,7 @@ const persistConfig: PersistConfig<RootState> = {
   whitelist: [
     "globalConfig",
     "chats",
+    "chatUI",
     "auth",
     "balance",
     "passcode",
