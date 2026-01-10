@@ -8,6 +8,7 @@ import { store } from '../redux/store';
 import { ApiClient } from '../apiClients/ApiClient';
 import { AuthService } from '../services/AuthService';
 import { BalanceService } from '../services/BalanceService';
+import { MemoryLoopService } from '../services/MemoryLoopService';
 import { setGlobalConfig } from '../redux/slices/globalConfigSlice';
 import { addChat, setCurrentChat } from '../redux/slices/chatsSlice';
 import * as Calendar from 'expo-calendar';
@@ -85,6 +86,8 @@ export function useInitialization() {
         // Start auth services with the fresh token
         AuthService.startAuthServices();
         AuthService.startAppFocusHandler();
+        // Start memory loop service
+        MemoryLoopService.startMemoryLoop();
         // Fetch initial balance if authenticated
         BalanceService.getInstance().fetchBalance();
       }
@@ -96,8 +99,10 @@ export function useInitialization() {
 
         if (currentIsAuthenticated && !AuthService.RefreshInterval) {
           AuthService.startTokenRefreshService();
+          MemoryLoopService.startMemoryLoop();
         } else {
           AuthService.stopTokenRefreshService();
+          MemoryLoopService.stopMemoryLoop();
         }
       });
     };
