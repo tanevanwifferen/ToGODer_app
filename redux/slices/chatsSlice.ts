@@ -190,6 +190,46 @@ const chatsSlice = createSlice({
         chat.projectId = action.payload.projectId;
       }
     },
+    // Edit a message and truncate all messages after it (for conversation branching)
+    editMessageAndTruncate: (
+      state,
+      action: PayloadAction<{
+        chatId: string;
+        messageIndex: number;
+        content: string;
+      }>
+    ) => {
+      const { chatId, messageIndex, content } = action.payload;
+      const chat = state.chats[chatId];
+      if (!chat) {
+        console.warn(`Chat ${chatId} not found when editing message`);
+        return;
+      }
+      if (messageIndex < 0 || messageIndex >= chat.messages.length) {
+        console.warn(
+          `Invalid message index ${messageIndex} for chat ${chatId}`
+        );
+        return;
+      }
+
+      // Create a new array with messages up to and including the edited message
+      const newMessages = chat.messages
+        .slice(0, messageIndex + 1)
+        .map((m, i) =>
+          i === messageIndex
+            ? {
+                ...m,
+                content,
+                timestamp: new Date().getTime(),
+              }
+            : m
+        );
+
+      chat.messages = newMessages;
+      chat.last_update = new Date().getTime();
+      // Set to true since editing a user message typically means wanting a new response
+      state.auto_generate_answer = true;
+    },
   },
 });
 
@@ -207,6 +247,7 @@ export const {
   updateDraftInputText,
   setAutoGenerateAnswer,
   setProjectForChat,
+  editMessageAndTruncate,
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;
