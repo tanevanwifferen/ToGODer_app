@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -16,36 +16,20 @@ import { useChatTitle } from "../hooks/useChatTitle";
 import { usePrompts } from "../hooks/usePrompts";
 import { useChatInput } from "../hooks/useChatInput";
 import { useChatActions } from "../hooks/useChatActions";
-import { ApiChatMessage } from "../model/ChatRequest";
+import { useGiftedMessages } from "../hooks/useGiftedMessages";
+import { useLibraryIntegration } from "../hooks/useLibraryIntegration";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "./ThemedText";
 import { useExperienceContext } from "./providers/ExperienceProvider";
-import { useDispatch, useSelector } from "react-redux";
-import { updateSettings } from "../redux/slices/chatsSlice";
-import { selectLibraryIntegrationEnabled } from "../redux/slices/chatSelectors";
 
 interface ChatProps {
   chatId: string;
   onBack: () => void;
 }
 
-const convertToGiftedMessage = (
-  msg: ApiChatMessage,
-  index: number
-): IMessage => ({
-  _id: index.toString(),
-  text: msg.content,
-  createdAt: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-  user: {
-    _id: msg.role === "user" ? 1 : 2,
-    name: msg.role === "user" ? "User" : "Assistant",
-  },
-});
-
 export function Chat({ chatId, onBack }: ChatProps) {
   const colorScheme = useColorScheme();
   const { showLanguageInput } = useExperienceContext();
-  const dispatch = useDispatch();
   const {
     messages: apiMessages,
     onSend: sendApiMessage,
@@ -66,19 +50,13 @@ export function Chat({ chatId, onBack }: ChatProps) {
   }, [showLanguageInput, chatId]);
 
   // Convert API messages to Gifted Chat messages
-  const giftedMessages = useMemo(() => {
-    if(apiMessages == null){
-      return [];
-    }
-    return [...apiMessages].map(convertToGiftedMessage).reverse();
-  }, [apiMessages]);
-
+  const giftedMessages = useGiftedMessages(apiMessages);
   const chatTitle = useChatTitle(chatId, giftedMessages);
-  
+
   // Get persistent chat input state from Redux
   const { inputText, setInputText } = useChatInput(chatId);
-  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled);
-  
+  const { libraryIntegrationEnabled, handleLibraryIntegrationToggle } = useLibraryIntegration();
+
   const {
     showPrompts,
     filteredPrompts,
@@ -96,13 +74,6 @@ export function Chat({ chatId, onBack }: ChatProps) {
         onDeleteMessage(apiMessages.length - 1 - messageIndex);
       }
     }
-  );
-
-  const handleLibraryIntegrationToggle = useCallback(
-    (value: boolean) => {
-      dispatch(updateSettings({ libraryIntegrationEnabled: value }));
-    },
-    [dispatch]
   );
 
   const renderInputToolbar = (toolbarProps: any) => (
