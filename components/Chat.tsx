@@ -12,6 +12,7 @@ import { ChatHeader } from "./chat/ChatHeader";
 import { CustomInputToolbar } from "./chat/CustomInputToolbar";
 import { EmptyChat } from "./chat/EmptyChat";
 import { useMessages } from "../hooks/useMessages";
+import { useMessageSending } from "../hooks/useMessageSending";
 import { useChatTitle } from "../hooks/useChatTitle";
 import { useMessageInput } from "../hooks/useMessageInput";
 import { useChatActions } from "../hooks/useChatActions";
@@ -29,14 +30,17 @@ interface ChatProps {
 export function Chat({ chatId, onBack }: ChatProps) {
   const colorScheme = useColorScheme();
   const { showLanguageInput } = useExperienceContext();
+
+  // useMessages provides message display and deletion
+  const { messages: apiMessages, onDeleteMessage } = useMessages(chatId);
+
+  // useMessageSending provides message sending functionality
   const {
-    messages: apiMessages,
-    onSend: sendApiMessage,
-    onDeleteMessage,
-    errorMessage,
-    retrySend,
-    typing
-  } = useMessages(chatId);
+    sendMessage: sendApiMessage,
+    retry: retrySend,
+    typing,
+    error: errorMessage,
+  } = useMessageSending(chatId);
 
   // Check language configuration when chat is loaded or changes
   useEffect(() => {
