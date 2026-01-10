@@ -11,6 +11,7 @@ import chatsReducer, {
   addMemories,
   updateDraftInputText,
   setAutoGenerateAnswer,
+  editMessageAndTruncate,
   Chat,
   ChatsState,
 } from "../chatsSlice";
@@ -666,6 +667,161 @@ describe("chatsSlice", () => {
       const state = chatsReducer(initialState, setAutoGenerateAnswer(false));
 
       expect(state.auto_generate_answer).toBe(false);
+    });
+  });
+
+  describe("editMessageAndTruncate", () => {
+    it("should edit message content at the specified index", () => {
+      const stateWithMessages: ChatsState = {
+        ...initialState,
+        chats: {
+          "chat-1": createMockChat({
+            id: "chat-1",
+            messages: [
+              createMockMessage({ content: "First", role: "user" }),
+              createMockMessage({ content: "Second", role: "assistant" }),
+              createMockMessage({ content: "Third", role: "user" }),
+            ],
+          }),
+        },
+      };
+
+      const state = chatsReducer(
+        stateWithMessages,
+        editMessageAndTruncate({
+          chatId: "chat-1",
+          messageIndex: 0,
+          content: "Edited First",
+        })
+      );
+
+      expect(state.chats["chat-1"].messages[0].content).toBe("Edited First");
+    });
+
+    it("should truncate all messages after the edited message", () => {
+      const stateWithMessages: ChatsState = {
+        ...initialState,
+        chats: {
+          "chat-1": createMockChat({
+            id: "chat-1",
+            messages: [
+              createMockMessage({ content: "First", role: "user" }),
+              createMockMessage({ content: "Second", role: "assistant" }),
+              createMockMessage({ content: "Third", role: "user" }),
+              createMockMessage({ content: "Fourth", role: "assistant" }),
+            ],
+          }),
+        },
+      };
+
+      const state = chatsReducer(
+        stateWithMessages,
+        editMessageAndTruncate({
+          chatId: "chat-1",
+          messageIndex: 1,
+          content: "Edited Second",
+        })
+      );
+
+      expect(state.chats["chat-1"].messages).toHaveLength(2);
+      expect(state.chats["chat-1"].messages[0].content).toBe("First");
+      expect(state.chats["chat-1"].messages[1].content).toBe("Edited Second");
+    });
+
+    it("should set auto_generate_answer to true", () => {
+      const stateWithMessages: ChatsState = {
+        ...initialState,
+        auto_generate_answer: false,
+        chats: {
+          "chat-1": createMockChat({
+            id: "chat-1",
+            messages: [createMockMessage({ content: "First", role: "user" })],
+          }),
+        },
+      };
+
+      const state = chatsReducer(
+        stateWithMessages,
+        editMessageAndTruncate({
+          chatId: "chat-1",
+          messageIndex: 0,
+          content: "Edited",
+        })
+      );
+
+      expect(state.auto_generate_answer).toBe(true);
+    });
+
+    it("should update last_update timestamp", () => {
+      const stateWithMessages: ChatsState = {
+        ...initialState,
+        chats: {
+          "chat-1": createMockChat({
+            id: "chat-1",
+            last_update: 1000,
+            messages: [createMockMessage()],
+          }),
+        },
+      };
+
+      const beforeTime = new Date().getTime();
+      const state = chatsReducer(
+        stateWithMessages,
+        editMessageAndTruncate({
+          chatId: "chat-1",
+          messageIndex: 0,
+          content: "Edited",
+        })
+      );
+
+      expect(state.chats["chat-1"].last_update).toBeGreaterThanOrEqual(beforeTime);
+    });
+
+    it("should not crash when chat does not exist", () => {
+      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+
+      const state = chatsReducer(
+        initialState,
+        editMessageAndTruncate({
+          chatId: "nonexistent",
+          messageIndex: 0,
+          content: "Edited",
+        })
+      );
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Chat nonexistent not found when editing message"
+      );
+      expect(state).toEqual(initialState);
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should not crash for invalid message index", () => {
+      const stateWithMessages: ChatsState = {
+        ...initialState,
+        chats: {
+          "chat-1": createMockChat({
+            id: "chat-1",
+            messages: [createMockMessage()],
+          }),
+        },
+      };
+      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+
+      const state = chatsReducer(
+        stateWithMessages,
+        editMessageAndTruncate({
+          chatId: "chat-1",
+          messageIndex: 5,
+          content: "Edited",
+        })
+      );
+
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(state.chats["chat-1"].messages[0].content).toBe("Test message");
+
+      consoleSpy.mockRestore();
     });
   });
 });

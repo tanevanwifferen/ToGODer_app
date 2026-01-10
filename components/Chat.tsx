@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -11,6 +11,7 @@ import { Colors } from "../constants/Colors";
 import { ChatHeader } from "./chat/ChatHeader";
 import { CustomInputToolbar } from "./chat/CustomInputToolbar";
 import { EmptyChat } from "./chat/EmptyChat";
+import { EditMessageModal } from "./chat/EditMessageModal";
 import { useMessages } from "../hooks/useMessages";
 import { useMessageSending } from "../hooks/useMessageSending";
 import { useChatTitle } from "../hooks/useChatTitle";
@@ -21,6 +22,8 @@ import { useLibraryIntegration } from "../hooks/useLibraryIntegration";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "./ThemedText";
 import { useExperienceContext } from "./providers/ExperienceProvider";
+import { useDispatch } from "react-redux";
+import { editMessageAndTruncate } from "../redux/slices/chatsSlice";
 
 interface ChatProps {
   chatId: string;
@@ -30,6 +33,7 @@ interface ChatProps {
 export function Chat({ chatId, onBack }: ChatProps) {
   const colorScheme = useColorScheme();
   const { showLanguageInput } = useExperienceContext();
+  const dispatch = useDispatch();
 
   // useMessages provides message display and deletion
   const { messages: apiMessages, onDeleteMessage } = useMessages(chatId);
@@ -56,6 +60,11 @@ export function Chat({ chatId, onBack }: ChatProps) {
   const giftedMessages = useGiftedMessages(apiMessages);
   const chatTitle = useChatTitle(chatId, giftedMessages);
 
+  // Edit modal state
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(null);
+  const [editingMessageContent, setEditingMessageContent] = useState("");
+
   // Get message input state and handlers using the consolidated hook
   const {
     inputText,
@@ -70,6 +79,49 @@ export function Chat({ chatId, onBack }: ChatProps) {
   // Get library integration state and handler
   const { libraryIntegrationEnabled, handleLibraryIntegrationToggle } = useLibraryIntegration();
 
+  // Handle edit message action from long press menu
+  const handleEditMessage = useCallback(
+    (messageId: string, content: string) => {
+      const messageIndex = giftedMessages.findIndex(
+        (msg) => msg._id === messageId
+      );
+      if (messageIndex !== -1 && apiMessages != null) {
+        // Convert from reversed index to original index
+        const originalIndex = apiMessages.length - 1 - messageIndex;
+        setEditingMessageIndex(originalIndex);
+        setEditingMessageContent(content);
+        setEditModalVisible(true);
+      }
+    },
+    [giftedMessages, apiMessages]
+  );
+
+  // Handle save from edit modal
+  const handleSaveEdit = useCallback(
+    (newContent: string) => {
+      if (editingMessageIndex !== null) {
+        dispatch(
+          editMessageAndTruncate({
+            chatId,
+            messageIndex: editingMessageIndex,
+            content: newContent,
+          })
+        );
+      }
+      setEditModalVisible(false);
+      setEditingMessageIndex(null);
+      setEditingMessageContent("");
+    },
+    [dispatch, chatId, editingMessageIndex]
+  );
+
+  // Handle close edit modal
+  const handleCloseEditModal = useCallback(() => {
+    setEditModalVisible(false);
+    setEditingMessageIndex(null);
+    setEditingMessageContent("");
+  }, []);
+
   const { onLongPress } = useChatActions(
     giftedMessages,
     (messageId: string) => {
@@ -81,17 +133,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
         onDeleteMessage(apiMessages.length - 1 - messageIndex);
       }
     },
-    (messageId: string, content: string) => {
-      // Edit: set message content in input field and delete the message
-      setInputText(content);
-      const messageIndex = giftedMessages.findIndex(
-        (msg) => msg._id === messageId
-      );
-      if (messageIndex !== -1 && apiMessages != null) {
-        // Convert from reversed index to original index
-        onDeleteMessage(apiMessages.length - 1 - messageIndex);
-      }
-    }
+    handleEditMessage
   );
 
   const renderInputToolbar = (toolbarProps: any) => (
@@ -155,6 +197,12 @@ export function Chat({ chatId, onBack }: ChatProps) {
           renderSystemMessage={renderSystemMessage}
         />
       </View>
+      <EditMessageModal
+        visible={editModalVisible}
+        onClose={handleCloseEditModal}
+        onSave={handleSaveEdit}
+        initialContent={editingMessageContent}
+      />
       <Toast />
     </SafeAreaView>
   );
