@@ -9,6 +9,7 @@ export interface Chat {
   last_update?: number;
   memories: string[];
   draftInputText?: string;
+  projectId?: string;
 }
 
 export interface ChatsState {
@@ -180,6 +181,15 @@ const chatsSlice = createSlice({
     setAutoGenerateAnswer: (state, action: PayloadAction<boolean>) => {
       state.auto_generate_answer = action.payload;
     },
+    setProjectForChat: (
+      state,
+      action: PayloadAction<{ chatId: string; projectId: string | undefined }>
+    ) => {
+      const chat = state.chats[action.payload.chatId];
+      if (chat) {
+        chat.projectId = action.payload.projectId;
+      }
+    },
   },
 });
 
@@ -196,6 +206,7 @@ export const {
   addMemories,
   updateDraftInputText,
   setAutoGenerateAnswer,
+  setProjectForChat,
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;
