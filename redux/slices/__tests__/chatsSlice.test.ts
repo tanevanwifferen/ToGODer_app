@@ -4,7 +4,6 @@ import chatsReducer, {
   updateMessageAtIndex,
   deleteMessage,
   deleteMessageByContent,
-  updateSettings,
   setTitle,
   deleteChat,
   setCurrentChat,
@@ -465,37 +464,6 @@ describe("chatsSlice", () => {
       );
 
       expect(state.chats["chat-1"].messages).toHaveLength(1);
-    });
-  });
-
-  describe("updateSettings", () => {
-    it("should update settings while preserving chats", () => {
-      const stateWithChats: ChatsState = {
-        ...initialState,
-        chats: { "chat-1": createMockChat() },
-        currentChatId: "chat-1",
-      };
-
-      const state = chatsReducer(
-        stateWithChats,
-        updateSettings({ model: "new-model", humanPrompt: false })
-      );
-
-      expect(state.model).toBe("new-model");
-      expect(state.humanPrompt).toBe(false);
-      expect(state.chats["chat-1"]).toBeDefined();
-      expect(state.currentChatId).toBe("chat-1");
-    });
-
-    it("should preserve unmodified settings", () => {
-      const state = chatsReducer(
-        initialState,
-        updateSettings({ language: "en" })
-      );
-
-      expect(state.language).toBe("en");
-      expect(state.model).toBe("meta-llama/llama-3.2-90b-vision-instruct");
-      expect(state.humanPrompt).toBe(true);
     });
   });
 
