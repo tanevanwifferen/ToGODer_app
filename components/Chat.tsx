@@ -13,8 +13,7 @@ import { CustomInputToolbar } from "./chat/CustomInputToolbar";
 import { EmptyChat } from "./chat/EmptyChat";
 import { useMessages } from "../hooks/useMessages";
 import { useChatTitle } from "../hooks/useChatTitle";
-import { usePrompts } from "../hooks/usePrompts";
-import { useChatInput } from "../hooks/useChatInput";
+import { useMessageInput } from "../hooks/useMessageInput";
 import { useChatActions } from "../hooks/useChatActions";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
@@ -74,17 +73,18 @@ export function Chat({ chatId, onBack }: ChatProps) {
   }, [apiMessages]);
 
   const chatTitle = useChatTitle(chatId, giftedMessages);
-  
-  // Get persistent chat input state from Redux
-  const { inputText, setInputText } = useChatInput(chatId);
-  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled);
-  
+
+  // Get message input state and handlers using the consolidated hook
   const {
+    inputText,
+    setInputText,
     showPrompts,
     filteredPrompts,
     handleInputTextChanged,
-    handleSelectPrompt
-  } = usePrompts(giftedMessages, inputText, setInputText);
+    handleSelectPrompt,
+    clearInput
+  } = useMessageInput(chatId, giftedMessages);
+  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled);
   const { onLongPress } = useChatActions(
     giftedMessages,
     (messageId: string) => {
@@ -111,7 +111,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
       onSend={(messages: IMessage[]) => {
         if (messages[0]) {
           sendApiMessage(messages[0].text);
-          setInputText("");
+          clearInput();
         }
       }}
       showPrompts={showPrompts}
@@ -144,7 +144,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
           onSend={(messages) => {
             if (messages[0]) {
               sendApiMessage(messages[0].text);
-              setInputText("");
+              clearInput();
             }
           }}
           user={{
