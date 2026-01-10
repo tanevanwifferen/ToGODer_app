@@ -13,6 +13,9 @@ import personalReducer, { PersonalState } from "./slices/personalSlice";
 import systemPromptReducer, {
   SystemPromptState,
 } from "./slices/systemPromptSlice";
+import userSettingsReducer, {
+  UserSettingsState,
+} from "./slices/userSettingsSlice";
 import { personalDataMiddleware } from "./middleware/personalDataMiddleware";
 import { GlobalConfig } from "../model/GlobalConfig";
 
@@ -31,6 +34,7 @@ export interface RootState {
   };
   personal: PersonalState;
   systemPrompt: SystemPromptState;
+  userSettings: UserSettingsState;
 }
 
 const rootReducer = combineReducers({
@@ -43,7 +47,40 @@ const rootReducer = combineReducers({
   passcode: passcodeReducer,
   personal: personalReducer,
   systemPrompt: systemPromptReducer,
+  userSettings: userSettingsReducer,
 });
+
+// Migration function to transfer settings from chats slice to userSettings slice
+const migrateSettings = (state: any) => {
+  // Check if userSettings is empty or uninitialized and chats has settings
+  if (state?.chats && (!state?.userSettings || !state.userSettings.model)) {
+    const chatsState = state.chats;
+
+    // Migrate settings from chats to userSettings
+    const migratedSettings = {
+      model: chatsState.model || "meta-llama/llama-3.2-90b-vision-instruct",
+      communicationStyle: chatsState.communicationStyle ?? 2,
+      language: chatsState.language || "",
+      assistant_name: chatsState.assistant_name || "ToGODer",
+      humanPrompt: chatsState.humanPrompt ?? true,
+      keepGoing: chatsState.keepGoing ?? true,
+      outsideBox: chatsState.outsideBox ?? true,
+      holisticTherapist: chatsState.holisticTherapist ?? true,
+      libraryIntegrationEnabled: chatsState.libraryIntegrationEnabled ?? false,
+      customSystemPrompt: state.systemPrompt?.customSystemPrompt || null,
+      isGeneratingPrompt: false,
+      promptLastGenerated: state.systemPrompt?.lastGenerated || null,
+      promptError: null,
+    };
+
+    return {
+      ...state,
+      userSettings: migratedSettings,
+    };
+  }
+
+  return state;
+};
 
 const persistConfig: PersistConfig<RootState> = {
   key: "root",
@@ -57,7 +94,11 @@ const persistConfig: PersistConfig<RootState> = {
     "passcode",
     "personal",
     "systemPrompt",
+    "userSettings",
   ],
+  migrate: (state: any) => {
+    return Promise.resolve(migrateSettings(state));
+  },
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

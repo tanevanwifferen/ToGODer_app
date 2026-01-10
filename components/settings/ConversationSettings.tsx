@@ -1,9 +1,20 @@
 import React from 'react';
 import { View, StyleSheet, Text, TextInput, useColorScheme } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { ChatSettings } from '../../model/ChatRequest';
-import { selectHumanPrompt, selectKeepGoing, selectOutsideBox, selectHolisticTherapist, selectLanguage, selectLibraryIntegrationEnabled } from '../../redux/slices/chatSelectors';
-import { updateSettings } from '../../redux/slices/chatsSlice';
+import {
+  selectHumanPrompt,
+  selectKeepGoing,
+  selectOutsideBox,
+  selectHolisticTherapist,
+  selectLanguage,
+  selectLibraryIntegrationEnabled,
+  setHumanPrompt,
+  setKeepGoing,
+  setOutsideBox,
+  setHolisticTherapist,
+  setLanguage,
+  setLibraryIntegrationEnabled,
+} from '../../redux/slices/userSettingsSlice';
 import { Colors } from '../../constants/Colors';
 import CustomCheckbox from '../ui/CustomCheckbox';
 import { selectPersona, setPersona } from '../../redux/slices/personalSlice';
@@ -12,21 +23,14 @@ const ConversationSettings = () => {
   const dispatch = useDispatch();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
-  
-  const humanPrompt = useSelector(selectHumanPrompt) ?? false;
-  const keepGoing = useSelector(selectKeepGoing) ?? false;
-  const outsideBox = useSelector(selectOutsideBox) ?? false;
-  const language = useSelector(selectLanguage)
-  const holisticTherapist = useSelector(selectHolisticTherapist) ?? false;
-  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled) ?? false;
-  const persona = useSelector(selectPersona);
 
-  const updateSettingsFn = (newSettings: Partial<ChatSettings>) => {
-    console.log("updating settings", newSettings);
-    dispatch(updateSettings({
-      ...newSettings,
-    }));
-  };
+  const humanPrompt = useSelector(selectHumanPrompt);
+  const keepGoing = useSelector(selectKeepGoing);
+  const outsideBox = useSelector(selectOutsideBox);
+  const language = useSelector(selectLanguage);
+  const holisticTherapist = useSelector(selectHolisticTherapist);
+  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled);
+  const persona = useSelector(selectPersona);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -39,7 +43,7 @@ const ConversationSettings = () => {
             borderColor: theme.icon
           }]}
           value={language}
-          onChangeText={(value: string) => dispatch(updateSettings({language:value.trim()}))}
+          onChangeText={(value: string) => dispatch(setLanguage(value.trim()))}
           placeholder="Enter language (e.g. English)"
           placeholderTextColor={theme.icon}
         />
@@ -68,7 +72,7 @@ const ConversationSettings = () => {
       <View style={styles.checkboxSection}>
         <CustomCheckbox
           value={humanPrompt}
-          onValueChange={(value: boolean) => updateSettingsFn({ humanPrompt: value })}
+          onValueChange={(value: boolean) => dispatch(setHumanPrompt(value))}
           color={theme.tint}
           colorScheme={colorScheme}
         />
@@ -78,7 +82,7 @@ const ConversationSettings = () => {
       <View style={styles.checkboxSection}>
         <CustomCheckbox
           value={keepGoing}
-          onValueChange={(value: boolean) => updateSettingsFn({ keepGoing: value })}
+          onValueChange={(value: boolean) => dispatch(setKeepGoing(value))}
           color={theme.tint}
           colorScheme={colorScheme}
         />
@@ -88,7 +92,7 @@ const ConversationSettings = () => {
       <View style={styles.checkboxSection}>
         <CustomCheckbox
           value={outsideBox}
-          onValueChange={(value: boolean) => updateSettingsFn({ outsideBox: value })}
+          onValueChange={(value: boolean) => dispatch(setOutsideBox(value))}
           color={theme.tint}
           colorScheme={colorScheme}
         />
@@ -98,7 +102,7 @@ const ConversationSettings = () => {
       <View style={styles.checkboxSection}>
         <CustomCheckbox
           value={holisticTherapist}
-          onValueChange={(value: boolean) => updateSettingsFn({ holisticTherapist: value })}
+          onValueChange={(value: boolean) => dispatch(setHolisticTherapist(value))}
           color={theme.tint}
           colorScheme={colorScheme}
         />
@@ -108,7 +112,7 @@ const ConversationSettings = () => {
       <View style={styles.checkboxSection}>
         <CustomCheckbox
           value={libraryIntegrationEnabled}
-          onValueChange={(value: boolean) => updateSettingsFn({ libraryIntegrationEnabled: value })}
+          onValueChange={(value: boolean) => dispatch(setLibraryIntegrationEnabled(value))}
           color={theme.tint}
           colorScheme={colorScheme}
         />

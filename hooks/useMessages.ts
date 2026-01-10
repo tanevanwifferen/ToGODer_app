@@ -15,8 +15,8 @@ import {
   selectCurrentChat,
   selectCurrentMemories,
   selectCurrentMessages,
-  selectModel,
 } from "../redux/slices/chatSelectors";
+import { selectModel, selectAssistantName } from "../redux/slices/userSettingsSlice";
 import { RootState } from "../redux/store";
 import StorageService from "../services/StorageService";
 import { useMemoryUpdates } from "./useMemoryUpdates";
@@ -35,9 +35,7 @@ export const useMessages = (chatId: string) => {
   const messages = useSelector(selectCurrentMessages);
   const autoGenerateAnswer = useSelector(selectAutoGenerateAnswer);
   const model = useSelector(selectModel);
-  const assistant_name = useSelector(
-    (state: RootState) => state.chats.assistant_name
-  );
+  const assistant_name = useSelector(selectAssistantName);
   const { updateMemory } = useMemoryUpdates(chatId);
 
   const retrySend = useCallback(() => {

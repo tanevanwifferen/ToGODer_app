@@ -3,7 +3,6 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import { setModalVisible } from '../../redux/slices/experienceSlice';
-import { updateSettings } from '../../redux/slices/chatsSlice';
 import { useState, useEffect } from 'react';
 import { Colors } from '../../constants/Colors';
 
@@ -23,7 +22,7 @@ interface LanguageInputModalProps {
 export const LanguageInputModal = ({ onSubmit }: LanguageInputModalProps) => {
   const dispatch = useDispatch();
   const modalVisible = useSelector((state: RootState) => state.experience.modalVisible);
-  const language = useSelector((state: RootState) => state.chats.language);
+  const language = useSelector((state: RootState) => state.userSettings.language);
   
   // Use local state for the input text to prevent re-renders from Redux updates
   const [localLanguage, setLocalLanguage] = useState('');

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ApiChatMessage, ChatSettings } from "../../model/ChatRequest";
+import { ApiChatMessage } from "../../model/ChatRequest";
 
 export interface Chat {
   id: string;
@@ -11,7 +11,7 @@ export interface Chat {
   draftInputText?: string;
 }
 
-export interface ChatsState extends ChatSettings {
+export interface ChatsState {
   chats: {
     [id: string]: Chat;
   };
@@ -23,15 +23,6 @@ export interface ChatsState extends ChatSettings {
 const initialState: ChatsState = {
   chats: {},
   currentChatId: null,
-  model: "meta-llama/llama-3.2-90b-vision-instruct",
-  humanPrompt: true,
-  keepGoing: true,
-  outsideBox: true,
-  holisticTherapist: true,
-  communicationStyle: 2,
-  assistant_name: "ToGODer",
-  language: "",
-  libraryIntegrationEnabled: false,
   auto_generate_answer: true,
 };
 
@@ -141,16 +132,6 @@ const chatsSlice = createSlice({
         chat.messages.splice(messageIndex, 1);
       }
     },
-    updateSettings: (state, action: PayloadAction<Partial<ChatSettings>>) => {
-      console.log("old_state", state.humanPrompt);
-      console.log("new_state", action.payload);
-      return {
-        ...state,
-        ...action.payload,
-        chats: state.chats, // Preserve existing chats
-        currentChatId: state.currentChatId, // Preserve current chat id
-      };
-    },
     setTitle: (state, action: PayloadAction<{ id: string; title: string }>) => {
       const chat = state.chats[action.payload.id];
       if (chat) {
@@ -208,7 +189,6 @@ export const {
   updateMessageAtIndex,
   deleteMessage,
   deleteMessageByContent,
-  updateSettings,
   setTitle,
   deleteChat,
   setCurrentChat,

@@ -42,49 +42,9 @@ export const selectCurrentMemories = createSelector(
   (chats, currentChatId) => currentChatId ? chats[currentChatId].memories : []
 );
 
-export const selectModel = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.model
-);
-
-export const selectKeepGoing = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.keepGoing
-);
-
-export const selectOutsideBox = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.outsideBox
-);
-
-export const selectHolisticTherapist = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.holisticTherapist
-);
-
-export const selectCommunicationStyle = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.communicationStyle
-);
-
-export const selectHumanPrompt = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.humanPrompt
-);
-
 export const selectAutoGenerateAnswer = createSelector(
   (state: { chats: ChatsState }) => state.chats,
   (chats) => chats.auto_generate_answer
-);
-
-export const selectLanguage = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.language
-);
-
-export const selectLibraryIntegrationEnabled = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.libraryIntegrationEnabled ?? false
 );
 
 export const selectDraftInputText = createSelector(

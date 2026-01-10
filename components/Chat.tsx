@@ -20,8 +20,7 @@ import Toast from "react-native-toast-message";
 import { ThemedText } from "./ThemedText";
 import { useExperienceContext } from "./providers/ExperienceProvider";
 import { useDispatch, useSelector } from "react-redux";
-import { updateSettings } from "../redux/slices/chatsSlice";
-import { selectLibraryIntegrationEnabled } from "../redux/slices/chatSelectors";
+import { selectLibraryIntegrationEnabled, setLibraryIntegrationEnabled } from "../redux/slices/userSettingsSlice";
 
 interface ChatProps {
   chatId: string;
@@ -100,7 +99,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
 
   const handleLibraryIntegrationToggle = useCallback(
     (value: boolean) => {
-      dispatch(updateSettings({ libraryIntegrationEnabled: value }));
+      dispatch(setLibraryIntegrationEnabled(value));
     },
     [dispatch]
   );
