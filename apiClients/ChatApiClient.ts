@@ -13,10 +13,29 @@ import {
 import { store } from "../redux";
 import { getApiUrl } from "../constants/Env";
 
+export interface ArtifactToolCall {
+  id: string;
+  name: "read_artifact" | "write_artifact" | "delete_artifact";
+  arguments: {
+    path: string;
+    content?: string;
+    name?: string;
+    mimeType?: string;
+  };
+}
+
+export interface ArtifactIndexItem {
+  path: string;
+  name: string;
+  mimeType?: string;
+  type: "file" | "folder";
+}
+
 export type StreamEvent =
   | { type: "chunk"; data: string }
   | { type: "signature"; data: string }
   | { type: "memory_request"; data: { keys: string[] } }
+  | { type: "tool_call"; data: ArtifactToolCall }
   | { type: "error"; data: any }
   | { type: "done"; data: null };
 
@@ -120,6 +139,7 @@ export class ChatApiClient {
     libraryIntegrationEnabled: boolean = false,
     memoryLoopCount?: number,
     memoryLoopLimitReached?: boolean,
+    artifactIndex?: ArtifactIndexItem[] | undefined,
     signal?: AbortSignal
   ): AsyncGenerator<StreamEvent> {
     const baseUrl = getApiUrl();
@@ -158,6 +178,7 @@ export class ChatApiClient {
       libraryIntegrationEnabled,
       memoryLoopCount,
       memoryLoopLimitReached,
+      artifactIndex,
     };
 
     // Use correct API prefix for streaming endpoint
@@ -278,6 +299,12 @@ export class ChatApiClient {
                 yield {
                   type: "memory_request",
                   data: data as { keys: string[] },
+                };
+                break;
+              case "tool_call":
+                yield {
+                  type: "tool_call",
+                  data: data as ArtifactToolCall,
                 };
                 break;
               case "error":
@@ -471,6 +498,12 @@ export class ChatApiClient {
               yield {
                 type: "memory_request",
                 data: data as { keys: string[] },
+              };
+              break;
+            case "tool_call":
+              yield {
+                type: "tool_call",
+                data: data as ArtifactToolCall,
               };
               break;
             case "error":

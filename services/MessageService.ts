@@ -6,11 +6,24 @@ import {
   addMemories,
   setAutoGenerateAnswer,
 } from "../redux/slices/chatsSlice";
-import { ChatApiClient, StreamEvent } from "../apiClients/ChatApiClient";
+import {
+  addArtifact,
+  updateArtifact,
+  deleteArtifact,
+  selectProjectArtifacts,
+  Artifact,
+} from "../redux/slices/artifactsSlice";
+import {
+  ChatApiClient,
+  StreamEvent,
+  ArtifactIndexItem,
+  ArtifactToolCall,
+} from "../apiClients/ChatApiClient";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
 import { BalanceService } from "./BalanceService";
 import StorageService from "./StorageService";
+import { v4 as uuidv4 } from "uuid";
 
 const MAX_MEMORY_FETCH_LOOPS = 4;
 
@@ -31,9 +44,11 @@ export interface SendMessageStreamOptions {
   memories: string[];
   memoryLoopCount?: number;
   memoryLoopLimitReached?: boolean;
+  artifactIndex?: ArtifactIndexItem[];
   onChunk?: (content: string) => void;
   onComplete?: (message: ApiChatMessage) => void;
   onError?: (error: string) => void;
+  onToolCall?: (toolCall: ArtifactToolCall) => void;
 }
 
 /**
@@ -50,6 +65,153 @@ export class MessageService {
       MessageService.instance = new MessageService();
     }
     return MessageService.instance;
+  }
+
+  /**
+   * Builds an artifact index for a project.
+   * Returns array of artifacts with path, name, mimeType, and type.
+   * Path is constructed from parent hierarchy.
+   */
+  private buildArtifactIndex(projectId: string): ArtifactIndexItem[] {
+    const state = store.getState();
+    const artifacts = selectProjectArtifacts(state, projectId);
+
+    // Build path for each artifact by traversing parent hierarchy
+    const buildPath = (artifact: Artifact): string => {
+      const parts: string[] = [artifact.name];
+      let current = artifact;
+
+      while (current.parentId) {
+        const parent = state.artifacts.artifacts[current.parentId];
+        if (parent) {
+          parts.unshift(parent.name);
+          current = parent;
+        } else {
+          break;
+        }
+      }
+
+      return "/" + parts.join("/");
+    };
+
+    return artifacts.map((artifact) => ({
+      path: buildPath(artifact),
+      name: artifact.name,
+      type: artifact.type,
+      mimeType: artifact.type === "file" ? "text/plain" : undefined,
+    }));
+  }
+
+  /**
+   * Handles artifact tool calls from the AI.
+   * Returns the result content to potentially send back to the AI.
+   */
+  private handleArtifactToolCall(
+    toolCall: ArtifactToolCall,
+    projectId: string
+  ): string {
+    const state = store.getState();
+    const artifacts = selectProjectArtifacts(state, projectId);
+
+    // Find artifact by path
+    const findArtifactByPath = (path: string): Artifact | undefined => {
+      const buildPath = (artifact: Artifact): string => {
+        const parts: string[] = [artifact.name];
+        let current = artifact;
+
+        while (current.parentId) {
+          const parent = state.artifacts.artifacts[current.parentId];
+          if (parent) {
+            parts.unshift(parent.name);
+            current = parent;
+          } else {
+            break;
+          }
+        }
+
+        return "/" + parts.join("/");
+      };
+
+      return artifacts.find((a) => buildPath(a) === path);
+    };
+
+    // Find parent artifact for a given path
+    const findParentForPath = (
+      path: string
+    ): { parentId: string | null; name: string } => {
+      const parts = path.split("/").filter(Boolean);
+      const name = parts.pop() || "";
+
+      if (parts.length === 0) {
+        return { parentId: null, name };
+      }
+
+      const parentPath = "/" + parts.join("/");
+      const parent = findArtifactByPath(parentPath);
+      return { parentId: parent?.id || null, name };
+    };
+
+    switch (toolCall.name) {
+      case "read_artifact": {
+        const artifact = findArtifactByPath(toolCall.arguments.path);
+        if (!artifact) {
+          return `Error: Artifact not found at path "${toolCall.arguments.path}"`;
+        }
+        if (artifact.type === "folder") {
+          // Return folder contents listing
+          const children = artifacts.filter((a) => a.parentId === artifact.id);
+          const listing = children
+            .map((c) => `${c.type === "folder" ? "[folder] " : ""}${c.name}`)
+            .join("\n");
+          return `Folder contents of "${toolCall.arguments.path}":\n${listing || "(empty)"}`;
+        }
+        return artifact.content || "";
+      }
+
+      case "write_artifact": {
+        const existing = findArtifactByPath(toolCall.arguments.path);
+        if (existing) {
+          // Update existing artifact
+          store.dispatch(
+            updateArtifact({
+              id: existing.id,
+              updates: {
+                content: toolCall.arguments.content,
+                name: toolCall.arguments.name || existing.name,
+              },
+            })
+          );
+          return `Updated artifact at "${toolCall.arguments.path}"`;
+        } else {
+          // Create new artifact
+          const { parentId, name } = findParentForPath(toolCall.arguments.path);
+          const newId = uuidv4();
+          store.dispatch(
+            addArtifact({
+              id: newId,
+              projectId,
+              name: toolCall.arguments.name || name,
+              type: "file",
+              parentId,
+              content: toolCall.arguments.content,
+            })
+          );
+          return `Created artifact at "${toolCall.arguments.path}"`;
+        }
+      }
+
+      case "delete_artifact": {
+        const artifact = findArtifactByPath(toolCall.arguments.path);
+        if (!artifact) {
+          return `Error: Artifact not found at path "${toolCall.arguments.path}"`;
+        }
+        store.dispatch(deleteArtifact(artifact.id));
+        return `Deleted artifact at "${toolCall.arguments.path}"`;
+      }
+
+      default:
+        return `Error: Unknown tool "${(toolCall as any).name}"`;
+    }
   }
 
   /**
@@ -102,6 +264,11 @@ export class MessageService {
       const updatedChat = updatedState.chats.chats[chatId];
       const messages = updatedChat.messages;
 
+      // Build artifact index if chat is associated with a project
+      const artifactIndex = chat.projectId
+        ? this.buildArtifactIndex(chat.projectId)
+        : undefined;
+
       // Send the message and get response
       if (useStreaming) {
         await this.sendMessageWithStreaming({
@@ -110,6 +277,7 @@ export class MessageService {
           memories: chat.memories,
           memoryLoopCount,
           memoryLoopLimitReached,
+          artifactIndex,
           onChunk,
           onComplete,
           onError,
@@ -155,13 +323,16 @@ export class MessageService {
       memories,
       memoryLoopCount = 0,
       memoryLoopLimitReached = false,
+      artifactIndex,
       onChunk,
       onComplete,
       onError,
+      onToolCall,
     } = options;
 
     const state = store.getState();
     const chatSettings = state.chats;
+    const chat = state.chats.chats[chatId];
 
     let accumulated = "";
     let messageSignature: string | undefined;
@@ -186,7 +357,8 @@ export class MessageService {
         undefined,
         chatSettings.libraryIntegrationEnabled,
         memoryLoopCount,
-        memoryLoopLimitReached
+        memoryLoopLimitReached,
+        artifactIndex
       )) {
         switch (evt.type) {
           case "chunk": {
@@ -266,17 +438,50 @@ export class MessageService {
             const updatedState = store.getState();
             const updatedChat = updatedState.chats.chats[chatId];
 
+            // Rebuild artifact index with fresh state
+            const updatedArtifactIndex = updatedChat.projectId
+              ? this.buildArtifactIndex(updatedChat.projectId)
+              : undefined;
+
             await this.sendMessageWithStreaming({
               chatId,
               messages: updatedChat.messages,
               memories: updatedChat.memories,
               memoryLoopCount: nextLoopCount,
               memoryLoopLimitReached: nextLimitReached,
+              artifactIndex: updatedArtifactIndex,
               onChunk,
               onComplete,
               onError,
+              onToolCall,
             });
             return;
+          }
+
+          case "tool_call": {
+            const toolCall = evt.data;
+
+            // Notify callback if provided
+            onToolCall?.(toolCall);
+
+            // Handle the tool call if chat is associated with a project
+            if (chat?.projectId) {
+              const result = this.handleArtifactToolCall(toolCall, chat.projectId);
+
+              // Log the tool call result
+              console.log(`Artifact tool call "${toolCall.name}":`, result);
+
+              // Show toast for artifact operations
+              const isError = result.startsWith("Error:");
+              Toast.show({
+                type: isError ? "error" : "success",
+                text1: isError ? "Artifact Error" : "Artifact Updated",
+                text2: result,
+                position: "bottom",
+                visibilityTime: 2000,
+              });
+            }
+            break;
           }
 
           case "error": {
@@ -471,12 +676,18 @@ export class MessageService {
       const messages = chat.messages;
       const memories = chat.memories;
 
+      // Build artifact index if chat is associated with a project
+      const artifactIndex = chat.projectId
+        ? this.buildArtifactIndex(chat.projectId)
+        : undefined;
+
       // Send the message and get response
       if (useStreaming) {
         await this.sendMessageWithStreaming({
           chatId,
           messages,
           memories,
+          artifactIndex,
           onChunk,
           onComplete,
           onError,
