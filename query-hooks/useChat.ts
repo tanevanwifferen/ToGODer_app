@@ -226,6 +226,8 @@ export function useChat() {
         libraryIntegrationEnabled ?? false,
         memoryLoopCount,
         memoryLoopLimitReached,
+        undefined, // artifactIndex
+        undefined, // tools
         signal
       )) {
         yield evt;

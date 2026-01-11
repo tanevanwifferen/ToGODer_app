@@ -336,7 +336,7 @@ export class MessageService {
     } = options;
 
     const state = store.getState();
-    const chatSettings = state.chats;
+    const userSettings = state.userSettings;
     const chat = state.chats.chats[chatId];
 
     let accumulated = "";
@@ -346,21 +346,21 @@ export class MessageService {
 
     try {
       for await (const evt of ChatApiClient.sendMessageStream(
-        chatSettings.model,
-        chatSettings.humanPrompt,
-        chatSettings.keepGoing,
-        chatSettings.outsideBox,
-        chatSettings.holisticTherapist,
-        chatSettings.communicationStyle,
+        userSettings.model,
+        userSettings.humanPrompt,
+        userSettings.keepGoing,
+        userSettings.outsideBox,
+        userSettings.holisticTherapist,
+        userSettings.communicationStyle,
         messages,
         undefined,
         undefined,
-        chatSettings.assistant_name,
+        userSettings.assistant_name,
         memories,
         undefined,
         undefined,
         undefined,
-        chatSettings.libraryIntegrationEnabled,
+        userSettings.libraryIntegrationEnabled,
         memoryLoopCount,
         memoryLoopLimitReached,
         artifactIndex,
@@ -556,25 +556,25 @@ export class MessageService {
     } = options;
 
     const state = store.getState();
-    const chatSettings = state.chats;
+    const userSettings = state.userSettings;
 
     try {
       const response = await ChatApiClient.sendMessage(
-        chatSettings.model,
-        chatSettings.humanPrompt,
-        chatSettings.keepGoing,
-        chatSettings.outsideBox,
-        chatSettings.holisticTherapist,
-        chatSettings.communicationStyle,
+        userSettings.model,
+        userSettings.humanPrompt,
+        userSettings.keepGoing,
+        userSettings.outsideBox,
+        userSettings.holisticTherapist,
+        userSettings.communicationStyle,
         messages,
         undefined,
         undefined,
-        chatSettings.assistant_name,
+        userSettings.assistant_name,
         memories,
         undefined,
         undefined,
         undefined,
-        chatSettings.libraryIntegrationEnabled,
+        userSettings.libraryIntegrationEnabled,
         memoryLoopCount,
         memoryLoopLimitReached
       );

@@ -89,9 +89,9 @@ export async function streamingWithMemoryExample() {
   });
 
   const options: StreamOptions = {
-    model: store.getState().chats.model,
+    model: store.getState().userSettings.model,
     communicationStyle:
-      store.getState().chats.communicationStyle ??
+      store.getState().userSettings.communicationStyle ??
       ChatRequestCommunicationStyle.Default,
     messages: store.getState().chats.chats[store.getState().chats.currentChatId!]
       ?.messages ?? [],
@@ -152,9 +152,9 @@ export function useStreamingChat(chatId: string) {
     // Get state from Redux
     const state = store.getState();
     const chat = state.chats.chats[chatId];
-    const model = state.chats.model;
+    const model = state.userSettings.model;
     const communicationStyle =
-      state.chats.communicationStyle ?? ChatRequestCommunicationStyle.Default;
+      state.userSettings.communicationStyle ?? ChatRequestCommunicationStyle.Default;
 
     // Register handlers
     let assistantContent = "";
@@ -200,10 +200,10 @@ export function useStreamingChat(chatId: string) {
       ],
       memoryIndex: [], // From StorageService.listKeys()
       memories: {}, // Loaded memories for this chat
-      humanPrompt: state.chats.humanPrompt,
-      keepGoing: state.chats.keepGoing,
-      outsideBox: state.chats.outsideBox,
-      holisticTherapist: state.chats.holisticTherapist,
+      humanPrompt: state.userSettings.humanPrompt,
+      keepGoing: state.userSettings.keepGoing,
+      outsideBox: state.userSettings.outsideBox,
+      holisticTherapist: state.userSettings.holisticTherapist,
     };
 
     // Start streaming
