@@ -106,12 +106,18 @@ export class MessageService {
 
   /**
    * Handles artifact tool calls from the AI.
-   * Returns the result content to potentially send back to the AI.
+   * Returns the result with artifact info for creating chat messages.
    */
   private handleArtifactToolCall(
     toolCall: ArtifactToolCall,
     projectId: string
-  ): string {
+  ): {
+    message: string;
+    artifactId?: string;
+    artifactPath: string;
+    isError: boolean;
+    operation: "read" | "write" | "delete";
+  } {
     const state = store.getState();
     const artifacts = selectProjectArtifacts(state, projectId);
 
@@ -153,11 +159,18 @@ export class MessageService {
       return { parentId: parent?.id || null, name };
     };
 
+    const path = toolCall.arguments.path;
+
     switch (toolCall.name) {
       case "read_artifact": {
-        const artifact = findArtifactByPath(toolCall.arguments.path);
+        const artifact = findArtifactByPath(path);
         if (!artifact) {
-          return `Error: Artifact not found at path "${toolCall.arguments.path}"`;
+          return {
+            message: `Artifact not found at path "${path}"`,
+            artifactPath: path,
+            isError: true,
+            operation: "read" as const,
+          };
         }
         if (artifact.type === "folder") {
           // Return folder contents listing
@@ -165,13 +178,25 @@ export class MessageService {
           const listing = children
             .map((c) => `${c.type === "folder" ? "[folder] " : ""}${c.name}`)
             .join("\n");
-          return `Folder contents of "${toolCall.arguments.path}":\n${listing || "(empty)"}`;
+          return {
+            message: `Folder contents of "${path}":\n${listing || "(empty)"}`,
+            artifactId: artifact.id,
+            artifactPath: path,
+            isError: false,
+            operation: "read" as const,
+          };
         }
-        return artifact.content || "";
+        return {
+          message: artifact.content || "",
+          artifactId: artifact.id,
+          artifactPath: path,
+          isError: false,
+          operation: "read" as const,
+        };
       }
 
       case "write_artifact": {
-        const existing = findArtifactByPath(toolCall.arguments.path);
+        const existing = findArtifactByPath(path);
         if (existing) {
           // Update existing artifact
           store.dispatch(
@@ -183,10 +208,16 @@ export class MessageService {
               },
             })
           );
-          return `Updated artifact at "${toolCall.arguments.path}"`;
+          return {
+            message: `Updated artifact "${path}"`,
+            artifactId: existing.id,
+            artifactPath: path,
+            isError: false,
+            operation: "write" as const,
+          };
         } else {
           // Create new artifact
-          const { parentId, name } = findParentForPath(toolCall.arguments.path);
+          const { parentId, name } = findParentForPath(path);
           const newId = uuidv4();
           store.dispatch(
             addArtifact({
@@ -198,21 +229,44 @@ export class MessageService {
               content: toolCall.arguments.content,
             })
           );
-          return `Created artifact at "${toolCall.arguments.path}"`;
+          return {
+            message: `Created artifact "${path}"`,
+            artifactId: newId,
+            artifactPath: path,
+            isError: false,
+            operation: "write" as const,
+          };
         }
       }
 
       case "delete_artifact": {
-        const artifact = findArtifactByPath(toolCall.arguments.path);
+        const artifact = findArtifactByPath(path);
         if (!artifact) {
-          return `Error: Artifact not found at path "${toolCall.arguments.path}"`;
+          return {
+            message: `Artifact not found at path "${path}"`,
+            artifactPath: path,
+            isError: true,
+            operation: "delete" as const,
+          };
         }
-        store.dispatch(deleteArtifact(artifact.id));
-        return `Deleted artifact at "${toolCall.arguments.path}"`;
+        const deletedId = artifact.id;
+        store.dispatch(deleteArtifact(deletedId));
+        return {
+          message: `Deleted artifact "${path}"`,
+          artifactId: deletedId,
+          artifactPath: path,
+          isError: false,
+          operation: "delete" as const,
+        };
       }
 
       default:
-        return `Error: Unknown tool "${(toolCall as any).name}"`;
+        return {
+          message: `Unknown tool "${(toolCall as any).name}"`,
+          artifactPath: path,
+          isError: true,
+          operation: "read" as const,
+        };
     }
   }
 
@@ -481,15 +535,17 @@ export class MessageService {
               // Log the tool call result
               console.log(`Artifact tool call "${toolCall.name}":`, result);
 
-              // Show toast for artifact operations
-              const isError = result.startsWith("Error:");
-              Toast.show({
-                type: isError ? "error" : "success",
-                text1: isError ? "Artifact Error" : "Artifact Updated",
-                text2: result,
-                position: "bottom",
-                visibilityTime: 2000,
-              });
+              // Add artifact operation message to chat (for write/delete, not read)
+              if (result.operation !== "read") {
+                const artifactMessage: ApiChatMessage = {
+                  role: "assistant",
+                  content: result.isError
+                    ? `Error: ${result.message}`
+                    : `${result.message}${result.artifactId ? `\n[View artifact](artifact://${result.artifactId})` : ""}`,
+                  timestamp: Date.now(),
+                };
+                store.dispatch(addMessage({ id: chatId, message: artifactMessage }));
+              }
             }
             break;
           }
@@ -517,8 +573,8 @@ export class MessageService {
         }
       }
 
-      // Stream completed successfully
-      if (onComplete && accumulated) {
+      // Stream completed successfully - always call onComplete to stop typing indicator
+      if (onComplete) {
         const assistantMessage: ApiChatMessage = {
           role: "assistant",
           content: accumulated,
