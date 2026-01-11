@@ -47,11 +47,14 @@ export interface SendMessageStreamOptions {
   memoryLoopLimitReached?: boolean;
   artifactIndex?: ArtifactIndexItem[];
   tools?: typeof ARTIFACT_TOOL_SCHEMAS;
+  toolCallLoopCount?: number;
   onChunk?: (content: string) => void;
   onComplete?: (message: ApiChatMessage) => void;
   onError?: (error: string) => void;
   onToolCall?: (toolCall: ArtifactToolCall) => void;
 }
+
+const MAX_TOOL_CALL_LOOPS = 10;
 
 /**
  * Service class for managing message operations
@@ -385,6 +388,7 @@ export class MessageService {
       memoryLoopLimitReached = false,
       artifactIndex,
       tools,
+      toolCallLoopCount = 0,
       onChunk,
       onComplete,
       onError,
@@ -399,6 +403,14 @@ export class MessageService {
     let messageSignature: string | undefined;
     let assistantIndex = -1;
     let placeholderCreated = false;
+
+    // Track tool calls and their results for chaining
+    const toolCallResults: Array<{
+      toolCallId: string;
+      name: string;
+      result: string;
+      isError: boolean;
+    }> = [];
 
     try {
       for await (const evt of ChatApiClient.sendMessageStream(
@@ -535,6 +547,14 @@ export class MessageService {
               // Log the tool call result
               console.log(`Artifact tool call "${toolCall.name}":`, result);
 
+              // Collect result for chaining
+              toolCallResults.push({
+                toolCallId: toolCall.id,
+                name: toolCall.name,
+                result: result.message,
+                isError: result.isError,
+              });
+
               // Add artifact operation message to chat (for write/delete, not read)
               if (result.operation !== "read") {
                 const artifactMessage: ApiChatMessage = {
@@ -571,6 +591,54 @@ export class MessageService {
             break;
           }
         }
+      }
+
+      // If there were tool calls, send results back to AI for chaining
+      if (toolCallResults.length > 0 && toolCallLoopCount < MAX_TOOL_CALL_LOOPS) {
+        // Format tool results as a user message
+        const toolResultsContent = toolCallResults
+          .map((r) => `[Tool Result: ${r.name}]\n${r.isError ? "Error: " : ""}${r.result}`)
+          .join("\n\n");
+
+        const toolResultMessage: ApiChatMessage = {
+          role: "user",
+          content: toolResultsContent,
+          timestamp: Date.now(),
+        };
+
+        // Add to chat history
+        store.dispatch(addMessage({ id: chatId, message: toolResultMessage }));
+
+        // Get updated state with new messages
+        const updatedState = store.getState();
+        const updatedChat = updatedState.chats.chats[chatId];
+
+        // Rebuild artifact index with fresh state
+        const updatedArtifactIndex = updatedChat.projectId
+          ? this.buildArtifactIndex(updatedChat.projectId)
+          : undefined;
+
+        // Build tools if project has artifacts
+        const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+
+        // Continue the conversation with tool results
+        console.log(`Tool call loop ${toolCallLoopCount + 1}: sending ${toolCallResults.length} results back to AI`);
+
+        await this.sendMessageWithStreaming({
+          chatId,
+          messages: updatedChat.messages,
+          memories: updatedChat.memories,
+          memoryLoopCount,
+          memoryLoopLimitReached,
+          artifactIndex: updatedArtifactIndex,
+          tools: updatedTools,
+          toolCallLoopCount: toolCallLoopCount + 1,
+          onChunk,
+          onComplete,
+          onError,
+          onToolCall,
+        });
+        return;
       }
 
       // Stream completed successfully - always call onComplete to stop typing indicator
