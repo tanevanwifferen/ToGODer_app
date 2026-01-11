@@ -32,18 +32,21 @@ export interface ArtifactIndexItem {
 }
 
 /**
- * Tool schema definition for AI function calling
+ * Tool schema definition for AI function calling (OpenAI format)
  */
 export interface ToolSchema {
-  name: string;
-  description: string;
-  input_schema: {
-    type: "object";
-    properties: Record<string, {
-      type: string;
-      description: string;
-    }>;
-    required: string[];
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: "object";
+      properties: Record<string, {
+        type: string;
+        description: string;
+      }>;
+      required: string[];
+    };
   };
 }
 
@@ -53,57 +56,66 @@ export interface ToolSchema {
  */
 export const ARTIFACT_TOOL_SCHEMAS: ToolSchema[] = [
   {
-    name: "read_artifact",
-    description: "Read the content of an artifact file or list contents of a folder. Use this to view existing artifacts.",
-    input_schema: {
-      type: "object",
-      properties: {
-        path: {
-          type: "string",
-          description: "The path to the artifact to read (e.g., '/src/main.ts' or '/docs')"
-        }
-      },
-      required: ["path"]
+    type: "function",
+    function: {
+      name: "read_artifact",
+      description: "Read the content of an artifact file or list contents of a folder. Use this to view existing artifacts.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path to the artifact to read (e.g., '/src/main.ts' or '/docs')"
+          }
+        },
+        required: ["path"]
+      }
     }
   },
   {
-    name: "write_artifact",
-    description: "Create a new artifact or update an existing artifact's content. Use this to save code, documents, or other files.",
-    input_schema: {
-      type: "object",
-      properties: {
-        path: {
-          type: "string",
-          description: "The path where the artifact should be saved (e.g., '/src/utils.ts')"
+    type: "function",
+    function: {
+      name: "write_artifact",
+      description: "Create a new artifact or update an existing artifact's content. Use this to save code, documents, or other files.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path where the artifact should be saved (e.g., '/src/utils.ts')"
+          },
+          content: {
+            type: "string",
+            description: "The content to write to the artifact"
+          },
+          name: {
+            type: "string",
+            description: "Optional display name for the artifact. If not provided, the filename from the path will be used."
+          },
+          mimeType: {
+            type: "string",
+            description: "Optional MIME type for the artifact (e.g., 'text/typescript', 'application/json')"
+          }
         },
-        content: {
-          type: "string",
-          description: "The content to write to the artifact"
-        },
-        name: {
-          type: "string",
-          description: "Optional display name for the artifact. If not provided, the filename from the path will be used."
-        },
-        mimeType: {
-          type: "string",
-          description: "Optional MIME type for the artifact (e.g., 'text/typescript', 'application/json')"
-        }
-      },
-      required: ["path", "content"]
+        required: ["path", "content"]
+      }
     }
   },
   {
-    name: "delete_artifact",
-    description: "Delete an existing artifact. Use this to remove files or folders that are no longer needed.",
-    input_schema: {
-      type: "object",
-      properties: {
-        path: {
-          type: "string",
-          description: "The path to the artifact to delete (e.g., '/old-file.txt')"
-        }
-      },
-      required: ["path"]
+    type: "function",
+    function: {
+      name: "delete_artifact",
+      description: "Delete an existing artifact. Use this to remove files or folders that are no longer needed.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path to the artifact to delete (e.g., '/old-file.txt')"
+          }
+        },
+        required: ["path"]
+      }
     }
   }
 ];
