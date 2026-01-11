@@ -45,6 +45,8 @@ interface ChatListItemProps {
   isRequest?: boolean;
   onSelect: (chatId: string) => void;
   onDelete: (chatId: string, title: string | null | undefined) => void;
+  onLongPress?: (chatId: string) => void;
+  projectName?: string | null;
 }
 
 const RightActions = ({
@@ -82,6 +84,8 @@ export function ChatListItem({
   isRequest,
   onSelect,
   onDelete,
+  onLongPress,
+  projectName,
 }: ChatListItemProps) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
@@ -105,21 +109,41 @@ export function ChatListItem({
             ],
           ]}
           onPress={() => onSelect(item.id)}
+          onLongPress={() => onLongPress?.(item.id)}
+          delayLongPress={500}
         >
           <View style={styles.chatItemContent}>
-            <Text
-              style={[
-                styles.chatTitle,
-                { color: theme.text },
-                isRequest && [
-                  styles.requestTitle,
-                  { color: colorScheme === "dark" ? "#FFB74D" : "#f57c00" },
-                ],
-              ]}
-            >
-              {isRequest ? "🔔 " : ""}
-              {item.title || "Untitled Chat"}
-            </Text>
+            <View style={styles.chatTitleContainer}>
+              <Text
+                style={[
+                  styles.chatTitle,
+                  { color: theme.text },
+                  isRequest && [
+                    styles.requestTitle,
+                    { color: colorScheme === "dark" ? "#FFB74D" : "#f57c00" },
+                  ],
+                ]}
+                numberOfLines={1}
+              >
+                {isRequest ? "🔔 " : ""}
+                {item.title || "Untitled Chat"}
+              </Text>
+              {projectName && (
+                <View
+                  style={[
+                    styles.projectBadge,
+                    { backgroundColor: theme.tint + "20" },
+                  ]}
+                >
+                  <Text
+                    style={[styles.projectBadgeText, { color: theme.tint }]}
+                    numberOfLines={1}
+                  >
+                    {projectName}
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text style={[styles.timestamp, { color: theme.text + "99" }]}>
               {formatLastUpdate(item.last_update)}
             </Text>
@@ -168,21 +192,41 @@ export function ChatListItem({
             ],
           ]}
           onPress={() => onSelect(item.id)}
+          onLongPress={() => onLongPress?.(item.id)}
+          delayLongPress={500}
         >
           <View style={styles.chatItemContent}>
-            <Text
-              style={[
-                styles.chatTitle,
-                { color: theme.text },
-                isRequest && [
-                  styles.requestTitle,
-                  { color: colorScheme === "dark" ? "#FFB74D" : "#f57c00" },
-                ],
-              ]}
-            >
-              {isRequest ? "🔔 " : ""}
-              {item.title || "Untitled Chat"}
-            </Text>
+            <View style={styles.chatTitleContainer}>
+              <Text
+                style={[
+                  styles.chatTitle,
+                  { color: theme.text },
+                  isRequest && [
+                    styles.requestTitle,
+                    { color: colorScheme === "dark" ? "#FFB74D" : "#f57c00" },
+                  ],
+                ]}
+                numberOfLines={1}
+              >
+                {isRequest ? "🔔 " : ""}
+                {item.title || "Untitled Chat"}
+              </Text>
+              {projectName && (
+                <View
+                  style={[
+                    styles.projectBadge,
+                    { backgroundColor: theme.tint + "20" },
+                  ]}
+                >
+                  <Text
+                    style={[styles.projectBadgeText, { color: theme.tint }]}
+                    numberOfLines={1}
+                  >
+                    {projectName}
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text style={[styles.timestamp, { color: theme.text + "99" }]}>
               {formatLastUpdate(item.last_update)}
             </Text>
@@ -246,8 +290,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  chatTitleContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginRight: 8,
+  },
+  projectBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    flexShrink: 0,
+  },
+  projectBadgeText: {
+    fontSize: 11,
+    fontWeight: "500",
+    maxWidth: 80,
+  },
   timestamp: {
     fontSize: 12,
     marginLeft: 8,
+    flexShrink: 0,
   },
 });
