@@ -5,7 +5,7 @@ import {
   selectOldDefaultModel,
   setGlobalConfig,
 } from "../redux/slices/globalConfigSlice";
-import { updateSettings } from "../redux/slices/chatsSlice";
+import { updateSettings } from "../redux/slices/userSettingsSlice";
 import { store } from "../redux/store";
 import { InitializationService } from "../services/InitializationService";
 import { useSelector } from "react-redux";
