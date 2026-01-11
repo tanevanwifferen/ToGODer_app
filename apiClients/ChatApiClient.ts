@@ -178,7 +178,9 @@ export class ChatApiClient {
     persona?: string | undefined,
     libraryIntegrationEnabled: boolean = false,
     memoryLoopCount?: number,
-    memoryLoopLimitReached?: boolean
+    memoryLoopLimitReached?: boolean,
+    artifactIndex?: ArtifactIndexItem[] | undefined,
+    tools?: ToolSchema[] | undefined
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>("/chat", {
       model,
@@ -198,6 +200,8 @@ export class ChatApiClient {
       libraryIntegrationEnabled,
       memoryLoopCount,
       memoryLoopLimitReached,
+      artifactIndex,
+      tools,
     });
 
     if (response instanceof Error) {

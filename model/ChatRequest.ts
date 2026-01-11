@@ -27,10 +27,35 @@ export interface ChatSettings {
   persona?: string;
 }
 
+export interface ArtifactIndexItem {
+  path: string;
+  name: string;
+  mimeType?: string;
+  type: "file" | "folder";
+}
+
+export interface ToolSchema {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: "object";
+      properties: Record<string, {
+        type: string;
+        description: string;
+      }>;
+      required: string[];
+    };
+  };
+}
+
 export interface ChatRequest extends ChatSettings {
   prompts: ApiChatMessage[];
   memoryLoopCount?: number;
   memoryLoopLimitReached?: boolean;
+  artifactIndex?: ArtifactIndexItem[];
+  tools?: ToolSchema[];
 }
 
 export interface ExperienceRequest {

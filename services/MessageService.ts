@@ -293,6 +293,8 @@ export class MessageService {
           memories: chat.memories,
           memoryLoopCount,
           memoryLoopLimitReached,
+          artifactIndex,
+          tools,
           onComplete,
           onError,
         });
@@ -551,6 +553,8 @@ export class MessageService {
       memories,
       memoryLoopCount = 0,
       memoryLoopLimitReached = false,
+      artifactIndex,
+      tools,
       onComplete,
       onError,
     } = options;
@@ -576,7 +580,9 @@ export class MessageService {
         undefined,
         userSettings.libraryIntegrationEnabled,
         memoryLoopCount,
-        memoryLoopLimitReached
+        memoryLoopLimitReached,
+        artifactIndex,
+        tools
       );
 
       if ("requestForMemory" in response) {
@@ -603,12 +609,20 @@ export class MessageService {
         const updatedState = store.getState();
         const updatedChat = updatedState.chats.chats[chatId];
 
+        // Rebuild artifact index and tools with fresh state
+        const updatedArtifactIndex = updatedChat.projectId
+          ? this.buildArtifactIndex(updatedChat.projectId)
+          : undefined;
+        const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+
         await this.sendMessageWithoutStreaming({
           chatId,
           messages: updatedChat.messages,
           memories: updatedChat.memories,
           memoryLoopCount: nextLoopCount,
           memoryLoopLimitReached: nextLimitReached,
+          artifactIndex: updatedArtifactIndex,
+          tools: updatedTools,
           onComplete,
           onError,
         });
@@ -707,6 +721,8 @@ export class MessageService {
           chatId,
           messages,
           memories,
+          artifactIndex,
+          tools,
           onComplete,
           onError,
         });
