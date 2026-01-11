@@ -676,20 +676,19 @@ export class MessageService {
 
       // If there were tool calls, send results back to AI for chaining
       if (toolCallResults.length > 0 && toolCallLoopCount < MAX_TOOL_CALL_LOOPS) {
-        // Format tool results as a user message
-        const toolResultsContent = toolCallResults
-          .map((r) => `[Tool Result: ${r.name}]\n${r.isError ? "Error: " : ""}${r.result}`)
-          .join("\n\n");
+        // Create proper tool messages for each result
+        for (const result of toolCallResults) {
+          const toolResultMessage: ApiChatMessage = {
+            role: "tool",
+            content: result.isError ? `Error: ${result.result}` : result.result,
+            tool_call_id: result.toolCallId,
+            timestamp: Date.now(),
+            hidden: true,
+          };
 
-        const toolResultMessage: ApiChatMessage = {
-          role: "user",
-          content: toolResultsContent,
-          timestamp: Date.now(),
-          hidden: true,
-        };
-
-        // Add to chat history
-        store.dispatch(addMessage({ id: chatId, message: toolResultMessage }));
+          // Add to chat history
+          store.dispatch(addMessage({ id: chatId, message: toolResultMessage }));
+        }
 
         // Get updated state with new messages
         const updatedState = store.getState();

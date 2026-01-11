@@ -7,12 +7,13 @@ export enum ChatRequestCommunicationStyle {
 
 export interface ApiChatMessage {
   content: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "tool";
   signature?: string;
   timestamp?: Date | number;
   updateData?: string;
   hidden?: boolean;
   artifactId?: string;
+  tool_call_id?: string;
 }
 
 export interface ChatSettings {
