@@ -73,11 +73,39 @@ export class MessageService {
   }
 
   /**
+   * Fixes orphaned artifacts in a project.
+   * Artifacts with parentId pointing to non-existent folders are moved to root.
+   */
+  private fixOrphanedArtifacts(projectId: string): void {
+    const state = store.getState();
+    const artifacts = selectProjectArtifacts(state, projectId);
+    const artifactIds = new Set(artifacts.map((a) => a.id));
+
+    for (const artifact of artifacts) {
+      if (artifact.parentId && !artifactIds.has(artifact.parentId)) {
+        // Parent doesn't exist, move to root
+        console.log(
+          `Fixing orphaned artifact "${artifact.name}" - moving to root`
+        );
+        store.dispatch(
+          updateArtifact({
+            id: artifact.id,
+            updates: { parentId: null },
+          })
+        );
+      }
+    }
+  }
+
+  /**
    * Builds an artifact index for a project.
    * Returns array of artifacts with path, name, mimeType, and type.
    * Path is constructed from parent hierarchy.
    */
   private buildArtifactIndex(projectId: string): ArtifactIndexItem[] {
+    // Fix any orphaned artifacts before building index
+    this.fixOrphanedArtifacts(projectId);
+
     const state = store.getState();
     const artifacts = selectProjectArtifacts(state, projectId);
 
@@ -162,6 +190,57 @@ export class MessageService {
       return { parentId: parent?.id || null, name };
     };
 
+    // Ensure all parent folders exist for a given path, creating them if needed
+    const ensureParentFoldersExist = (
+      path: string
+    ): { parentId: string | null; name: string } => {
+      const parts = path.split("/").filter(Boolean);
+      const name = parts.pop() || "";
+
+      if (parts.length === 0) {
+        return { parentId: null, name };
+      }
+
+      let currentParentId: string | null = null;
+      let currentPath = "";
+      // Track newly created folders by path to handle nested creation
+      const createdFolders: { [path: string]: string } = {};
+
+      // Iterate through each folder in the path
+      for (const folderName of parts) {
+        currentPath = currentPath + "/" + folderName;
+
+        // Check if we just created this folder in this operation
+        if (createdFolders[currentPath]) {
+          currentParentId = createdFolders[currentPath];
+          continue;
+        }
+
+        const existingFolder = findArtifactByPath(currentPath);
+
+        if (existingFolder) {
+          // Folder already exists, use it as the parent for next level
+          currentParentId = existingFolder.id;
+        } else {
+          // Folder doesn't exist, create it
+          const newFolderId = uuidv4();
+          store.dispatch(
+            addArtifact({
+              id: newFolderId,
+              projectId,
+              name: folderName,
+              type: "folder",
+              parentId: currentParentId,
+            })
+          );
+          createdFolders[currentPath] = newFolderId;
+          currentParentId = newFolderId;
+        }
+      }
+
+      return { parentId: currentParentId, name };
+    };
+
     const path = toolCall.arguments.path;
 
     switch (toolCall.name) {
@@ -219,8 +298,8 @@ export class MessageService {
             operation: "write" as const,
           };
         } else {
-          // Create new artifact
-          const { parentId, name } = findParentForPath(path);
+          // Create new artifact, ensuring parent folders exist
+          const { parentId, name } = ensureParentFoldersExist(path);
           const newId = uuidv4();
           store.dispatch(
             addArtifact({
