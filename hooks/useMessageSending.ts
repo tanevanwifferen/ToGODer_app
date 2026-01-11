@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { ApiChatMessage } from "../model/ChatRequest";
 import { ChatResponse, MessageResponse } from "../model/ChatResponse";
 import type { StreamEvent } from "../apiClients/ChatApiClient";
+import { MessageService } from "../services/MessageService";
 
 export interface SendMessageOptions {
   memoryLoopCount?: number;
@@ -44,10 +45,10 @@ export interface UseMessageSendingResult {
 }
 
 /**
- * Hook for handling message sending with streaming support, error handling, and retry logic.
+ * Core hook for handling message sending with streaming support, error handling, and retry logic.
  * Decoupled from Redux for testability.
  */
-export function useMessageSending(
+function useCoreMessageSending(
   api: MessageSendingApi,
   callbacks?: MessageSendingCallbacks
 ): UseMessageSendingResult {
@@ -216,5 +217,112 @@ export function useMessageSending(
     isLoading,
     error,
     clearError,
+  };
+}
+
+/**
+ * Consumer-friendly result interface for chat-based message sending
+ */
+export interface UseChatMessageSendingResult {
+  sendMessage: (content: string) => Promise<void>;
+  retry: () => Promise<void>;
+  isLoading: boolean;
+  typing: boolean;
+  error: string | null;
+}
+
+/**
+ * Consumer-friendly hook for sending messages in a chat.
+ * Takes a chatId and provides a simple API for sending messages.
+ *
+ * This is the hook that should be used in UI components like Chat.tsx.
+ * For testing or custom integrations, use the core useMessageSending hook instead.
+ *
+ * @param chatId - The ID of the chat to send messages to
+ * @returns Object with sendMessage, retry, isLoading, typing, and error
+ */
+export function useMessageSending(chatId: string): UseChatMessageSendingResult;
+
+/**
+ * Core hook for message sending with streaming support.
+ * Decoupled from Redux for testability.
+ *
+ * @param api - The API client for sending messages
+ * @param callbacks - Optional callbacks for handling events
+ * @returns Object with sendMessage, retry, cancel, isLoading, error, and clearError
+ */
+export function useMessageSending(
+  api: MessageSendingApi,
+  callbacks?: MessageSendingCallbacks
+): UseMessageSendingResult;
+
+/**
+ * Implementation of useMessageSending that supports both signatures
+ */
+export function useMessageSending(
+  chatIdOrApi: string | MessageSendingApi,
+  callbacks?: MessageSendingCallbacks
+): UseChatMessageSendingResult | UseMessageSendingResult {
+  // Check if called with chatId (consumer-friendly API)
+  if (typeof chatIdOrApi === "string") {
+    return useChatMessageSending(chatIdOrApi);
+  }
+
+  // Otherwise, use core implementation
+  return useCoreMessageSending(chatIdOrApi, callbacks);
+}
+
+/**
+ * Consumer-friendly hook implementation that wraps MessageService
+ */
+function useChatMessageSending(chatId: string): UseChatMessageSendingResult {
+  const [isLoading, setIsLoading] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const lastContentRef = useRef<string | null>(null);
+
+  const sendMessage = useCallback(
+    async (content: string): Promise<void> => {
+      lastContentRef.current = content;
+      setIsLoading(true);
+      setTyping(false);
+      setError(null);
+
+      const messageService = MessageService.getInstance();
+
+      await messageService.sendMessage({
+        chatId,
+        content,
+        useStreaming: true,
+        onChunk: () => {
+          // Once we receive chunks, assistant is "typing"
+          setTyping(true);
+        },
+        onComplete: () => {
+          setIsLoading(false);
+          setTyping(false);
+        },
+        onError: (errorMsg) => {
+          setError(errorMsg);
+          setIsLoading(false);
+          setTyping(false);
+        },
+      });
+    },
+    [chatId]
+  );
+
+  const retry = useCallback(async (): Promise<void> => {
+    if (lastContentRef.current) {
+      await sendMessage(lastContentRef.current);
+    }
+  }, [sendMessage]);
+
+  return {
+    sendMessage,
+    retry,
+    isLoading,
+    typing,
+    error,
   };
 }
