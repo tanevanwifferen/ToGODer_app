@@ -1,12 +1,10 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useState, useMemo } from "react";
 import {
   StyleSheet,
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   Platform,
   SafeAreaView,
   useColorScheme,
@@ -16,14 +14,13 @@ import { useSelector, useDispatch } from "react-redux";
 import { Colors } from "../../../constants/Colors";
 import { RootState } from "../../../redux/store";
 import { updateProject } from "../../../redux/slices/projectsSlice";
+import { selectProjectArtifacts } from "../../../redux/slices/artifactsSlice";
 import {
-  addArtifact,
-  deleteArtifact,
-  Artifact,
-} from "../../../redux/slices/artifactsSlice";
-import { ArtifactTree } from "../../../components/artifact-tree";
-import { IconSymbol } from "../../../components/ui/IconSymbol";
-import { v4 as uuidv4 } from "uuid";
+  ProjectDetailsTabs,
+  ProjectChatsTab,
+  ProjectArtifactsTab,
+  TabType,
+} from "../../../components/project-details";
 
 export default function ProjectDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -37,10 +34,20 @@ export default function ProjectDetailsScreen() {
     (state: RootState) => state.projects.projects[projectId]
   );
   const chats = useSelector((state: RootState) => state.chats.chats);
+  const artifacts = useSelector((state: RootState) =>
+    selectProjectArtifacts(state, projectId)
+  );
 
+  const [activeTab, setActiveTab] = useState<TabType>("chats");
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState(project?.description || "");
-  const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
+
+  // Count chats belonging to this project
+  const chatCount = useMemo(() => {
+    return Object.values(chats).filter(
+      (chat) => chat.projectId === projectId && !chat.isRequest
+    ).length;
+  }, [chats, projectId]);
 
   // Update navigation title
   useLayoutEffect(() => {
@@ -71,10 +78,6 @@ export default function ProjectDetailsScreen() {
     );
   }
 
-  const projectChats = project.chatIds
-    .map((chatId) => chats[chatId])
-    .filter(Boolean);
-
   const handleSaveDescription = () => {
     dispatch(
       updateProject({
@@ -85,196 +88,76 @@ export default function ProjectDetailsScreen() {
     setIsEditingDescription(false);
   };
 
-  const handleAddFolder = () => {
-    const name = Platform.OS === "web" ? prompt("Folder name:") : null;
-    if (Platform.OS === "web") {
-      if (name) {
-        dispatch(
-          addArtifact({
-            id: uuidv4(),
-            projectId,
-            name,
-            type: "folder",
-            parentId: selectedArtifact?.type === "folder" ? selectedArtifact.id : null,
-          })
-        );
-      }
-    } else {
-      Alert.prompt(
-        "New Folder",
-        "Enter folder name:",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Create",
-            onPress: (name) => {
-              if (name) {
-                dispatch(
-                  addArtifact({
-                    id: uuidv4(),
-                    projectId,
-                    name,
-                    type: "folder",
-                    parentId: selectedArtifact?.type === "folder" ? selectedArtifact.id : null,
-                  })
-                );
-              }
-            },
-          },
-        ],
-        "plain-text"
-      );
-    }
-  };
-
-  const handleAddFile = () => {
-    const name = Platform.OS === "web" ? prompt("File name:") : null;
-    if (Platform.OS === "web") {
-      if (name) {
-        dispatch(
-          addArtifact({
-            id: uuidv4(),
-            projectId,
-            name,
-            type: "file",
-            parentId: selectedArtifact?.type === "folder" ? selectedArtifact.id : null,
-            content: "",
-          })
-        );
-      }
-    } else {
-      Alert.prompt(
-        "New File",
-        "Enter file name:",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Create",
-            onPress: (name) => {
-              if (name) {
-                dispatch(
-                  addArtifact({
-                    id: uuidv4(),
-                    projectId,
-                    name,
-                    type: "file",
-                    parentId: selectedArtifact?.type === "folder" ? selectedArtifact.id : null,
-                    content: "",
-                  })
-                );
-              }
-            },
-          },
-        ],
-        "plain-text"
-      );
-    }
-  };
-
-  const handleDeleteArtifact = (artifact: Artifact) => {
-    const message =
-      artifact.type === "folder"
-        ? `Delete folder "${artifact.name}" and all its contents?`
-        : `Delete file "${artifact.name}"?`;
-
-    if (Platform.OS === "web") {
-      if (confirm(message)) {
-        dispatch(deleteArtifact(artifact.id));
-        if (selectedArtifact?.id === artifact.id) {
-          setSelectedArtifact(null);
-        }
-      }
-    } else {
-      Alert.alert("Delete", message, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            dispatch(deleteArtifact(artifact.id));
-            if (selectedArtifact?.id === artifact.id) {
-              setSelectedArtifact(null);
-            }
-          },
-        },
-      ]);
-    }
-  };
-
   const containerStyle =
     Platform.OS === "web" ? styles.webContainer : styles.container;
-  const contentStyle = Platform.OS === "web" ? styles.webContent : undefined;
+  const contentStyle = Platform.OS === "web" ? styles.webContent : styles.content;
 
   return (
     <SafeAreaView
       style={[containerStyle, { backgroundColor: theme.background }]}
     >
-      <ScrollView style={contentStyle} contentContainerStyle={styles.scrollContent}>
-        {/* Project Info Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            Description
-          </Text>
-          {isEditingDescription ? (
-            <View style={styles.editDescriptionContainer}>
-              <TextInput
-                style={[
-                  styles.descriptionInput,
-                  {
-                    color: theme.text,
-                    backgroundColor: colorScheme === "dark" ? "#2D2D2D" : "#f5f5f5",
-                    borderColor: theme.tint,
-                  },
-                ]}
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Add a description..."
-                placeholderTextColor={theme.text + "66"}
-                multiline
-                autoFocus
-              />
-              <View style={styles.editActions}>
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => setIsEditingDescription(false)}
-                >
-                  <Text style={[styles.editButtonText, { color: theme.text + "99" }]}>
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.editButton, { backgroundColor: theme.tint }]}
-                  onPress={handleSaveDescription}
-                >
-                  <Text style={styles.saveButtonText}>Save</Text>
-                </TouchableOpacity>
+      <View style={contentStyle}>
+        {/* Project Info Header */}
+        <View style={styles.header}>
+          {/* Description Section */}
+          <View style={styles.descriptionSection}>
+            {isEditingDescription ? (
+              <View style={styles.editDescriptionContainer}>
+                <TextInput
+                  style={[
+                    styles.descriptionInput,
+                    {
+                      color: theme.text,
+                      backgroundColor:
+                        colorScheme === "dark" ? "#2D2D2D" : "#f5f5f5",
+                      borderColor: theme.tint,
+                    },
+                  ]}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="Add a description..."
+                  placeholderTextColor={theme.text + "66"}
+                  multiline
+                  autoFocus
+                />
+                <View style={styles.editActions}>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => setIsEditingDescription(false)}
+                  >
+                    <Text
+                      style={[styles.editButtonText, { color: theme.text + "99" }]}
+                    >
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.editButton, { backgroundColor: theme.tint }]}
+                    onPress={handleSaveDescription}
+                  >
+                    <Text style={styles.saveButtonText}>Save</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          ) : (
-            <TouchableOpacity onPress={() => setIsEditingDescription(true)}>
-              <Text
-                style={[
-                  styles.description,
-                  { color: project.description ? theme.text : theme.text + "66" },
-                ]}
-              >
-                {project.description || "Tap to add a description..."}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            ) : (
+              <TouchableOpacity onPress={() => setIsEditingDescription(true)}>
+                <Text
+                  style={[
+                    styles.description,
+                    {
+                      color: project.description ? theme.text : theme.text + "66",
+                    },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {project.description || "Tap to add a description..."}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-        {/* Stats Section */}
-        <View style={styles.section}>
+          {/* Stats Row */}
           <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: theme.tint }]}>
-                {projectChats.length}
-              </Text>
-              <Text style={[styles.statLabel, { color: theme.text + "99" }]}>
-                Chats
-              </Text>
-            </View>
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: theme.tint }]}>
                 {new Date(project.createdAt).toLocaleDateString()}
@@ -286,41 +169,23 @@ export default function ProjectDetailsScreen() {
           </View>
         </View>
 
-        {/* Artifacts Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              Artifacts
-            </Text>
-            <View style={styles.artifactActions}>
-              <TouchableOpacity
-                style={[styles.iconButton, { backgroundColor: theme.tint + "20" }]}
-                onPress={handleAddFolder}
-              >
-                <IconSymbol name="folder.badge.plus" size={18} color={theme.tint} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.iconButton, { backgroundColor: theme.tint + "20" }]}
-                onPress={handleAddFile}
-              >
-                <IconSymbol name="doc.badge.plus" size={18} color={theme.tint} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View
-            style={[
-              styles.treeContainer,
-              { backgroundColor: colorScheme === "dark" ? "#2D2D2D" : "#f5f5f5" },
-            ]}
-          >
-            <ArtifactTree
-              projectId={projectId}
-              onSelectArtifact={setSelectedArtifact}
-              onLongPressArtifact={handleDeleteArtifact}
-            />
-          </View>
+        {/* Tabs */}
+        <ProjectDetailsTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          chatCount={chatCount}
+          artifactCount={artifacts.length}
+        />
+
+        {/* Tab Content */}
+        <View style={styles.tabContent}>
+          {activeTab === "chats" ? (
+            <ProjectChatsTab projectId={projectId} />
+          ) : (
+            <ProjectArtifactsTab projectId={projectId} />
+          )}
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -333,12 +198,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
   webContent: {
     width: "100%",
     maxWidth: 600,
     flex: 1,
-  },
-  scrollContent: {
     padding: 16,
   },
   notFound: {
@@ -359,18 +226,10 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
   },
-  section: {
-    marginBottom: 24,
+  header: {
+    marginBottom: 16,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+  descriptionSection: {
     marginBottom: 12,
   },
   description: {
@@ -386,7 +245,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    minHeight: 80,
+    minHeight: 60,
     textAlignVertical: "top",
   },
   editActions: {
@@ -416,24 +275,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: "600",
   },
   statLabel: {
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 11,
+    marginTop: 2,
   },
-  artifactActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  iconButton: {
-    padding: 8,
-    borderRadius: 6,
-  },
-  treeContainer: {
-    borderRadius: 8,
-    minHeight: 120,
-    overflow: "hidden",
+  tabContent: {
+    flex: 1,
   },
 });
