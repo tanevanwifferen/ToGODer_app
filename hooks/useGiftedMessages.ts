@@ -27,7 +27,10 @@ export const useGiftedMessages = (apiMessages: ApiChatMessage[] | null) => {
     if (apiMessages == null) {
       return [];
     }
-    return [...apiMessages].map(convertToGiftedMessage).reverse();
+    return [...apiMessages]
+      .filter((msg) => !msg.hidden)
+      .map(convertToGiftedMessage)
+      .reverse();
   }, [apiMessages]);
 
   return giftedMessages;

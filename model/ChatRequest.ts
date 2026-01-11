@@ -11,6 +11,7 @@ export interface ApiChatMessage {
   signature?: string;
   timestamp?: Date | number;
   updateData?: string;
+  hidden?: boolean;
 }
 
 export interface ChatSettings {

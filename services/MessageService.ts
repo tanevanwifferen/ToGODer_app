@@ -563,6 +563,7 @@ export class MessageService {
                     ? `Error: ${result.message}`
                     : `${result.message}${result.artifactId ? `\n[View artifact](artifact://${result.artifactId})` : ""}`,
                   timestamp: Date.now(),
+                  hidden: true,
                 };
                 store.dispatch(addMessage({ id: chatId, message: artifactMessage }));
               }
@@ -604,6 +605,7 @@ export class MessageService {
           role: "user",
           content: toolResultsContent,
           timestamp: Date.now(),
+          hidden: true,
         };
 
         // Add to chat history
