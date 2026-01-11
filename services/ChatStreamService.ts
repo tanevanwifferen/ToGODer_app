@@ -1,8 +1,15 @@
-import { ChatApiClient, StreamEvent } from "../apiClients/ChatApiClient";
+import {
+  ChatApiClient,
+  StreamEvent,
+  ArtifactIndexItem,
+  ToolSchema,
+} from "../apiClients/ChatApiClient";
 import {
   ApiChatMessage,
   ChatRequestCommunicationStyle,
 } from "../model/ChatRequest";
+
+import type { ArtifactToolCall } from "../apiClients/ChatApiClient";
 
 /**
  * Event handler types for stream events
@@ -10,6 +17,7 @@ import {
 export type ChunkHandler = (data: string) => void;
 export type SignatureHandler = (signature: string) => void;
 export type MemoryRequestHandler = (keys: string[]) => void;
+export type ToolCallHandler = (toolCall: ArtifactToolCall) => void;
 export type ErrorHandler = (error: any) => void;
 export type DoneHandler = () => void;
 
@@ -34,6 +42,8 @@ export interface StreamOptions {
   libraryIntegrationEnabled?: boolean;
   memoryLoopCount?: number;
   memoryLoopLimitReached?: boolean;
+  artifactIndex?: ArtifactIndexItem[];
+  tools?: ToolSchema[];
 }
 
 /**
@@ -69,6 +79,7 @@ export class ChatStreamService {
   private chunkHandlers: ChunkHandler[] = [];
   private signatureHandlers: SignatureHandler[] = [];
   private memoryRequestHandlers: MemoryRequestHandler[] = [];
+  private toolCallHandlers: ToolCallHandler[] = [];
   private errorHandlers: ErrorHandler[] = [];
   private doneHandlers: DoneHandler[] = [];
 
@@ -129,6 +140,21 @@ export class ChatStreamService {
       const index = this.memoryRequestHandlers.indexOf(handler);
       if (index > -1) {
         this.memoryRequestHandlers.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Register a tool call event handler
+   * @param handler Callback to invoke when a tool call is received
+   * @returns Cleanup function to unregister the handler
+   */
+  public onToolCall(handler: ToolCallHandler): () => void {
+    this.toolCallHandlers.push(handler);
+    return () => {
+      const index = this.toolCallHandlers.indexOf(handler);
+      if (index > -1) {
+        this.toolCallHandlers.splice(index, 1);
       }
     };
   }
@@ -217,6 +243,8 @@ export class ChatStreamService {
         options.libraryIntegrationEnabled ?? false,
         options.memoryLoopCount,
         options.memoryLoopLimitReached,
+        options.artifactIndex,
+        options.tools,
         this.abortController.signal
       );
 
@@ -252,6 +280,9 @@ export class ChatStreamService {
         break;
       case "memory_request":
         this.dispatchMemoryRequest(event.data.keys);
+        break;
+      case "tool_call":
+        this.dispatchToolCall(event.data);
         break;
       case "error":
         this.dispatchError(event.data);
@@ -302,6 +333,19 @@ export class ChatStreamService {
   }
 
   /**
+   * Dispatch tool call event to all registered handlers
+   */
+  private dispatchToolCall(toolCall: ArtifactToolCall): void {
+    for (const handler of this.toolCallHandlers) {
+      try {
+        handler(toolCall);
+      } catch (error) {
+        console.error("ChatStreamService: Tool call handler error", error);
+      }
+    }
+  }
+
+  /**
    * Dispatch error event to all registered handlers
    */
   private dispatchError(error: any): void {
@@ -343,6 +387,7 @@ export class ChatStreamService {
     this.chunkHandlers = [];
     this.signatureHandlers = [];
     this.memoryRequestHandlers = [];
+    this.toolCallHandlers = [];
     this.errorHandlers = [];
     this.doneHandlers = [];
   }

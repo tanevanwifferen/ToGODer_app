@@ -55,6 +55,14 @@ describe("ChatStreamService", () => {
       unregister();
     });
 
+    it("should register and unregister tool call handlers", () => {
+      const handler = jest.fn();
+      const unregister = service.onToolCall(handler);
+
+      expect(typeof unregister).toBe("function");
+      unregister();
+    });
+
     it("should register and unregister error handlers", () => {
       const handler = jest.fn();
       const unregister = service.onError(handler);

@@ -18,6 +18,7 @@ import {
   StreamEvent,
   ArtifactIndexItem,
   ArtifactToolCall,
+  ARTIFACT_TOOL_SCHEMAS,
 } from "../apiClients/ChatApiClient";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
@@ -45,6 +46,7 @@ export interface SendMessageStreamOptions {
   memoryLoopCount?: number;
   memoryLoopLimitReached?: boolean;
   artifactIndex?: ArtifactIndexItem[];
+  tools?: typeof ARTIFACT_TOOL_SCHEMAS;
   onChunk?: (content: string) => void;
   onComplete?: (message: ApiChatMessage) => void;
   onError?: (error: string) => void;
@@ -264,10 +266,11 @@ export class MessageService {
       const updatedChat = updatedState.chats.chats[chatId];
       const messages = updatedChat.messages;
 
-      // Build artifact index if chat is associated with a project
+      // Build artifact index and tools if chat is associated with a project
       const artifactIndex = chat.projectId
         ? this.buildArtifactIndex(chat.projectId)
         : undefined;
+      const tools = chat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
 
       // Send the message and get response
       if (useStreaming) {
@@ -278,6 +281,7 @@ export class MessageService {
           memoryLoopCount,
           memoryLoopLimitReached,
           artifactIndex,
+          tools,
           onChunk,
           onComplete,
           onError,
@@ -324,6 +328,7 @@ export class MessageService {
       memoryLoopCount = 0,
       memoryLoopLimitReached = false,
       artifactIndex,
+      tools,
       onChunk,
       onComplete,
       onError,
@@ -358,7 +363,8 @@ export class MessageService {
         chatSettings.libraryIntegrationEnabled,
         memoryLoopCount,
         memoryLoopLimitReached,
-        artifactIndex
+        artifactIndex,
+        tools
       )) {
         switch (evt.type) {
           case "chunk": {
@@ -438,10 +444,11 @@ export class MessageService {
             const updatedState = store.getState();
             const updatedChat = updatedState.chats.chats[chatId];
 
-            // Rebuild artifact index with fresh state
+            // Rebuild artifact index and include tools with fresh state
             const updatedArtifactIndex = updatedChat.projectId
               ? this.buildArtifactIndex(updatedChat.projectId)
               : undefined;
+            const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
 
             await this.sendMessageWithStreaming({
               chatId,
@@ -450,6 +457,7 @@ export class MessageService {
               memoryLoopCount: nextLoopCount,
               memoryLoopLimitReached: nextLimitReached,
               artifactIndex: updatedArtifactIndex,
+              tools: updatedTools,
               onChunk,
               onComplete,
               onError,
@@ -676,10 +684,11 @@ export class MessageService {
       const messages = chat.messages;
       const memories = chat.memories;
 
-      // Build artifact index if chat is associated with a project
+      // Build artifact index and tools if chat is associated with a project
       const artifactIndex = chat.projectId
         ? this.buildArtifactIndex(chat.projectId)
         : undefined;
+      const tools = chat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
 
       // Send the message and get response
       if (useStreaming) {
@@ -688,6 +697,7 @@ export class MessageService {
           messages,
           memories,
           artifactIndex,
+          tools,
           onChunk,
           onComplete,
           onError,
