@@ -17,6 +17,7 @@ import userSettingsReducer, {
   UserSettingsState,
 } from "./slices/userSettingsSlice";
 import projectsReducer, { ProjectsState } from "./slices/projectsSlice";
+import artifactsReducer, { ArtifactsState } from "./slices/artifactsSlice";
 import { personalDataMiddleware } from "./middleware/personalDataMiddleware";
 import { GlobalConfig } from "../model/GlobalConfig";
 
@@ -37,6 +38,7 @@ export interface RootState {
   systemPrompt: SystemPromptState;
   userSettings: UserSettingsState;
   projects: ProjectsState;
+  artifacts: ArtifactsState;
 }
 
 const rootReducer = combineReducers({
@@ -51,6 +53,7 @@ const rootReducer = combineReducers({
   systemPrompt: systemPromptReducer,
   userSettings: userSettingsReducer,
   projects: projectsReducer,
+  artifacts: artifactsReducer,
 });
 
 // Migration function to transfer settings from chats slice to userSettings slice
@@ -99,6 +102,7 @@ const persistConfig: PersistConfig<RootState> = {
     "systemPrompt",
     "userSettings",
     "projects",
+    "artifacts",
   ],
   migrate: (state: any) => {
     return Promise.resolve(migrateSettings(state));

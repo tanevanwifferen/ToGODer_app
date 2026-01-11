@@ -40,8 +40,11 @@ export default function DrawerLayout() {
           headerTintColor: Colors[colorScheme ?? "light"].tint,
           drawerType: "front",
           drawerItemStyle: {
-            // Hide any routes that start with shared/ except the main shared route
-            display: route.name.startsWith('shared/') && route.name !== 'shared' ? 'none' : undefined
+            // Hide any routes that start with shared/ or projects/ except the main routes
+            display: (route.name.startsWith('shared/') && route.name !== 'shared') ||
+                     (route.name.startsWith('projects/') && route.name !== 'projects')
+              ? 'none'
+              : undefined
           }
         })}
         drawerContent={(props: DrawerContentComponentProps) => (

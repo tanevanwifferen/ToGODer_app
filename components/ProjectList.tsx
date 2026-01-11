@@ -12,6 +12,7 @@ import {
   Text,
   KeyboardAvoidingView,
 } from "react-native";
+import { router } from "expo-router";
 import { Colors } from "../constants/Colors";
 import { useSelector } from "react-redux";
 import { selectProjects, Project } from "../redux/slices/projectsSlice";
@@ -23,7 +24,11 @@ export function ProjectList() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
   const projectsState = useSelector(selectProjects);
-  const { handleCreateProject, handleDeleteProject, handleSelectProject } = useProjectActions();
+  const { handleCreateProject, handleDeleteProject } = useProjectActions();
+
+  const handleViewProject = (projectId: string) => {
+    router.push(`/projects/${projectId}`);
+  };
 
   // Modal state for creating new project
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
@@ -58,7 +63,7 @@ export function ProjectList() {
   const renderProjectItem = ({ item }: { item: Project }) => (
     <ProjectListItem
       item={item}
-      onSelect={handleSelectProject}
+      onSelect={handleViewProject}
       onDelete={handleDeleteProject}
     />
   );
