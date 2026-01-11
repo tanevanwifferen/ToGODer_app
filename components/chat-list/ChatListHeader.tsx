@@ -3,9 +3,11 @@ import { Colors } from "../../constants/Colors";
 
 interface ChatListHeaderProps {
   onNewChat: () => void;
+  projectName?: string | null;
+  onClearProjectFilter?: () => void;
 }
 
-export function ChatListHeader({ onNewChat }: ChatListHeaderProps) {
+export function ChatListHeader({ onNewChat, projectName, onClearProjectFilter }: ChatListHeaderProps) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
 
@@ -18,7 +20,23 @@ export function ChatListHeader({ onNewChat }: ChatListHeaderProps) {
         },
       ]}
     >
-      <Text style={[styles.headerTitle, { color: theme.text }]}>Chats</Text>
+      <View style={styles.titleContainer}>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Chats</Text>
+        {projectName && (
+          <TouchableOpacity
+            style={[
+              styles.projectBadge,
+              { backgroundColor: colorScheme === "dark" ? "#3D3D3D" : "#e8e8e8" },
+            ]}
+            onPress={onClearProjectFilter}
+          >
+            <Text style={[styles.projectBadgeText, { color: theme.tint }]}>
+              {projectName}
+            </Text>
+            <Text style={[styles.clearIcon, { color: theme.text + "99" }]}>×</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <TouchableOpacity
         style={[styles.newChatButton, { backgroundColor: theme.tint }]}
         onPress={onNewChat}
@@ -44,8 +62,30 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 1,
+    gap: 8,
+  },
   headerTitle: {
     fontSize: 24,
+    fontWeight: "bold",
+  },
+  projectBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  projectBadgeText: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  clearIcon: {
+    fontSize: 16,
     fontWeight: "bold",
   },
   newChatButton: {

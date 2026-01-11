@@ -7,8 +7,10 @@ import {
   Platform,
   useColorScheme,
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { Colors } from "../constants/Colors";
 import { Chat } from "../redux/slices/chatsSlice";
+import { selectProjects, setCurrentProject } from "../redux/slices/projectsSlice";
 import { ChatListHeader } from "./chat-list/ChatListHeader";
 import { ChatListItem } from "./chat-list/ChatListItem";
 import { ChatSectionHeader } from "./chat-list/ChatSectionHeader";
@@ -20,9 +22,20 @@ import { useChatProjectAssignment } from "../hooks/useChatProjectAssignment";
 export function ChatList() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
+  const dispatch = useDispatch();
   const { handleCreateNewChat, handleDeleteChat, handleSelectChat } = useChatListActions();
-  const { sortedChatRequests, sortedChats, hasRequests, chatsMap } = useSortedChats();
+  const { sortedChatRequests, sortedChats, hasRequests, chatsMap, currentProjectId } = useSortedChats();
   const { assignChatToProject, getProjectNameForChat, handleCreateProject } = useChatProjectAssignment();
+  const projectsState = useSelector(selectProjects);
+
+  // Get current project name for header display
+  const currentProjectName = currentProjectId
+    ? projectsState.projects[currentProjectId]?.name
+    : null;
+
+  const handleClearProjectFilter = useCallback(() => {
+    dispatch(setCurrentProject(null));
+  }, [dispatch]);
 
   const [assignmentModalVisible, setAssignmentModalVisible] = useState(false);
   const [selectedChatForAssignment, setSelectedChatForAssignment] = useState<Chat | null>(null);
@@ -76,7 +89,11 @@ export function ChatList() {
       style={[containerStyle, { backgroundColor: theme.background }]}
     >
       <View style={[contentStyle]}>
-        <ChatListHeader onNewChat={handleCreateNewChat} />
+        <ChatListHeader
+          onNewChat={handleCreateNewChat}
+          projectName={currentProjectName}
+          onClearProjectFilter={handleClearProjectFilter}
+        />
         <FlatList
           data={[...sortedChatRequests, ...sortedChats]}
           renderItem={({ item, index }) =>
