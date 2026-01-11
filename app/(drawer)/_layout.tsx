@@ -69,6 +69,15 @@ export default function DrawerLayout() {
           }}
         />
         <Drawer.Screen
+          name="projects"
+          options={{
+            title: "Projects",
+            drawerIcon: ({ color }: { color: string }) => (
+              <IconSymbol size={28} name="folder.fill" color={color} />
+            ),
+          }}
+        />
+        <Drawer.Screen
           name="shared"
           options={{
             title: "Shared",
