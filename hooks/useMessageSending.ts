@@ -226,6 +226,7 @@ function useCoreMessageSending(
 export interface UseChatMessageSendingResult {
   sendMessage: (content: string) => Promise<void>;
   retry: () => Promise<void>;
+  regenerate: () => Promise<void>;
   isLoading: boolean;
   typing: boolean;
   error: string | null;
@@ -318,9 +319,35 @@ function useChatMessageSending(chatId: string): UseChatMessageSendingResult {
     }
   }, [sendMessage]);
 
+  const regenerate = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setTyping(false);
+    setError(null);
+
+    const messageService = MessageService.getInstance();
+
+    await messageService.regenerateResponse({
+      chatId,
+      useStreaming: true,
+      onChunk: () => {
+        setTyping(true);
+      },
+      onComplete: () => {
+        setIsLoading(false);
+        setTyping(false);
+      },
+      onError: (errorMsg) => {
+        setError(errorMsg);
+        setIsLoading(false);
+        setTyping(false);
+      },
+    });
+  }, [chatId]);
+
   return {
     sendMessage,
     retry,
+    regenerate,
     isLoading,
     typing,
     error,

@@ -42,6 +42,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
   const {
     sendMessage: sendApiMessage,
     retry: retrySend,
+    regenerate: regenerateResponse,
     typing,
     error: errorMessage,
   } = useMessageSending(chatId);
@@ -107,12 +108,17 @@ export function Chat({ chatId, onBack }: ChatProps) {
             content: newContent,
           })
         );
+        // Trigger backend sync by regenerating response after edit
+        // Use setTimeout to ensure Redux state is updated first
+        setTimeout(() => {
+          regenerateResponse();
+        }, 0);
       }
       setEditModalVisible(false);
       setEditingMessageIndex(null);
       setEditingMessageContent("");
     },
-    [dispatch, chatId, editingMessageIndex]
+    [dispatch, chatId, editingMessageIndex, regenerateResponse]
   );
 
   // Handle close edit modal

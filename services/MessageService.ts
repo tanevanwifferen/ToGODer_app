@@ -428,6 +428,87 @@ export class MessageService {
   }
 
   /**
+   * Regenerates an AI response for the current conversation.
+   * Used after editing a message - doesn't add a new user message,
+   * just sends the current messages to get a new response.
+   */
+  public async regenerateResponse(options: {
+    chatId: string;
+    useStreaming?: boolean;
+    onChunk?: (content: string) => void;
+    onComplete?: (message: ApiChatMessage) => void;
+    onError?: (error: string) => void;
+  }): Promise<void> {
+    const {
+      chatId,
+      useStreaming = true,
+      onChunk,
+      onComplete,
+      onError,
+    } = options;
+
+    try {
+      const state = store.getState();
+      const chat = state.chats.chats[chatId];
+
+      if (!chat) {
+        const error = `Chat ${chatId} not found`;
+        console.error(error);
+        onError?.(error);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error,
+          position: "bottom",
+        });
+        return;
+      }
+
+      // Prevent auto-generation during manual regeneration
+      store.dispatch(setAutoGenerateAnswer(false));
+
+      // Use current messages and memories from the chat
+      const messages = chat.messages;
+      const memories = chat.memories;
+
+      // Send the message and get response
+      if (useStreaming) {
+        await this.sendMessageWithStreaming({
+          chatId,
+          messages,
+          memories,
+          onChunk,
+          onComplete,
+          onError,
+        });
+      } else {
+        await this.sendMessageWithoutStreaming({
+          chatId,
+          messages,
+          memories,
+          onComplete,
+          onError,
+        });
+      }
+
+      // Update balance after successful send
+      const balanceService = BalanceService.getInstance();
+      await balanceService.updateBalanceIfAuthenticated();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to regenerate response";
+      console.error("MessageService.regenerateResponse error:", error);
+      onError?.(errorMessage);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: errorMessage,
+        position: "bottom",
+      });
+    }
+  }
+
+  /**
    * Creates a new chat
    */
   public createChat(chatId: string, title?: string): void {
