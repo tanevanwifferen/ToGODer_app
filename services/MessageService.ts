@@ -561,9 +561,10 @@ export class MessageService {
                   role: "assistant",
                   content: result.isError
                     ? `Error: ${result.message}`
-                    : `${result.message}${result.artifactId ? `\n[View artifact](artifact://${result.artifactId})` : ""}`,
+                    : result.message,
                   timestamp: Date.now(),
                   hidden: true,
+                  artifactId: result.isError ? undefined : result.artifactId,
                 };
                 store.dispatch(addMessage({ id: chatId, message: artifactMessage }));
               }

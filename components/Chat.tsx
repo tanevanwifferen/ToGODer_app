@@ -6,18 +6,19 @@ import {
   Platform,
   useColorScheme,
 } from "react-native";
-import { GiftedChat, IMessage } from "react-native-gifted-chat";
+import { GiftedChat, IMessage, BubbleProps } from "react-native-gifted-chat";
 import { Colors } from "../constants/Colors";
 import { ChatHeader } from "./chat/ChatHeader";
 import { CustomInputToolbar } from "./chat/CustomInputToolbar";
 import { EmptyChat } from "./chat/EmptyChat";
 import { EditMessageModal } from "./chat/EditMessageModal";
+import { EmbeddedArtifact } from "./chat/EmbeddedArtifact";
 import { useMessages } from "../hooks/useMessages";
 import { useMessageSending } from "../hooks/useMessageSending";
 import { useChatTitle } from "../hooks/useChatTitle";
 import { useMessageInput } from "../hooks/useMessageInput";
 import { useChatActions } from "../hooks/useChatActions";
-import { useGiftedMessages } from "../hooks/useGiftedMessages";
+import { useGiftedMessages, ExtendedIMessage } from "../hooks/useGiftedMessages";
 import { useLibraryIntegration } from "../hooks/useLibraryIntegration";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "./ThemedText";
@@ -166,6 +167,14 @@ export function Chat({ chatId, onBack }: ChatProps) {
     return null;
   };
 
+  const renderCustomView = (props: BubbleProps<ExtendedIMessage>) => {
+    const message = props.currentMessage as ExtendedIMessage;
+    if (message?.artifactId) {
+      return <EmbeddedArtifact artifactId={message.artifactId} />;
+    }
+    return null;
+  };
+
   const backgroundColor = Colors[colorScheme ?? "light"].background;
 
   return (
@@ -201,6 +210,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
           minInputToolbarHeight={0}
           onLongPress={onLongPress}
           renderSystemMessage={renderSystemMessage}
+          renderCustomView={renderCustomView}
         />
       </View>
       <EditMessageModal

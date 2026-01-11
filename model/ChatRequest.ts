@@ -12,6 +12,7 @@ export interface ApiChatMessage {
   timestamp?: Date | number;
   updateData?: string;
   hidden?: boolean;
+  artifactId?: string;
 }
 
 export interface ChatSettings {
