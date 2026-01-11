@@ -15,6 +15,13 @@ export interface RateLimitError {
   seconds: number;
 }
 
+export class InvalidResponseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidResponseError";
+  }
+}
+
 export class ApiClient {
   private static get_base_url() {
     return getApiUrl();
@@ -65,6 +72,37 @@ export class ApiClient {
     return toreturn;
   }
 
+  private static validateJsonResponse<T>(response: AxiosResponse<T>): T {
+    const contentType = response.headers["content-type"] || "";
+    const data = response.data;
+
+    // Check if response is HTML (common error page response)
+    if (typeof data === "string") {
+      const trimmed = data.trim();
+      if (trimmed.startsWith("<!DOCTYPE") || trimmed.startsWith("<html") || trimmed.startsWith("<")) {
+        throw new InvalidResponseError(
+          `Server returned HTML instead of JSON. This usually indicates a server error or network issue.`
+        );
+      }
+      throw new InvalidResponseError(
+        `Expected JSON object but received string. Content-Type: ${contentType}`
+      );
+    }
+
+    // Ensure response is an object (not null, undefined, or primitive)
+    if (data === null || data === undefined) {
+      throw new InvalidResponseError("Server returned empty response");
+    }
+
+    if (typeof data !== "object") {
+      throw new InvalidResponseError(
+        `Expected JSON object but received ${typeof data}`
+      );
+    }
+
+    return data;
+  }
+
   static async get<T>(
     url: string,
     config: AxiosRequestConfig = {}
@@ -76,7 +114,7 @@ export class ApiClient {
       url,
       ApiClient.extendConfig(config)
     );
-    return response.data;
+    return ApiClient.validateJsonResponse(response);
   }
 
   static async post<T>(
@@ -92,7 +130,7 @@ export class ApiClient {
       data,
       ApiClient.extendConfig(config)
     );
-    return response.data;
+    return ApiClient.validateJsonResponse(response);
   }
 
   static async put<T>(
@@ -108,7 +146,7 @@ export class ApiClient {
       data,
       ApiClient.extendConfig(config)
     );
-    return response.data;
+    return ApiClient.validateJsonResponse(response);
   }
 
   static async delete<T>(
@@ -122,6 +160,6 @@ export class ApiClient {
       url,
       ApiClient.extendConfig(config)
     );
-    return response.data;
+    return ApiClient.validateJsonResponse(response);
   }
 }
