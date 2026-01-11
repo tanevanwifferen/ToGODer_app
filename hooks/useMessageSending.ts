@@ -286,7 +286,7 @@ function useChatMessageSending(chatId: string): UseChatMessageSendingResult {
     async (content: string): Promise<void> => {
       lastContentRef.current = content;
       setIsLoading(true);
-      setTyping(false);
+      setTyping(true);  // Show typing indicator while waiting for response
       setError(null);
 
       const messageService = MessageService.getInstance();
@@ -296,8 +296,8 @@ function useChatMessageSending(chatId: string): UseChatMessageSendingResult {
         content,
         useStreaming: true,
         onChunk: () => {
-          // Once we receive chunks, assistant is "typing"
-          setTyping(true);
+          // Once we receive chunks, content is showing - hide typing indicator
+          setTyping(false);
         },
         onComplete: () => {
           setIsLoading(false);
@@ -321,7 +321,7 @@ function useChatMessageSending(chatId: string): UseChatMessageSendingResult {
 
   const regenerate = useCallback(async (): Promise<void> => {
     setIsLoading(true);
-    setTyping(false);
+    setTyping(true);  // Show typing indicator while waiting for response
     setError(null);
 
     const messageService = MessageService.getInstance();
@@ -330,7 +330,8 @@ function useChatMessageSending(chatId: string): UseChatMessageSendingResult {
       chatId,
       useStreaming: true,
       onChunk: () => {
-        setTyping(true);
+        // Once we receive chunks, content is showing - hide typing indicator
+        setTyping(false);
       },
       onComplete: () => {
         setIsLoading(false);
