@@ -1,10 +1,13 @@
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import { addChat, deleteChat, setCurrentChat } from "../redux/slices/chatsSlice";
+import { selectProjects, addChatToProject } from "../redux/slices/projectsSlice";
 import CustomAlert from "../components/ui/CustomAlert";
 
 export const useChatListActions = () => {
   const dispatch = useDispatch();
+  const projectsState = useSelector(selectProjects);
+  const currentProjectId = projectsState.currentProjectId;
 
   const handleCreateNewChat = () => {
     const newChatId = uuidv4();
@@ -13,9 +16,15 @@ export const useChatListActions = () => {
         id: newChatId,
         title: null,
         messages: [],
-        memories: []
+        memories: [],
+        // Assign to current project if one is selected
+        projectId: currentProjectId ?? undefined,
       })
     );
+    // Also add the chat to the project's chatIds list
+    if (currentProjectId) {
+      dispatch(addChatToProject({ projectId: currentProjectId, chatId: newChatId }));
+    }
     dispatch(setCurrentChat(newChatId));
   };
 
