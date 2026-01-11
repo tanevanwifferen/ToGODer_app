@@ -13,12 +13,20 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'chevron.up': 'expand-less',
+  'chevron.down': 'expand-more',
   'gear': 'settings',
   'person.fill': 'person',
   'heart.fill': 'favorite',
   'link': 'link',
   'message.fill': 'message',
-  'share': 'share' // Added mapping for share icon
+  'share': 'share',
+  'folder.fill': 'folder',
+  'tray.full.fill': 'inbox',
+  'checkmark': 'check',
+  'plus.circle.fill': 'add-circle',
+  'xmark.circle.fill': 'cancel',
+  'checkmark.circle.fill': 'check-circle',
 } as const;
 
 export type IconSymbolName = keyof typeof MAPPING;

@@ -15,6 +15,7 @@ import { usePasscode } from "../../hooks/usePasscode";
 import { EditPasscodeModal } from "../../components/passcode/PasscodeModal";
 import { LockScreen } from "../../components/passcode/LockScreen";
 import { ExternalDrawerLink } from "../../components/drawer/ExternalDrawerLink";
+import { ProjectSelector } from "../../components/drawer/ProjectSelector";
 import { useMemoryCheck } from "../../hooks/useMemoryCheck";
 import { DreamingView } from "../../components/DreamingView";
 
@@ -45,6 +46,7 @@ export default function DrawerLayout() {
         })}
         drawerContent={(props: DrawerContentComponentProps) => (
           <DrawerContentScrollView {...props}>
+            <ProjectSelector />
             <DrawerItemList {...props} />
             <ExternalDrawerLink
               href="https://github.com/tanevanwifferen/ToGODer"
