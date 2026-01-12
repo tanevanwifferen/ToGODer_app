@@ -97,17 +97,17 @@ export class SyncService {
       updatedAt: (personalState as any).updatedAt || Date.now(),
     };
 
-    // Get user settings
+    // Get user settings from userSettingsSlice
     const syncableUserSettings: SyncableUserSettings = {
-      model: chatsState.model,
-      humanPrompt: chatsState.humanPrompt,
-      keepGoing: chatsState.keepGoing,
-      outsideBox: chatsState.outsideBox,
-      holisticTherapist: chatsState.holisticTherapist,
-      communicationStyle: chatsState.communicationStyle,
-      assistant_name: chatsState.assistant_name,
-      language: chatsState.language,
-      libraryIntegrationEnabled: chatsState.libraryIntegrationEnabled,
+      model: userSettingsState?.model || '',
+      humanPrompt: userSettingsState?.humanPrompt ?? true,
+      keepGoing: userSettingsState?.keepGoing ?? true,
+      outsideBox: userSettingsState?.outsideBox ?? true,
+      holisticTherapist: userSettingsState?.holisticTherapist ?? true,
+      communicationStyle: userSettingsState?.communicationStyle || 0,
+      assistant_name: userSettingsState?.assistant_name || 'ToGODer',
+      language: userSettingsState?.language || '',
+      libraryIntegrationEnabled: userSettingsState?.libraryIntegrationEnabled ?? false,
       updatedAt: userSettingsState?.updatedAt || Date.now(),
     };
 

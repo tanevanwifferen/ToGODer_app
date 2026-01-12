@@ -37,12 +37,13 @@ export class CryptoService {
     const salt = Buffer.from(`togoder-sync-${userId}`, 'utf8');
     const passwordBuffer = Buffer.from(password, 'utf8');
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.encryptionKey = pbkdf2Sync(
       passwordBuffer,
       salt,
       PBKDF2_ITERATIONS,
       KEY_LENGTH,
-      'sha256'
+      'sha256' as any
     ) as Buffer;
   }
 
