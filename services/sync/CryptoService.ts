@@ -1,18 +1,21 @@
-import crypto from 'react-native-quick-crypto';
-import { Buffer } from '@craftzdog/react-native-buffer';
+import 'react-native-get-random-values';
 import { EncryptedSyncData } from './types';
 
 const PBKDF2_ITERATIONS = 100000;
-const KEY_LENGTH = 32; // 256 bits for AES-256
-const IV_LENGTH = 12; // 96 bits for GCM
+const KEY_LENGTH = 256; // bits for AES-256
+const IV_LENGTH = 12; // bytes, 96 bits for GCM
 
 /**
  * CryptoService handles encryption and decryption of sync data
  * Uses PBKDF2 for key derivation and AES-256-GCM for encryption
+ *
+ * Uses standard Web Crypto API which works on:
+ * - Web browsers (native)
+ * - React Native / Expo (via react-native-get-random-values polyfill)
  */
 export class CryptoService {
   private static instance: CryptoService;
-  private encryptionKey: any = null;
+  private encryptionKey: CryptoKey | null = null;
 
   private constructor() {}
 
@@ -28,16 +31,31 @@ export class CryptoService {
    * Salt is based on userId for deterministic key derivation
    */
   async deriveKey(userId: string, password: string): Promise<void> {
-    const salt = `togoder-sync-${userId}`;
-    const saltBuffer = Buffer.from(salt, 'utf8');
-    const passwordBuffer = Buffer.from(password, 'utf8');
+    const encoder = new TextEncoder();
+    const salt = encoder.encode(`togoder-sync-${userId}`);
+    const passwordBuffer = encoder.encode(password);
 
-    this.encryptionKey = crypto.pbkdf2Sync(
-      passwordBuffer as any,
-      saltBuffer as any,
-      PBKDF2_ITERATIONS,
-      KEY_LENGTH,
-      'SHA-256'
+    // Import password as a key for PBKDF2
+    const passwordKey = await crypto.subtle.importKey(
+      'raw',
+      passwordBuffer,
+      'PBKDF2',
+      false,
+      ['deriveKey']
+    );
+
+    // Derive the actual encryption key
+    this.encryptionKey = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt,
+        iterations: PBKDF2_ITERATIONS,
+        hash: 'SHA-256',
+      },
+      passwordKey,
+      { name: 'AES-GCM', length: KEY_LENGTH },
+      false,
+      ['encrypt', 'decrypt']
     );
   }
 
@@ -58,49 +76,61 @@ export class CryptoService {
   /**
    * Encrypt data using AES-256-GCM
    */
-  encrypt(data: string): EncryptedSyncData {
+  async encrypt(data: string): Promise<EncryptedSyncData> {
     if (!this.encryptionKey) {
       throw new Error('CryptoService not initialized - call deriveKey first');
     }
 
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-gcm', this.encryptionKey, iv as any);
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
 
-    const encrypted = Buffer.concat([
-      cipher.update(data, 'utf8') as any,
-      cipher.final() as any,
-    ]);
+    // Generate random IV
+    const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
 
-    const tag = cipher.getAuthTag();
+    // Encrypt with AES-GCM (tag is automatically appended to ciphertext)
+    const encryptedBuffer = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      this.encryptionKey,
+      dataBuffer
+    );
+
+    // AES-GCM appends 16-byte auth tag to the ciphertext
+    const encryptedArray = new Uint8Array(encryptedBuffer);
+    const ciphertext = encryptedArray.slice(0, -16);
+    const tag = encryptedArray.slice(-16);
 
     return {
-      iv: iv.toString('base64'),
-      ciphertext: encrypted.toString('base64'),
-      tag: tag.toString('base64'),
+      iv: this.arrayToBase64(iv),
+      ciphertext: this.arrayToBase64(ciphertext),
+      tag: this.arrayToBase64(tag),
     };
   }
 
   /**
    * Decrypt data using AES-256-GCM
    */
-  decrypt(encryptedData: EncryptedSyncData): string {
+  async decrypt(encryptedData: EncryptedSyncData): Promise<string> {
     if (!this.encryptionKey) {
       throw new Error('CryptoService not initialized - call deriveKey first');
     }
 
-    const iv = Buffer.from(encryptedData.iv, 'base64');
-    const ciphertext = Buffer.from(encryptedData.ciphertext, 'base64');
-    const tag = Buffer.from(encryptedData.tag, 'base64');
+    const iv = this.base64ToArray(encryptedData.iv);
+    const ciphertext = this.base64ToArray(encryptedData.ciphertext);
+    const tag = this.base64ToArray(encryptedData.tag);
 
-    const decipher = crypto.createDecipheriv('aes-256-gcm', this.encryptionKey, iv as any);
-    decipher.setAuthTag(tag as any);
+    // Reconstruct the combined ciphertext + tag that AES-GCM expects
+    const combined = new Uint8Array(ciphertext.length + tag.length);
+    combined.set(ciphertext, 0);
+    combined.set(tag, ciphertext.length);
 
-    const decrypted = Buffer.concat([
-      decipher.update(ciphertext as any) as any,
-      decipher.final() as any,
-    ]);
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      this.encryptionKey,
+      combined
+    );
 
-    return decrypted.toString('utf8');
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedBuffer);
   }
 
   /**
@@ -115,10 +145,28 @@ export class CryptoService {
   ): Promise<EncryptedSyncData> {
     // Derive old key and decrypt
     await this.deriveKey(userId, oldPassword);
-    const plaintext = this.decrypt(encryptedData);
+    const plaintext = await this.decrypt(encryptedData);
 
     // Derive new key and encrypt
     await this.deriveKey(userId, newPassword);
     return this.encrypt(plaintext);
+  }
+
+  private arrayToBase64(array: Uint8Array): string {
+    // Works in both browser and React Native
+    let binary = '';
+    for (let i = 0; i < array.length; i++) {
+      binary += String.fromCharCode(array[i]);
+    }
+    return btoa(binary);
+  }
+
+  private base64ToArray(base64: string): Uint8Array {
+    const binary = atob(base64);
+    const array = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      array[i] = binary.charCodeAt(i);
+    }
+    return array;
   }
 }

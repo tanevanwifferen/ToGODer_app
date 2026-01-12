@@ -175,7 +175,7 @@ export class SyncService {
       }
 
       // Decrypt remote data
-      const decryptedJson = this.cryptoService.decrypt(response.data);
+      const decryptedJson = await this.cryptoService.decrypt(response.data);
       const remotePayload: SyncPayload = JSON.parse(decryptedJson);
 
       // Get local payload
@@ -211,7 +211,7 @@ export class SyncService {
     try {
       const localPayload = this.getLocalPayload();
       const jsonData = JSON.stringify(localPayload);
-      const encryptedData = this.cryptoService.encrypt(jsonData);
+      const encryptedData = await this.cryptoService.encrypt(jsonData);
 
       const response = await SyncApiClient.push(encryptedData, SYNC_VERSION);
       this.lastRemoteUpdatedAt = response.updatedAt;
