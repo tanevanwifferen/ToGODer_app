@@ -230,6 +230,14 @@ const chatsSlice = createSlice({
       // Set to true since editing a user message typically means wanting a new response
       state.auto_generate_answer = true;
     },
+    // Set chats from sync - replaces all chats with synced data
+    setChatsFromSync: (state, action: PayloadAction<Record<string, Chat>>) => {
+      state.chats = action.payload;
+      // Keep current chat if it still exists, otherwise clear it
+      if (state.currentChatId && !action.payload[state.currentChatId]) {
+        state.currentChatId = null;
+      }
+    },
   },
 });
 
@@ -248,6 +256,7 @@ export const {
   setAutoGenerateAnswer,
   setProjectForChat,
   editMessageAndTruncate,
+  setChatsFromSync,
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;

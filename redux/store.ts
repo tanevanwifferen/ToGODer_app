@@ -19,6 +19,7 @@ import userSettingsReducer, {
 import projectsReducer, { ProjectsState } from "./slices/projectsSlice";
 import artifactsReducer, { ArtifactsState } from "./slices/artifactsSlice";
 import { personalDataMiddleware } from "./middleware/personalDataMiddleware";
+import { syncMiddleware } from "./middleware/syncMiddleware";
 import { GlobalConfig } from "../model/GlobalConfig";
 
 export interface RootState {
@@ -118,7 +119,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
       },
-    }).concat(personalDataMiddleware),
+    }).concat(personalDataMiddleware).concat(syncMiddleware),
 });
 
 export const persistor = persistStore(store);

@@ -33,6 +33,9 @@ export interface UserSettingsState {
   isGeneratingPrompt: boolean;
   promptLastGenerated: string | null; // ISO timestamp
   promptError: string | null;
+
+  // Sync tracking
+  updatedAt: number;
 }
 
 const initialState: UserSettingsState = {
@@ -56,6 +59,9 @@ const initialState: UserSettingsState = {
   isGeneratingPrompt: false,
   promptLastGenerated: null,
   promptError: null,
+
+  // Sync defaults
+  updatedAt: Date.now(),
 };
 
 const userSettingsSlice = createSlice({
@@ -65,37 +71,46 @@ const userSettingsSlice = createSlice({
     // Conversation Settings
     setModel: (state, action: PayloadAction<string>) => {
       state.model = action.payload;
+      state.updatedAt = Date.now();
     },
     setCommunicationStyle: (
       state,
       action: PayloadAction<ChatRequestCommunicationStyle>
     ) => {
       state.communicationStyle = action.payload;
+      state.updatedAt = Date.now();
     },
     setLanguage: (state, action: PayloadAction<string>) => {
       state.language = action.payload;
+      state.updatedAt = Date.now();
     },
     setAssistantName: (state, action: PayloadAction<string>) => {
       state.assistant_name = action.payload;
+      state.updatedAt = Date.now();
     },
 
     // Behavior Settings
     setHumanPrompt: (state, action: PayloadAction<boolean>) => {
       state.humanPrompt = action.payload;
+      state.updatedAt = Date.now();
     },
     setKeepGoing: (state, action: PayloadAction<boolean>) => {
       state.keepGoing = action.payload;
+      state.updatedAt = Date.now();
     },
     setOutsideBox: (state, action: PayloadAction<boolean>) => {
       state.outsideBox = action.payload;
+      state.updatedAt = Date.now();
     },
     setHolisticTherapist: (state, action: PayloadAction<boolean>) => {
       state.holisticTherapist = action.payload;
+      state.updatedAt = Date.now();
     },
 
     // Feature Settings
     setLibraryIntegrationEnabled: (state, action: PayloadAction<boolean>) => {
       state.libraryIntegrationEnabled = action.payload;
+      state.updatedAt = Date.now();
     },
 
     // Bulk update settings (for migration and compatibility)
@@ -103,6 +118,7 @@ const userSettingsSlice = createSlice({
       return {
         ...state,
         ...action.payload,
+        updatedAt: Date.now(),
       };
     },
 
@@ -111,6 +127,7 @@ const userSettingsSlice = createSlice({
       state.customSystemPrompt = action.payload;
       state.promptLastGenerated = new Date().toISOString();
       state.promptError = null;
+      state.updatedAt = Date.now();
     },
     setGeneratingPrompt: (state, action: PayloadAction<boolean>) => {
       state.isGeneratingPrompt = action.payload;
@@ -126,6 +143,18 @@ const userSettingsSlice = createSlice({
       state.customSystemPrompt = null;
       state.promptLastGenerated = null;
       state.promptError = null;
+      state.updatedAt = Date.now();
+    },
+
+    // Sync actions
+    setUserSettingsFromSync: (
+      state,
+      action: PayloadAction<Partial<UserSettingsState> & { updatedAt: number }>
+    ) => {
+      return {
+        ...state,
+        ...action.payload,
+      };
     },
   },
 });
@@ -145,6 +174,7 @@ export const {
   setGeneratingPrompt,
   setPromptError,
   clearCustomSystemPrompt,
+  setUserSettingsFromSync,
 } = userSettingsSlice.actions;
 
 // ===== SELECTORS =====
