@@ -1,4 +1,9 @@
-import crypto from 'react-native-quick-crypto';
+import {
+  pbkdf2Sync,
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+} from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 
 const PBKDF2_ITERATIONS = 100000;
@@ -32,13 +37,13 @@ export class CryptoService {
     const salt = Buffer.from(`togoder-sync-${userId}`, 'utf8');
     const passwordBuffer = Buffer.from(password, 'utf8');
 
-    this.encryptionKey = crypto.pbkdf2Sync(
+    this.encryptionKey = pbkdf2Sync(
       passwordBuffer,
       salt,
       PBKDF2_ITERATIONS,
       KEY_LENGTH,
       'sha256'
-    );
+    ) as Buffer;
   }
 
   /**
@@ -64,8 +69,8 @@ export class CryptoService {
       throw new Error('CryptoService not initialized - call deriveKey first');
     }
 
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-gcm', this.encryptionKey, iv);
+    const iv = randomBytes(IV_LENGTH);
+    const cipher = createCipheriv('aes-256-gcm', this.encryptionKey, iv);
 
     const encrypted = Buffer.concat([
       cipher.update(Buffer.from(data, 'utf8')),
@@ -75,7 +80,7 @@ export class CryptoService {
     const tag = cipher.getAuthTag();
 
     // Combine: [IV][ciphertext][tag]
-    const combined = Buffer.concat([iv, encrypted, tag]);
+    const combined = Buffer.concat([Buffer.from(iv), encrypted, tag]);
     return combined.toString('base64');
   }
 
@@ -91,13 +96,13 @@ export class CryptoService {
     const combined = Buffer.from(encryptedBlob, 'base64');
 
     // Extract IV (first 12 bytes)
-    const iv = combined.slice(0, IV_LENGTH);
+    const iv = combined.subarray(0, IV_LENGTH);
     // Extract tag (last 16 bytes)
-    const tag = combined.slice(-16);
+    const tag = combined.subarray(-16);
     // Rest is ciphertext
-    const ciphertext = combined.slice(IV_LENGTH, -16);
+    const ciphertext = combined.subarray(IV_LENGTH, -16);
 
-    const decipher = crypto.createDecipheriv('aes-256-gcm', this.encryptionKey, iv);
+    const decipher = createDecipheriv('aes-256-gcm', this.encryptionKey, iv);
     decipher.setAuthTag(tag);
 
     const decrypted = Buffer.concat([
