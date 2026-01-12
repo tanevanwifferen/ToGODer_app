@@ -8,25 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		2520D5CF8A4144F69138A4F6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D062B0F1F373C13CE504F3DD /* PrivacyInfo.xcprivacy */; };
+		23247E30D4E0EC329440BF31 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C841192091E0EED6CFD52E38 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		481AD521FE01AEB03A79313C /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A9161C9DD86830584B42CA /* ExpoModulesProvider.swift */; };
+		748B286FA05B38016EF5B399 /* libPods-ToGODer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1706D3C2AC2F2096299BD27B /* libPods-ToGODer.a */; };
+		A6F8F10FA92ADB5BEF24F8BD /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82D60BC01281EDB847715E5F /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		BFBDAA4A5E9BC8B3CEFC2C6A /* libPods-ToGODer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB107CFD3389E3DA18F0CD6D /* libPods-ToGODer.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		03B1F561E8EB2ADA04419839 /* Pods-ToGODer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToGODer.debug.xcconfig"; path = "Target Support Files/Pods-ToGODer/Pods-ToGODer.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* ToGODer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToGODer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = ToGODer/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ToGODer/Info.plist; sourceTree = "<group>"; };
-		18A9161C9DD86830584B42CA /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ToGODer/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		9179012055C13A0A09857E42 /* Pods-ToGODer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToGODer.release.xcconfig"; path = "Target Support Files/Pods-ToGODer/Pods-ToGODer.release.xcconfig"; sourceTree = "<group>"; };
+		1706D3C2AC2F2096299BD27B /* libPods-ToGODer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ToGODer.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		30B99BFB74A0A8C707DF57B6 /* Pods-ToGODer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToGODer.release.xcconfig"; path = "Target Support Files/Pods-ToGODer/Pods-ToGODer.release.xcconfig"; sourceTree = "<group>"; };
+		82D60BC01281EDB847715E5F /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ToGODer/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = ToGODer/SplashScreen.storyboard; sourceTree = "<group>"; };
-		AB107CFD3389E3DA18F0CD6D /* libPods-ToGODer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ToGODer.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		D062B0F1F373C13CE504F3DD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = ToGODer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C63DEC78363FA6A8E502349E /* Pods-ToGODer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToGODer.debug.xcconfig"; path = "Target Support Files/Pods-ToGODer/Pods-ToGODer.debug.xcconfig"; sourceTree = "<group>"; };
+		C841192091E0EED6CFD52E38 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ToGODer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = ToGODer/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* ToGODer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ToGODer-Bridging-Header.h"; path = "ToGODer/ToGODer-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -37,21 +37,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BFBDAA4A5E9BC8B3CEFC2C6A /* libPods-ToGODer.a in Frameworks */,
+				748B286FA05B38016EF5B399 /* libPods-ToGODer.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0B04C26DE668AA7A58BA6358 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				A8F679FDDEB6FAAE2E245559 /* ToGODer */,
-			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* ToGODer */ = {
 			isa = PBXGroup;
 			children = (
@@ -61,27 +53,28 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				D062B0F1F373C13CE504F3DD /* PrivacyInfo.xcprivacy */,
+				C841192091E0EED6CFD52E38 /* PrivacyInfo.xcprivacy */,
 			);
 			name = ToGODer;
+			sourceTree = "<group>";
+		};
+		211B810690507192768BC517 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				C63DEC78363FA6A8E502349E /* Pods-ToGODer.debug.xcconfig */,
+				30B99BFB74A0A8C707DF57B6 /* Pods-ToGODer.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				AB107CFD3389E3DA18F0CD6D /* libPods-ToGODer.a */,
+				1706D3C2AC2F2096299BD27B /* libPods-ToGODer.a */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		2F8643668D440EB4D1B6148B /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				03B1F561E8EB2ADA04419839 /* Pods-ToGODer.debug.xcconfig */,
-				9179012055C13A0A09857E42 /* Pods-ToGODer.release.xcconfig */,
-			);
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -98,8 +91,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				2F8643668D440EB4D1B6148B /* Pods */,
-				0B04C26DE668AA7A58BA6358 /* ExpoModulesProviders */,
+				211B810690507192768BC517 /* Pods */,
+				FABB4DBAF1F03C6D0A8F2FE9 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -114,14 +107,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A8F679FDDEB6FAAE2E245559 /* ToGODer */ = {
-			isa = PBXGroup;
-			children = (
-				18A9161C9DD86830584B42CA /* ExpoModulesProvider.swift */,
-			);
-			name = ToGODer;
-			sourceTree = "<group>";
-		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -129,6 +114,22 @@
 			);
 			name = Supporting;
 			path = ToGODer/Supporting;
+			sourceTree = "<group>";
+		};
+		F64C35DDAB069B711E4CA350 /* ToGODer */ = {
+			isa = PBXGroup;
+			children = (
+				82D60BC01281EDB847715E5F /* ExpoModulesProvider.swift */,
+			);
+			name = ToGODer;
+			sourceTree = "<group>";
+		};
+		FABB4DBAF1F03C6D0A8F2FE9 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				F64C35DDAB069B711E4CA350 /* ToGODer */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "ToGODer" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				F0317EF1CCE15CCD48D6F746 /* [Expo] Configure project */,
+				90F39BDDAF6D06FAB456F82C /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				2B7386EB61127039B8E48EA6 /* [CP] Embed Pods Frameworks */,
+				C0C98D054877D8278433828E /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -195,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				2520D5CF8A4144F69138A4F6 /* PrivacyInfo.xcprivacy in Resources */,
+				23247E30D4E0EC329440BF31 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,24 +238,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		2B7386EB61127039B8E48EA6 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -301,7 +284,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F0317EF1CCE15CCD48D6F746 /* [Expo] Configure project */ = {
+		90F39BDDAF6D06FAB456F82C /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -320,6 +303,26 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-ToGODer/expo-configure-project.sh\"\n";
 		};
+		C0C98D054877D8278433828E /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/QuickCrypto/OpenSSL.framework/OpenSSL",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -328,7 +331,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				481AD521FE01AEB03A79313C /* ExpoModulesProvider.swift in Sources */,
+				A6F8F10FA92ADB5BEF24F8BD /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -337,7 +340,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 03B1F561E8EB2ADA04419839 /* Pods-ToGODer.debug.xcconfig */;
+			baseConfigurationReference = C63DEC78363FA6A8E502349E /* Pods-ToGODer.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -363,7 +366,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.vanWifferen.ToGODer-app";
-				PRODUCT_NAME = "ToGODer";
+				PRODUCT_NAME = ToGODer;
 				SWIFT_OBJC_BRIDGING_HEADER = "ToGODer/ToGODer-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -374,7 +377,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9179012055C13A0A09857E42 /* Pods-ToGODer.release.xcconfig */;
+			baseConfigurationReference = 30B99BFB74A0A8C707DF57B6 /* Pods-ToGODer.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -395,7 +398,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.vanWifferen.ToGODer-app";
-				PRODUCT_NAME = "ToGODer";
+				PRODUCT_NAME = ToGODer;
 				SWIFT_OBJC_BRIDGING_HEADER = "ToGODer/ToGODer-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -458,7 +461,10 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -513,7 +519,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
