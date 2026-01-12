@@ -1,23 +1,25 @@
 import 'react-native-get-random-values';
+import { gcm } from '@noble/ciphers/aes.js';
+import { pbkdf2 } from '@noble/hashes/pbkdf2.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 const PBKDF2_ITERATIONS = 100000;
-const KEY_LENGTH = 256; // bits for AES-256
-const IV_LENGTH = 12; // bytes, 96 bits for GCM
-const TAG_LENGTH = 16; // bytes, 128 bits for GCM auth tag
+const KEY_LENGTH = 32; // 32 bytes = 256 bits for AES-256
+const IV_LENGTH = 12; // 12 bytes = 96 bits for GCM
 
 /**
  * CryptoService handles encryption and decryption of sync data
  * Uses PBKDF2 for key derivation and AES-256-GCM for encryption
  *
- * Uses standard Web Crypto API which works on:
- * - Web browsers (native)
- * - React Native / Expo (via react-native-get-random-values polyfill)
+ * Uses @noble/ciphers and @noble/hashes which are pure JS and work on:
+ * - Web browsers
+ * - React Native iOS/Android
  *
  * Blob format: [12 bytes IV][ciphertext][16 bytes tag] - base64 encoded
  */
 export class CryptoService {
   private static instance: CryptoService;
-  private encryptionKey: CryptoKey | null = null;
+  private encryptionKey: Uint8Array | null = null;
 
   private constructor() {}
 
@@ -35,30 +37,12 @@ export class CryptoService {
   async deriveKey(userId: string, password: string): Promise<void> {
     const encoder = new TextEncoder();
     const salt = encoder.encode(`togoder-sync-${userId}`);
-    const passwordBuffer = encoder.encode(password);
+    const passwordBytes = encoder.encode(password);
 
-    // Import password as a key for PBKDF2
-    const passwordKey = await crypto.subtle.importKey(
-      'raw',
-      passwordBuffer,
-      'PBKDF2',
-      false,
-      ['deriveKey']
-    );
-
-    // Derive the actual encryption key
-    this.encryptionKey = await crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt,
-        iterations: PBKDF2_ITERATIONS,
-        hash: 'SHA-256',
-      },
-      passwordKey,
-      { name: 'AES-GCM', length: KEY_LENGTH },
-      false,
-      ['encrypt', 'decrypt']
-    );
+    this.encryptionKey = pbkdf2(sha256, passwordBytes, salt, {
+      c: PBKDF2_ITERATIONS,
+      dkLen: KEY_LENGTH,
+    });
   }
 
   /**
@@ -85,25 +69,20 @@ export class CryptoService {
     }
 
     const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(data);
+    const dataBytes = encoder.encode(data);
 
-    // Generate random IV
-    const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+    // Generate random IV using the polyfilled crypto.getRandomValues
+    const iv = new Uint8Array(IV_LENGTH);
+    crypto.getRandomValues(iv);
 
-    // Encrypt with AES-GCM (tag is automatically appended to ciphertext)
-    const encryptedBuffer = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      this.encryptionKey,
-      dataBuffer
-    );
+    // Encrypt with AES-256-GCM
+    const aes = gcm(this.encryptionKey, iv);
+    const ciphertext = aes.encrypt(dataBytes);
 
-    // Web Crypto appends 16-byte auth tag to ciphertext
-    const encryptedArray = new Uint8Array(encryptedBuffer);
-
-    // Combine: [IV][ciphertext+tag]
-    const combined = new Uint8Array(IV_LENGTH + encryptedArray.length);
+    // Combine: [IV][ciphertext] (noble/ciphers appends tag to ciphertext)
+    const combined = new Uint8Array(IV_LENGTH + ciphertext.length);
     combined.set(iv, 0);
-    combined.set(encryptedArray, IV_LENGTH);
+    combined.set(ciphertext, IV_LENGTH);
 
     return this.arrayToBase64(combined);
   }
@@ -121,17 +100,15 @@ export class CryptoService {
 
     // Extract IV (first 12 bytes)
     const iv = combined.slice(0, IV_LENGTH);
-    // Rest is ciphertext + tag (Web Crypto expects them together)
-    const ciphertextWithTag = combined.slice(IV_LENGTH);
+    // Rest is ciphertext + tag
+    const ciphertext = combined.slice(IV_LENGTH);
 
-    const decryptedBuffer = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
-      this.encryptionKey,
-      ciphertextWithTag
-    );
+    // Decrypt with AES-256-GCM
+    const aes = gcm(this.encryptionKey, iv);
+    const decrypted = aes.decrypt(ciphertext);
 
     const decoder = new TextDecoder();
-    return decoder.decode(decryptedBuffer);
+    return decoder.decode(decrypted);
   }
 
   /**
