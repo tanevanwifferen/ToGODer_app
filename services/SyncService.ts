@@ -27,7 +27,7 @@ export class SyncService {
   private isInitialized = false;
   private pushTimeout: NodeJS.Timeout | null = null;
   private firstPushRequestTime: number | null = null;
-  private lastRemoteUpdatedAt: number = 0;
+  private lastRemoteVersion: number = 0;
 
   private constructor() {
     this.cryptoService = CryptoService.getInstance();
@@ -62,7 +62,7 @@ export class SyncService {
       this.pushTimeout = null;
     }
     this.firstPushRequestTime = null;
-    this.lastRemoteUpdatedAt = 0;
+    this.lastRemoteVersion = 0;
   }
 
   /**
@@ -165,17 +165,18 @@ export class SyncService {
 
     try {
       const response = await SyncApiClient.pull();
-      this.lastRemoteUpdatedAt = response.updatedAt;
 
-      if (!response.data) {
-        // No remote data, push local data
+      if (!response) {
+        // No remote data (404), push local data
         console.log('No remote sync data, pushing local data');
         await this.push();
         return;
       }
 
+      this.lastRemoteVersion = response.version;
+
       // Decrypt remote data
-      const decryptedJson = await this.cryptoService.decrypt(response.data);
+      const decryptedJson = await this.cryptoService.decrypt(response.encryptedData);
       const remotePayload: SyncPayload = JSON.parse(decryptedJson);
 
       // Get local payload
@@ -188,7 +189,8 @@ export class SyncService {
       this.applyPayloadToStore(mergedPayload);
 
       // If local had newer changes, push the merged result
-      if (hasLocalChanges(localPayload, response.updatedAt)) {
+      const remoteTimestamp = new Date(response.lastModified).getTime();
+      if (hasLocalChanges(localPayload, remoteTimestamp)) {
         await this.push();
       }
 
@@ -213,8 +215,11 @@ export class SyncService {
       const jsonData = JSON.stringify(localPayload);
       const encryptedData = await this.cryptoService.encrypt(jsonData);
 
-      const response = await SyncApiClient.push(encryptedData, SYNC_VERSION);
-      this.lastRemoteUpdatedAt = response.updatedAt;
+      const response = await SyncApiClient.push(
+        encryptedData,
+        this.lastRemoteVersion > 0 ? this.lastRemoteVersion : undefined
+      );
+      this.lastRemoteVersion = response.version;
 
       console.log('Sync push completed');
     } catch (error) {
@@ -276,17 +281,17 @@ export class SyncService {
       // Fetch current remote data
       const response = await SyncApiClient.pull();
 
-      if (response.data) {
+      if (response) {
         // Re-encrypt with new password
         const reEncryptedData = await this.cryptoService.reEncrypt(
-          response.data,
+          response.encryptedData,
           this.userId,
           oldPassword,
           newPassword
         );
 
         // Push re-encrypted data
-        await SyncApiClient.push(reEncryptedData, SYNC_VERSION);
+        await SyncApiClient.push(reEncryptedData, response.version);
       }
 
       // Update service with new password

@@ -1,5 +1,5 @@
 import { ApiClient } from './ApiClient';
-import { EncryptedSyncData, SyncResponse, SyncPushRequest } from '../services/sync/types';
+import { SyncPullResponse, SyncPushRequest, SyncPushResponse } from '../services/sync/types';
 
 /**
  * Client for handling sync-related API requests.
@@ -8,23 +8,25 @@ import { EncryptedSyncData, SyncResponse, SyncPushRequest } from '../services/sy
 export class SyncApiClient {
   /**
    * Fetch the latest sync data from the server
+   * Returns null encryptedData if no sync data exists (404)
    */
-  static async pull(): Promise<SyncResponse> {
-    return ApiClient.get<SyncResponse>('/sync');
+  static async pull(): Promise<SyncPullResponse | null> {
+    try {
+      return await ApiClient.get<SyncPullResponse>('/sync');
+    } catch (error: any) {
+      // 404 means no sync data yet - return null
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   /**
    * Push encrypted sync data to the server
    */
-  static async push(data: EncryptedSyncData, version: number): Promise<SyncResponse> {
-    const request: SyncPushRequest = { data, version };
-    return ApiClient.post<SyncResponse>('/sync', request) as Promise<SyncResponse>;
-  }
-
-  /**
-   * Get the current sync version from the server
-   */
-  static async getVersion(): Promise<{ version: number; updatedAt: number }> {
-    return ApiClient.get<{ version: number; updatedAt: number }>('/sync/version');
+  static async push(encryptedData: string, version?: number): Promise<SyncPushResponse> {
+    const request: SyncPushRequest = { encryptedData, version };
+    return ApiClient.post<SyncPushResponse>('/sync', request);
   }
 }

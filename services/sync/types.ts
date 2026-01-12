@@ -33,21 +33,40 @@ export interface SyncPayload {
   userSettings: SyncableUserSettings;
 }
 
-export interface EncryptedSyncData {
+/**
+ * Internal encrypted data structure (iv + ciphertext + tag)
+ * Used internally by CryptoService before combining into single blob
+ */
+export interface EncryptedParts {
   iv: string;
   ciphertext: string;
   tag: string;
 }
 
-export interface SyncResponse {
-  data: EncryptedSyncData | null;
+/**
+ * API response from GET /api/sync
+ */
+export interface SyncPullResponse {
+  encryptedData: string;
   version: number;
-  updatedAt: number;
+  lastModified: string;
 }
 
+/**
+ * API request for POST /api/sync
+ */
 export interface SyncPushRequest {
-  data: EncryptedSyncData;
+  encryptedData: string;
+  version?: number;
+}
+
+/**
+ * API response from POST /api/sync
+ */
+export interface SyncPushResponse {
+  success: boolean;
   version: number;
+  lastModified: string;
 }
 
 export const SYNC_VERSION = 1;

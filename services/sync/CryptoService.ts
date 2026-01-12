@@ -1,9 +1,9 @@
 import 'react-native-get-random-values';
-import { EncryptedSyncData } from './types';
 
 const PBKDF2_ITERATIONS = 100000;
 const KEY_LENGTH = 256; // bits for AES-256
 const IV_LENGTH = 12; // bytes, 96 bits for GCM
+const TAG_LENGTH = 16; // bytes, 128 bits for GCM auth tag
 
 /**
  * CryptoService handles encryption and decryption of sync data
@@ -12,6 +12,8 @@ const IV_LENGTH = 12; // bytes, 96 bits for GCM
  * Uses standard Web Crypto API which works on:
  * - Web browsers (native)
  * - React Native / Expo (via react-native-get-random-values polyfill)
+ *
+ * Blob format: [12 bytes IV][ciphertext][16 bytes tag] - base64 encoded
  */
 export class CryptoService {
   private static instance: CryptoService;
@@ -75,8 +77,9 @@ export class CryptoService {
 
   /**
    * Encrypt data using AES-256-GCM
+   * Returns a single base64 blob: [IV][ciphertext][tag]
    */
-  async encrypt(data: string): Promise<EncryptedSyncData> {
+  async encrypt(data: string): Promise<string> {
     if (!this.encryptionKey) {
       throw new Error('CryptoService not initialized - call deriveKey first');
     }
@@ -94,39 +97,37 @@ export class CryptoService {
       dataBuffer
     );
 
-    // AES-GCM appends 16-byte auth tag to the ciphertext
+    // Web Crypto appends 16-byte auth tag to ciphertext
     const encryptedArray = new Uint8Array(encryptedBuffer);
-    const ciphertext = encryptedArray.slice(0, -16);
-    const tag = encryptedArray.slice(-16);
 
-    return {
-      iv: this.arrayToBase64(iv),
-      ciphertext: this.arrayToBase64(ciphertext),
-      tag: this.arrayToBase64(tag),
-    };
+    // Combine: [IV][ciphertext+tag]
+    const combined = new Uint8Array(IV_LENGTH + encryptedArray.length);
+    combined.set(iv, 0);
+    combined.set(encryptedArray, IV_LENGTH);
+
+    return this.arrayToBase64(combined);
   }
 
   /**
    * Decrypt data using AES-256-GCM
+   * Expects a single base64 blob: [IV][ciphertext][tag]
    */
-  async decrypt(encryptedData: EncryptedSyncData): Promise<string> {
+  async decrypt(encryptedBlob: string): Promise<string> {
     if (!this.encryptionKey) {
       throw new Error('CryptoService not initialized - call deriveKey first');
     }
 
-    const iv = this.base64ToArray(encryptedData.iv);
-    const ciphertext = this.base64ToArray(encryptedData.ciphertext);
-    const tag = this.base64ToArray(encryptedData.tag);
+    const combined = this.base64ToArray(encryptedBlob);
 
-    // Reconstruct the combined ciphertext + tag that AES-GCM expects
-    const combined = new Uint8Array(ciphertext.length + tag.length);
-    combined.set(ciphertext, 0);
-    combined.set(tag, ciphertext.length);
+    // Extract IV (first 12 bytes)
+    const iv = combined.slice(0, IV_LENGTH);
+    // Rest is ciphertext + tag (Web Crypto expects them together)
+    const ciphertextWithTag = combined.slice(IV_LENGTH);
 
     const decryptedBuffer = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv },
       this.encryptionKey,
-      combined
+      ciphertextWithTag
     );
 
     const decoder = new TextDecoder();
@@ -138,14 +139,14 @@ export class CryptoService {
    * Used when user changes their password
    */
   async reEncrypt(
-    encryptedData: EncryptedSyncData,
+    encryptedBlob: string,
     userId: string,
     oldPassword: string,
     newPassword: string
-  ): Promise<EncryptedSyncData> {
+  ): Promise<string> {
     // Derive old key and decrypt
     await this.deriveKey(userId, oldPassword);
-    const plaintext = await this.decrypt(encryptedData);
+    const plaintext = await this.decrypt(encryptedBlob);
 
     // Derive new key and encrypt
     await this.deriveKey(userId, newPassword);
