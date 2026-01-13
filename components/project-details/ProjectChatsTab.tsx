@@ -39,7 +39,7 @@ export function ProjectChatsTab({ projectId }: ProjectChatsTabProps) {
 
   const handleSelectChat = (chatId: string) => {
     dispatch(setCurrentChat(chatId));
-    router.push("/");
+    router.push({ pathname: '/chat/[id]', params: { id: chatId } });
   };
 
   const handleDeleteChat = (chatId: string, title: string | null | undefined) => {
@@ -75,7 +75,7 @@ export function ProjectChatsTab({ projectId }: ProjectChatsTabProps) {
     );
     dispatch(addChatToProject({ projectId, chatId }));
     dispatch(setCurrentChat(chatId));
-    router.push("/");
+    router.push({ pathname: '/chat/[id]', params: { id: chatId } });
   };
 
   const renderItem = ({ item }: { item: (typeof projectChats)[0] }) => (

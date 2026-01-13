@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useMemo } from "react";
+import React, { useLayoutEffect, useState, useMemo, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -21,6 +21,7 @@ import {
   ProjectArtifactsTab,
   TabType,
 } from "../../../components/project-details";
+import { useProjectActions } from "../../../hooks/useProjectActions";
 
 export default function ProjectDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -29,6 +30,7 @@ export default function ProjectDetailsScreen() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
   const navigation = useNavigation();
+  const { handleRenameProject } = useProjectActions();
 
   const project = useSelector(
     (state: RootState) => state.projects.projects[projectId]
@@ -39,8 +41,17 @@ export default function ProjectDetailsScreen() {
   );
 
   const [activeTab, setActiveTab] = useState<TabType>("chats");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(project?.name || "");
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState(project?.description || "");
+
+  // Sync editedName when project changes
+  useEffect(() => {
+    if (project?.name) {
+      setEditedName(project.name);
+    }
+  }, [project?.name]);
 
   // Count chats belonging to this project
   const chatCount = useMemo(() => {
@@ -78,6 +89,14 @@ export default function ProjectDetailsScreen() {
     );
   }
 
+  const handleSaveName = () => {
+    if (editedName.trim()) {
+      handleRenameProject(projectId, editedName.trim());
+      navigation.setOptions({ title: editedName.trim() });
+    }
+    setIsEditingName(false);
+  };
+
   const handleSaveDescription = () => {
     dispatch(
       updateProject({
@@ -99,6 +118,57 @@ export default function ProjectDetailsScreen() {
       <View style={contentStyle}>
         {/* Project Info Header */}
         <View style={styles.header}>
+          {/* Name Section */}
+          <View style={styles.nameSection}>
+            {isEditingName ? (
+              <View style={styles.editNameContainer}>
+                <TextInput
+                  style={[
+                    styles.nameInput,
+                    {
+                      color: theme.text,
+                      backgroundColor:
+                        colorScheme === "dark" ? "#2D2D2D" : "#f5f5f5",
+                      borderColor: theme.tint,
+                    },
+                  ]}
+                  value={editedName}
+                  onChangeText={setEditedName}
+                  placeholder="Project name"
+                  placeholderTextColor={theme.text + "66"}
+                  autoFocus
+                />
+                <View style={styles.editActions}>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => {
+                      setEditedName(project?.name || "");
+                      setIsEditingName(false);
+                    }}
+                  >
+                    <Text
+                      style={[styles.editButtonText, { color: theme.text + "99" }]}
+                    >
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.editButton, { backgroundColor: theme.tint }]}
+                    onPress={handleSaveName}
+                  >
+                    <Text style={styles.saveButtonText}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={() => setIsEditingName(true)}>
+                <Text style={[styles.projectName, { color: theme.text }]}>
+                  {project.name}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           {/* Description Section */}
           <View style={styles.descriptionSection}>
             {isEditingDescription ? (
@@ -123,7 +193,10 @@ export default function ProjectDetailsScreen() {
                 <View style={styles.editActions}>
                   <TouchableOpacity
                     style={styles.editButton}
-                    onPress={() => setIsEditingDescription(false)}
+                    onPress={() => {
+                      setDescription(project?.description || "");
+                      setIsEditingDescription(false);
+                    }}
                   >
                     <Text
                       style={[styles.editButtonText, { color: theme.text + "99" }]}
@@ -228,6 +301,24 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+  },
+  nameSection: {
+    marginBottom: 12,
+  },
+  projectName: {
+    fontSize: 20,
+    fontWeight: "600",
+    lineHeight: 28,
+  },
+  editNameContainer: {
+    gap: 12,
+  },
+  nameInput: {
+    fontSize: 20,
+    fontWeight: "600",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
   },
   descriptionSection: {
     marginBottom: 12,
