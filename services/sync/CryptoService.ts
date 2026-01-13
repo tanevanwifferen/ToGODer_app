@@ -1,7 +1,4 @@
 import { Platform } from "react-native";
-import { AndroidCryptoService } from "./AndroidCryptoService";
-import { IOSCryptoService } from "./IOSCryptoService";
-import { WebCryptoService } from "./CryptoService.web";
 import { ICryptoService } from "./types";
 
 /**
@@ -22,10 +19,13 @@ export class CryptoService {
   private static getInstance(): ICryptoService {
     if (!CryptoService.instance) {
       if (Platform.OS === "ios") {
+        const { IOSCryptoService } = require("./IOSCryptoService");
         CryptoService.instance = new IOSCryptoService();
       } else if (Platform.OS === "android") {
+        const { AndroidCryptoService } = require("./AndroidCryptoService");
         CryptoService.instance = new AndroidCryptoService();
       } else {
+        const { WebCryptoService } = require("./CryptoService.web");
         CryptoService.instance = new WebCryptoService();
       }
     }

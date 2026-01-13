@@ -1,7 +1,7 @@
-import { pbkdf2 } from "@noble/hashes/pbkdf2.js";
-import { sha256 } from "@noble/hashes/sha2.js";
-import { gcm } from "@noble/ciphers/aes.js";
-import { randomBytes } from "@noble/ciphers/utils.js";
+const { pbkdf2 } = require("@noble/hashes/pbkdf2.js");
+const { sha256 } = require("@noble/hashes/sha2.js");
+const { gcm } = require("@noble/ciphers/aes.js");
+const { randomBytes } = require("@noble/ciphers/utils.js");
 import { ICryptoService } from "./types";
 
 const PBKDF2_ITERATIONS = 100000;

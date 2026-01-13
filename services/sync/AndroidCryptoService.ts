@@ -1,10 +1,10 @@
-import {
+const {
   pbkdf2Sync,
   randomBytes,
   createCipheriv,
   createDecipheriv,
-} from "react-native-quick-crypto";
-import { Buffer } from "@craftzdog/react-native-buffer";
+} = require("react-native-quick-crypto");
+const { Buffer } = require("@craftzdog/react-native-buffer");
 import { ICryptoService } from "./types";
 
 // Lazy getter for Buffer to ensure polyfills are loaded before accessing
