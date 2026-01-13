@@ -25,7 +25,7 @@ export class CryptoService {
         const { AndroidCryptoService } = require("./AndroidCryptoService");
         CryptoService.instance = new AndroidCryptoService();
       } else {
-        const { WebCryptoService } = require("./CryptoService.web");
+        const { WebCryptoService } = require("./WebCryptoService");
         CryptoService.instance = new WebCryptoService();
       }
     }
