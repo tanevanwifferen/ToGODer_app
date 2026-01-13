@@ -227,6 +227,7 @@ export interface UseChatMessageSendingResult {
   sendMessage: (content: string) => Promise<void>;
   retry: () => Promise<void>;
   regenerate: () => Promise<void>;
+  cancel: () => void;
   isLoading: boolean;
   typing: boolean;
   error: string | null;
@@ -345,10 +346,18 @@ function useChatMessageSending(chatId: string): UseChatMessageSendingResult {
     });
   }, [chatId]);
 
+  const cancel = useCallback(() => {
+    const messageService = MessageService.getInstance();
+    messageService.cancelRequest();
+    setIsLoading(false);
+    setTyping(false);
+  }, []);
+
   return {
     sendMessage,
     retry,
     regenerate,
+    cancel,
     isLoading,
     typing,
     error,

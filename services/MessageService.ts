@@ -48,6 +48,7 @@ export interface SendMessageStreamOptions {
   artifactIndex?: ArtifactIndexItem[];
   tools?: typeof ARTIFACT_TOOL_SCHEMAS;
   toolCallLoopCount?: number;
+  signal?: AbortSignal;
   onChunk?: (content: string) => void;
   onComplete?: (message: ApiChatMessage) => void;
   onError?: (error: string) => void;
@@ -62,6 +63,7 @@ const MAX_TOOL_CALL_LOOPS = 10;
  */
 export class MessageService {
   private static instance: MessageService;
+  private currentAbortController: AbortController | null = null;
 
   private constructor() {}
 
@@ -70,6 +72,24 @@ export class MessageService {
       MessageService.instance = new MessageService();
     }
     return MessageService.instance;
+  }
+
+  /**
+   * Cancels any currently active request.
+   * Safe to call even if no request is in progress.
+   */
+  public cancelRequest(): void {
+    if (this.currentAbortController) {
+      this.currentAbortController.abort();
+      this.currentAbortController = null;
+    }
+  }
+
+  /**
+   * Returns whether a request is currently in progress.
+   */
+  public isRequestInProgress(): boolean {
+    return this.currentAbortController !== null;
   }
 
   /**
@@ -368,6 +388,13 @@ export class MessageService {
       onError,
     } = options;
 
+    // Cancel any existing request
+    this.cancelRequest();
+
+    // Create new AbortController for this request
+    this.currentAbortController = new AbortController();
+    const signal = this.currentAbortController.signal;
+
     try {
       const state = store.getState();
       const chat = state.chats.chats[chatId];
@@ -418,6 +445,7 @@ export class MessageService {
           memoryLoopLimitReached,
           artifactIndex,
           tools,
+          signal,
           onChunk,
           onComplete,
           onError,
@@ -440,6 +468,12 @@ export class MessageService {
       const balanceService = BalanceService.getInstance();
       await balanceService.updateBalanceIfAuthenticated();
     } catch (error) {
+      // Don't show error toast for cancelled requests
+      if (error instanceof Error && error.name === "AbortError") {
+        console.log("MessageService: Request cancelled");
+        return;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : "Failed to send message";
       console.error("MessageService.sendMessage error:", error);
@@ -450,6 +484,8 @@ export class MessageService {
         text2: errorMessage,
         position: "bottom",
       });
+    } finally {
+      this.currentAbortController = null;
     }
   }
 
@@ -468,6 +504,7 @@ export class MessageService {
       artifactIndex,
       tools,
       toolCallLoopCount = 0,
+      signal,
       onChunk,
       onComplete,
       onError,
@@ -492,6 +529,11 @@ export class MessageService {
     }> = [];
 
     try {
+      // Check if already aborted before starting
+      if (signal?.aborted) {
+        throw new Error("Request cancelled");
+      }
+
       for await (const evt of ChatApiClient.sendMessageStream(
         userSettings.model,
         userSettings.humanPrompt,
@@ -511,7 +553,8 @@ export class MessageService {
         memoryLoopCount,
         memoryLoopLimitReached,
         artifactIndex,
-        tools
+        tools,
+        signal
       )) {
         switch (evt.type) {
           case "chunk": {
@@ -605,6 +648,7 @@ export class MessageService {
               memoryLoopLimitReached: nextLimitReached,
               artifactIndex: updatedArtifactIndex,
               tools: updatedTools,
+              signal,
               onChunk,
               onComplete,
               onError,
@@ -714,6 +758,7 @@ export class MessageService {
           artifactIndex: updatedArtifactIndex,
           tools: updatedTools,
           toolCallLoopCount: toolCallLoopCount + 1,
+          signal,
           onChunk,
           onComplete,
           onError,
@@ -733,6 +778,12 @@ export class MessageService {
         onComplete(assistantMessage);
       }
     } catch (error) {
+      // Don't show error for cancelled requests
+      if (error instanceof Error && (error.name === "AbortError" || error.message === "Request cancelled" || error.message === "Aborted")) {
+        console.log("MessageService: Streaming request cancelled");
+        return;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : "Streaming failed";
       console.error("MessageService.sendMessageWithStreaming error:", error);
@@ -879,6 +930,13 @@ export class MessageService {
       onError,
     } = options;
 
+    // Cancel any existing request
+    this.cancelRequest();
+
+    // Create new AbortController for this request
+    this.currentAbortController = new AbortController();
+    const signal = this.currentAbortController.signal;
+
     try {
       const state = store.getState();
       const chat = state.chats.chats[chatId];
@@ -917,6 +975,7 @@ export class MessageService {
           memories,
           artifactIndex,
           tools,
+          signal,
           onChunk,
           onComplete,
           onError,
@@ -937,6 +996,12 @@ export class MessageService {
       const balanceService = BalanceService.getInstance();
       await balanceService.updateBalanceIfAuthenticated();
     } catch (error) {
+      // Don't show error toast for cancelled requests
+      if (error instanceof Error && error.name === "AbortError") {
+        console.log("MessageService: Regenerate request cancelled");
+        return;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : "Failed to regenerate response";
       console.error("MessageService.regenerateResponse error:", error);
@@ -947,6 +1012,8 @@ export class MessageService {
         text2: errorMessage,
         position: "bottom",
       });
+    } finally {
+      this.currentAbortController = null;
     }
   }
 
