@@ -27,7 +27,7 @@ export function ProjectList() {
   const { handleCreateProject, handleDeleteProject } = useProjectActions();
 
   const handleViewProject = (projectId: string) => {
-    router.push(`/projects/${projectId}`);
+    router.push(`/projects/${projectId}` as any);
   };
 
   // Modal state for creating new project

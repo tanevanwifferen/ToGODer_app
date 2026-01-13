@@ -1,17 +1,20 @@
-import { store } from '../redux/store';
-import { CryptoService } from './sync/CryptoService';
-import { SyncApiClient } from '../apiClients/SyncApiClient';
-import { mergeSyncPayloads, hasLocalChanges } from './sync/mergeUtils';
+import { store } from "../redux/store";
+import { CryptoService } from "./sync/CryptoService";
+import { SyncApiClient } from "../apiClients/SyncApiClient";
+import { mergeSyncPayloads, hasLocalChanges } from "./sync/mergeUtils";
 import {
   SyncPayload,
   SyncableChat,
   SyncablePersonal,
   SyncableUserSettings,
   SYNC_VERSION,
-} from './sync/types';
-import { ChatsState } from '../redux/slices/chatsSlice';
-import { PersonalState } from '../redux/slices/personalSlice';
-import { UserSettingsState } from '../redux/slices/userSettingsSlice';
+} from "./sync/types";
+import { ChatsState } from "../redux/slices/chatsSlice";
+import { PersonalState } from "../redux/slices/personalSlice";
+import { UserSettingsState } from "../redux/slices/userSettingsSlice";
+import { setChatsFromSync } from "../redux/slices/chatsSlice";
+import { setPersonalFromSync } from "../redux/slices/personalSlice";
+import { setUserSettingsFromSync } from "../redux/slices/userSettingsSlice";
 
 const DEBOUNCE_DELAY = 2000; // 2 seconds
 const MAX_DEBOUNCE_WAIT = 10000; // 10 seconds max wait
@@ -22,16 +25,13 @@ const MAX_DEBOUNCE_WAIT = 10000; // 10 seconds max wait
  */
 export class SyncService {
   private static instance: SyncService;
-  private cryptoService: CryptoService;
   private userId: string | null = null;
   private isInitialized = false;
-  private pushTimeout: NodeJS.Timeout | null = null;
+  private pushTimeout: NodeJS.Timeout | number | null = null;
   private firstPushRequestTime: number | null = null;
   private lastRemoteVersion: number = 0;
 
-  private constructor() {
-    this.cryptoService = CryptoService.getInstance();
-  }
+  private constructor() {}
 
   static getInstance(): SyncService {
     if (!SyncService.instance) {
@@ -45,9 +45,9 @@ export class SyncService {
    */
   async initialize(userId: string, password: string): Promise<void> {
     this.userId = userId;
-    await this.cryptoService.deriveKey(userId, password);
+    await CryptoService.deriveKey(userId, password);
     this.isInitialized = true;
-    console.log('SyncService initialized for user:', userId);
+    console.log("SyncService initialized for user:", userId);
   }
 
   /**
@@ -56,7 +56,7 @@ export class SyncService {
   clear(): void {
     this.userId = null;
     this.isInitialized = false;
-    this.cryptoService.clearKey();
+    CryptoService.clearKey();
     if (this.pushTimeout) {
       clearTimeout(this.pushTimeout);
       this.pushTimeout = null;
@@ -69,7 +69,7 @@ export class SyncService {
    * Check if service is ready to sync
    */
   isReady(): boolean {
-    return this.isInitialized && this.cryptoService.isInitialized();
+    return this.isInitialized && CryptoService.isInitialized();
   }
 
   /**
@@ -79,7 +79,9 @@ export class SyncService {
     const state = store.getState();
     const chatsState = state.chats as ChatsState;
     const personalState = state.personal as PersonalState;
-    const userSettingsState = state.userSettings as UserSettingsState | undefined;
+    const userSettingsState = state.userSettings as
+      | UserSettingsState
+      | undefined;
 
     // Convert chats to syncable format
     const syncableChats: Record<string, SyncableChat> = {};
@@ -99,15 +101,16 @@ export class SyncService {
 
     // Get user settings from userSettingsSlice
     const syncableUserSettings: SyncableUserSettings = {
-      model: userSettingsState?.model || '',
+      model: userSettingsState?.model || "",
       humanPrompt: userSettingsState?.humanPrompt ?? true,
       keepGoing: userSettingsState?.keepGoing ?? true,
       outsideBox: userSettingsState?.outsideBox ?? true,
       holisticTherapist: userSettingsState?.holisticTherapist ?? true,
       communicationStyle: userSettingsState?.communicationStyle || 0,
-      assistant_name: userSettingsState?.assistant_name || 'ToGODer',
-      language: userSettingsState?.language || '',
-      libraryIntegrationEnabled: userSettingsState?.libraryIntegrationEnabled ?? false,
+      assistant_name: userSettingsState?.assistant_name || "ToGODer",
+      language: userSettingsState?.language || "",
+      libraryIntegrationEnabled:
+        userSettingsState?.libraryIntegrationEnabled ?? false,
       updatedAt: userSettingsState?.updatedAt || Date.now(),
     };
 
@@ -124,10 +127,6 @@ export class SyncService {
    * Apply merged payload to Redux store
    */
   private applyPayloadToStore(payload: SyncPayload): void {
-    const { setChatsFromSync } = require('../redux/slices/chatsSlice');
-    const { setPersonalFromSync } = require('../redux/slices/personalSlice');
-    const { setUserSettingsFromSync } = require('../redux/slices/userSettingsSlice');
-
     // Apply chats
     const chatsForStore: Record<string, any> = {};
     for (const [id, chat] of Object.entries(payload.chats)) {
@@ -140,18 +139,22 @@ export class SyncService {
     store.dispatch(setChatsFromSync(chatsForStore));
 
     // Apply personal data
-    store.dispatch(setPersonalFromSync({
-      data: payload.personal.data,
-      persona: payload.personal.persona,
-      updatedAt: payload.personal.updatedAt,
-    }));
+    store.dispatch(
+      setPersonalFromSync({
+        data: payload.personal.data,
+        persona: payload.personal.persona,
+        updatedAt: payload.personal.updatedAt,
+      })
+    );
 
     // Apply user settings
     const { updatedAt, ...settingsData } = payload.userSettings;
-    store.dispatch(setUserSettingsFromSync({
-      ...settingsData,
-      updatedAt,
-    }));
+    store.dispatch(
+      setUserSettingsFromSync({
+        ...settingsData,
+        updatedAt,
+      })
+    );
   }
 
   /**
@@ -159,44 +162,50 @@ export class SyncService {
    */
   async pullAndMerge(): Promise<void> {
     if (!this.isReady()) {
-      console.warn('SyncService not initialized, skipping pull');
+      console.warn("SyncService not initialized, skipping pull");
       return;
     }
 
     try {
+      console.log("a");
       const response = await SyncApiClient.pull();
 
       if (!response) {
         // No remote data (404), push local data
-        console.log('No remote sync data, pushing local data');
+        console.log("No remote sync data, pushing local data");
         await this.push();
         return;
       }
 
       this.lastRemoteVersion = response.version;
 
+      console.log("b");
       // Decrypt remote data
-      const decryptedJson = await this.cryptoService.decrypt(response.encryptedData);
+      const decryptedJson = await CryptoService.decrypt(response.encryptedData);
       const remotePayload: SyncPayload = JSON.parse(decryptedJson);
 
+      console.log("c");
       // Get local payload
       const localPayload = this.getLocalPayload();
 
+      console.log("d");
       // Merge using LWW strategy
       const mergedPayload = mergeSyncPayloads(localPayload, remotePayload);
+      console.log("e");
 
       // Apply merged data to store
       this.applyPayloadToStore(mergedPayload);
 
       // If local had newer changes, push the merged result
       const remoteTimestamp = new Date(response.lastModified).getTime();
+      console.log("f");
       if (hasLocalChanges(localPayload, remoteTimestamp)) {
         await this.push();
       }
 
-      console.log('Sync pull and merge completed');
+      console.log("Sync pull and merge completed");
     } catch (error) {
-      console.error('Sync pull failed:', error);
+      console.error("Sync pull failed:", error);
       throw error;
     }
   }
@@ -206,14 +215,14 @@ export class SyncService {
    */
   private async push(): Promise<void> {
     if (!this.isReady()) {
-      console.warn('SyncService not initialized, skipping push');
+      console.warn("SyncService not initialized, skipping push");
       return;
     }
 
     try {
       const localPayload = this.getLocalPayload();
       const jsonData = JSON.stringify(localPayload);
-      const encryptedData = await this.cryptoService.encrypt(jsonData);
+      const encryptedData = await CryptoService.encrypt(jsonData);
 
       const response = await SyncApiClient.push(
         encryptedData,
@@ -221,9 +230,9 @@ export class SyncService {
       );
       this.lastRemoteVersion = response.version;
 
-      console.log('Sync push completed');
+      console.log("Sync push completed");
     } catch (error) {
-      console.error('Sync push failed:', error);
+      console.error("Sync push failed:", error);
       throw error;
     }
   }
@@ -272,9 +281,12 @@ export class SyncService {
   /**
    * Handle password change - re-encrypt remote data with new password
    */
-  async handlePasswordChange(oldPassword: string, newPassword: string): Promise<void> {
+  async handlePasswordChange(
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> {
     if (!this.userId) {
-      throw new Error('SyncService not initialized');
+      throw new Error("SyncService not initialized");
     }
 
     try {
@@ -283,7 +295,7 @@ export class SyncService {
 
       if (response) {
         // Re-encrypt with new password
-        const reEncryptedData = await this.cryptoService.reEncrypt(
+        const reEncryptedData = await CryptoService.reEncrypt(
           response.encryptedData,
           this.userId,
           oldPassword,
@@ -297,9 +309,9 @@ export class SyncService {
       // Update service with new password
       await this.initialize(this.userId, newPassword);
 
-      console.log('Password change handled, data re-encrypted');
+      console.log("Password change handled, data re-encrypted");
     } catch (error) {
-      console.error('Failed to handle password change:', error);
+      console.error("Failed to handle password change:", error);
       throw error;
     }
   }

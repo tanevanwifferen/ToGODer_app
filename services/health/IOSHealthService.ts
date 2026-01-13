@@ -1,11 +1,14 @@
-import HealthKit, { 
-  HKQuantityTypeIdentifier,
-  HealthkitReadAuthorization,
-  HKQuantitySample,
-  HKCategoryTypeIdentifier
-} from '@kingstinct/react-native-healthkit';
+import HealthKit, {
+  QuantityTypeIdentifier,
+  CategoryTypeIdentifier,
+} from "@kingstinct/react-native-healthkit";
 
-import { ExerciseStats, IHealthService, MentalHealthStats, SleepStats } from './types';
+import {
+  ExerciseStats,
+  IHealthService,
+  MentalHealthStats,
+  SleepStats,
+} from "./types";
 
 export class IOSHealthService implements IHealthService {
   private static exerciseCache: Map<string, ExerciseStats> = new Map();
@@ -15,56 +18,73 @@ export class IOSHealthService implements IHealthService {
   private static readonly MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
   private static convertToLocalTime(date: Date | string): Date {
-    const originalDate = typeof date === 'string' ? new Date(date) : date;
+    const originalDate = typeof date === "string" ? new Date(date) : date;
     return new Date(
       originalDate.getTime() + originalDate.getTimezoneOffset() * 60000
     );
   }
 
-  private static createDateRange(periodInDays: number): { startDate: Date, endDate: Date } {
+  private static createDateRange(periodInDays: number): {
+    startDate: Date;
+    endDate: Date;
+  } {
     const endDate = new Date();
     // Ensure end date is at the end of the current day in local time
     endDate.setHours(23, 59, 59, 999);
-    
-    const startDate = new Date(endDate.getTime() - (periodInDays * this.MILLISECONDS_PER_DAY));
+
+    const startDate = new Date(
+      endDate.getTime() - periodInDays * this.MILLISECONDS_PER_DAY
+    );
     // Ensure start date is at the beginning of the day in local time
     startDate.setHours(0, 0, 0, 0);
-    
+
     return { startDate, endDate };
   }
 
   async requestPermissions(): Promise<boolean> {
     try {
-      const permissions: HealthkitReadAuthorization[] = [
-        HKQuantityTypeIdentifier.activeEnergyBurned,
-        HKQuantityTypeIdentifier.appleExerciseTime,
-        HKQuantityTypeIdentifier.distanceWalkingRunning,
-        HKCategoryTypeIdentifier.sleepAnalysis
-      ];
-
-      await HealthKit.requestAuthorization(permissions, []);
+      await HealthKit.requestAuthorization({
+        toRead: [
+          "HKQuantityTypeIdentifierActiveEnergyBurned" as QuantityTypeIdentifier,
+          "HKQuantityTypeIdentifierAppleExerciseTime" as QuantityTypeIdentifier,
+          "HKQuantityTypeIdentifierDistanceWalkingRunning" as QuantityTypeIdentifier,
+          "HKCategoryTypeIdentifierSleepAnalysis" as CategoryTypeIdentifier,
+        ],
+      });
       return true;
     } catch (error) {
-      console.error('Error requesting iOS health permissions:', error);
+      console.error("Error requesting iOS health permissions:", error);
       return false;
     }
   }
 
-  private async getExerciseMinutes(startDate: Date, endDate: Date): Promise<number> {
+  private async getExerciseMinutes(
+    startDate: Date,
+    endDate: Date
+  ): Promise<number> {
     try {
       const samples = await HealthKit.queryQuantitySamples(
-        HKQuantityTypeIdentifier.appleExerciseTime,
+        "HKQuantityTypeIdentifierAppleExerciseTime" as QuantityTypeIdentifier,
         {
-          from: startDate,
-          to: endDate
+          limit: 0,
+          filter: {
+            date: {
+              startDate,
+              endDate,
+            },
+          },
         }
       );
 
-      return samples.reduce((total: number, sample: HKQuantitySample<typeof HKQuantityTypeIdentifier.appleExerciseTime>) => {
+      return samples.reduce((total: number, sample) => {
         // Convert sample dates to local time for accurate daily calculations
-        const localStartDate = IOSHealthService.convertToLocalTime(sample.startDate);
-        const localEndDate = IOSHealthService.convertToLocalTime(sample.endDate);
-        
+        const localStartDate = IOSHealthService.convertToLocalTime(
+          sample.startDate
+        );
+        const localEndDate = IOSHealthService.convertToLocalTime(
+          sample.endDate
+        );
+
         // Only count samples that fall within our local time range
         if (localStartDate >= startDate && localEndDate <= endDate) {
           return total + sample.quantity;
@@ -72,7 +92,7 @@ export class IOSHealthService implements IHealthService {
         return total;
       }, 0);
     } catch (error) {
-      console.error('Error fetching iOS health data:', error);
+      console.error("Error fetching iOS health data:", error);
       return 0;
     }
   }
@@ -81,7 +101,7 @@ export class IOSHealthService implements IHealthService {
     if (times.length === 0) return "00:00";
 
     const TWO_PI = 2 * Math.PI;
-    
+
     // Calculate mean sine and cosine using hour+minute as angle
     const meanVector = times.reduce(
       (acc, time) => {
@@ -89,10 +109,10 @@ export class IOSHealthService implements IHealthService {
         // Convert time to angle (0 to 2π)
         const totalHours = time.getHours() + time.getMinutes() / 60;
         const angleInRadians = (totalHours * TWO_PI) / 24;
-        
+
         return {
           sumSin: acc.sumSin + Math.sin(angleInRadians),
-          sumCos: acc.sumCos + Math.cos(angleInRadians)
+          sumCos: acc.sumCos + Math.cos(angleInRadians),
         };
       },
       { sumSin: 0, sumCos: 0 }
@@ -110,47 +130,66 @@ export class IOSHealthService implements IHealthService {
 
     // Convert back to hours
     let meanHours = (meanAngle * 24) / TWO_PI;
-    
+
     // Convert to HH:MM format
     const hours = Math.floor(meanHours);
     const minutes = Math.floor((meanHours - hours) * 60);
-    
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}`;
   }
 
-  private async getSleepData(startDate: Date, endDate: Date): Promise<SleepStats> {
+  private async getSleepData(
+    startDate: Date,
+    endDate: Date
+  ): Promise<SleepStats> {
     try {
       const samples = await HealthKit.queryCategorySamples(
-        HKCategoryTypeIdentifier.sleepAnalysis,
+        "HKCategoryTypeIdentifierSleepAnalysis" as CategoryTypeIdentifier,
         {
-          from: startDate,
-          to: endDate,
+          limit: 0,
+          filter: {
+            date: {
+              startDate,
+              endDate,
+            },
+          },
         }
       );
 
-      const dailySleepSessions = new Map<string, {
-        firstBedtime: Date | null;
-        lastWakeTime: Date | null;
-        totalSleepMinutes: number;
-      }>();
+      const dailySleepSessions = new Map<
+        string,
+        {
+          firstBedtime: Date | null;
+          lastWakeTime: Date | null;
+          totalSleepMinutes: number;
+        }
+      >();
 
       // Convert and sort samples
       const sortedSamples = samples
-        .map(sample => ({
+        .map((sample) => ({
           ...sample,
           localStartDate: IOSHealthService.convertToLocalTime(sample.startDate),
-          localEndDate: IOSHealthService.convertToLocalTime(sample.endDate)
+          localEndDate: IOSHealthService.convertToLocalTime(sample.endDate),
         }))
-        .sort((a, b) => a.localStartDate.getTime() - b.localStartDate.getTime());
+        .sort(
+          (a, b) => a.localStartDate.getTime() - b.localStartDate.getTime()
+        );
 
       // Group samples into sessions (gap of 4 hours = new session)
       let currentSession: typeof sortedSamples = [];
-      const sessions: typeof sortedSamples[] = [];
+      const sessions: (typeof sortedSamples)[] = [];
       const FOUR_HOURS = 4 * 60 * 60 * 1000;
 
       sortedSamples.forEach((sample, index) => {
-        if (index === 0 || 
-            sample.localStartDate.getTime() - sortedSamples[index - 1].localEndDate.getTime() > FOUR_HOURS) {
+        if (
+          index === 0 ||
+          sample.localStartDate.getTime() -
+            sortedSamples[index - 1].localEndDate.getTime() >
+            FOUR_HOURS
+        ) {
           if (currentSession.length > 0) {
             sessions.push(currentSession);
           }
@@ -164,7 +203,7 @@ export class IOSHealthService implements IHealthService {
       }
 
       // Process each session
-      sessions.forEach(session => {
+      sessions.forEach((session) => {
         if (session.length === 0) return;
 
         const sessionStart = session[0].localStartDate;
@@ -175,25 +214,31 @@ export class IOSHealthService implements IHealthService {
         // If session ends after 4 AM, use the end date as the key
         // Otherwise, use the start date
         const FOUR_AM = 4;
-        const dateKey = sessionEnd.getHours() >= FOUR_AM 
-          ? sessionEnd.toISOString().split('T')[0]
-          : sessionStart.toISOString().split('T')[0];
+        const dateKey =
+          sessionEnd.getHours() >= FOUR_AM
+            ? sessionEnd.toISOString().split("T")[0]
+            : sessionStart.toISOString().split("T")[0];
 
         const totalMinutes = session.reduce((total, sample) => {
-          const duration = (sample.localEndDate.getTime() - sample.localStartDate.getTime()) / (1000 * 60);
+          const duration =
+            (sample.localEndDate.getTime() - sample.localStartDate.getTime()) /
+            (1000 * 60);
           return total + duration;
         }, 0);
 
         const existing = dailySleepSessions.get(dateKey) || {
           firstBedtime: null,
           lastWakeTime: null,
-          totalSleepMinutes: 0
+          totalSleepMinutes: 0,
         };
 
         dailySleepSessions.set(dateKey, {
-          firstBedtime: existing.firstBedtime === null ? sessionStart : existing.firstBedtime,
+          firstBedtime:
+            existing.firstBedtime === null
+              ? sessionStart
+              : existing.firstBedtime,
           lastWakeTime: sessionEnd,
-          totalSleepMinutes: existing.totalSleepMinutes + totalMinutes
+          totalSleepMinutes: existing.totalSleepMinutes + totalMinutes,
         });
       });
 
@@ -203,68 +248,73 @@ export class IOSHealthService implements IHealthService {
       let totalSleepMinutes = 0;
       let daysWithSleep = 0;
 
-      dailySleepSessions.forEach(({ firstBedtime, lastWakeTime, totalSleepMinutes: dailyTotal }) => {
-        if (firstBedtime !== null) {
-          bedtimes.push(firstBedtime);
+      dailySleepSessions.forEach(
+        ({ firstBedtime, lastWakeTime, totalSleepMinutes: dailyTotal }) => {
+          if (firstBedtime !== null) {
+            bedtimes.push(firstBedtime);
+          }
+          if (lastWakeTime !== null) {
+            wakeTimes.push(lastWakeTime);
+          }
+          if (dailyTotal > 0) {
+            totalSleepMinutes += dailyTotal;
+            daysWithSleep++;
+          }
         }
-        if (lastWakeTime !== null) {
-          wakeTimes.push(lastWakeTime);
-        }
-        if (dailyTotal > 0) {
-          totalSleepMinutes += dailyTotal;
-          daysWithSleep++;
-        }
-      });
+      );
 
       // Calculate averages
       const averageGoingToBedtime = this.calculateCircularMeanTime(bedtimes);
       console.log("averageBedTime", averageGoingToBedtime);
       const averageWakeUpTime = this.calculateCircularMeanTime(wakeTimes);
       console.log("averageWakeTime", averageWakeUpTime);
-      const averageTimeSpentInBed = daysWithSleep > 0 ? totalSleepMinutes / daysWithSleep : 0;
+      const averageTimeSpentInBed =
+        daysWithSleep > 0 ? totalSleepMinutes / daysWithSleep : 0;
 
       return {
         averageTimeSpentInBed,
         averageGoingToBedtime,
         averageWakeUpTime,
         periodStart: startDate,
-        periodEnd: endDate
+        periodEnd: endDate,
       };
     } catch (error) {
-      console.error('Error fetching iOS sleep data:', error);
+      console.error("Error fetching iOS sleep data:", error);
       return {
         averageTimeSpentInBed: 0,
         averageGoingToBedtime: "00:00",
         averageWakeUpTime: "00:00",
         periodStart: startDate,
-        periodEnd: endDate
+        periodEnd: endDate,
       };
     }
   }
 
   private async getExerciseStats(periodInDays: number): Promise<ExerciseStats> {
     const cacheKey = `exercise_${periodInDays}`;
-    
+
     if (
       IOSHealthService.exerciseCache.has(cacheKey) &&
       IOSHealthService.lastCacheTime &&
-      Date.now() - IOSHealthService.lastCacheTime < IOSHealthService.CACHE_DURATION
+      Date.now() - IOSHealthService.lastCacheTime <
+        IOSHealthService.CACHE_DURATION
     ) {
       return IOSHealthService.exerciseCache.get(cacheKey)!;
     }
 
-    const { startDate, endDate } = IOSHealthService.createDateRange(periodInDays);
+    const { startDate, endDate } =
+      IOSHealthService.createDateRange(periodInDays);
 
     const hasPermission = await this.requestPermissions();
     if (!hasPermission) {
-      var emptyStart = new Date();
+      const emptyStart = new Date();
       emptyStart.setTime(0);
       return {
         averageMinutes: 0,
         totalMinutes: 0,
         periodStart: emptyStart,
         periodEnd: emptyStart,
-      }
+      };
     }
 
     const totalMinutes = await this.getExerciseMinutes(startDate, endDate);
@@ -284,28 +334,30 @@ export class IOSHealthService implements IHealthService {
 
   private async getSleepStats(periodInDays: number): Promise<SleepStats> {
     const cacheKey = `sleep_${periodInDays}`;
-    
+
     if (
       IOSHealthService.sleepCache.has(cacheKey) &&
       IOSHealthService.lastCacheTime &&
-      Date.now() - IOSHealthService.lastCacheTime < IOSHealthService.CACHE_DURATION
+      Date.now() - IOSHealthService.lastCacheTime <
+        IOSHealthService.CACHE_DURATION
     ) {
       return IOSHealthService.sleepCache.get(cacheKey)!;
     }
 
-    const { startDate, endDate } = IOSHealthService.createDateRange(periodInDays);
+    const { startDate, endDate } =
+      IOSHealthService.createDateRange(periodInDays);
 
     const hasPermission = await this.requestPermissions();
     if (!hasPermission) {
-      var emptyStart = new Date();
+      const emptyStart = new Date();
       emptyStart.setTime(0);
       return {
-       averageGoingToBedtime: "00:00",
-       averageTimeSpentInBed: 0,
-       averageWakeUpTime: "00:00",
-       periodEnd: emptyStart,
-       periodStart: emptyStart
-      }
+        averageGoingToBedtime: "00:00",
+        averageTimeSpentInBed: 0,
+        averageWakeUpTime: "00:00",
+        periodEnd: emptyStart,
+        periodStart: emptyStart,
+      };
     }
 
     const stats = await this.getSleepData(startDate, endDate);
@@ -318,7 +370,9 @@ export class IOSHealthService implements IHealthService {
 
   private getMentalHealthStats(periodInDays: number): MentalHealthStats {
     const endDate = new Date();
-    const startDate = new Date(endDate.getTime() - (periodInDays * IOSHealthService.MILLISECONDS_PER_DAY));
+    const startDate = new Date(
+      endDate.getTime() - periodInDays * IOSHealthService.MILLISECONDS_PER_DAY
+    );
 
     return {
       averageValence: 0,
@@ -361,10 +415,9 @@ export class IOSHealthService implements IHealthService {
 
   async checkAvailability(): Promise<boolean> {
     try {
-      const types = await HealthKit.availableQuantityTypes();
-      return types.length > 0;
+      return HealthKit.isHealthDataAvailable();
     } catch (error) {
-      console.error('Error checking HealthKit availability:', error);
+      console.error("Error checking HealthKit availability:", error);
       return false;
     }
   }

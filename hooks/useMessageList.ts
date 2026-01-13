@@ -3,10 +3,14 @@
  * This hook provides utilities for working with messages in a chat,
  * including filtering, searching, and accessing message metadata.
  */
-import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { selectChatById, selectCurrentMessages } from '../redux/slices/chatSelectors';
-import { ApiChatMessage } from '../model/ChatRequest';
+import { useMemo } from "react";
+import { useSelector } from "react-redux";
+import {
+  selectChatById,
+  selectCurrentMessages,
+} from "../redux/slices/chatSelectors";
+import { ApiChatMessage } from "../model/ChatRequest";
+import { RootState } from "../redux";
 
 interface UseMessageListOptions {
   chatId?: string;
@@ -16,7 +20,7 @@ export const useMessageList = (options?: UseMessageListOptions) => {
   const { chatId } = options || {};
 
   // Get messages from Redux state
-  const messages = useSelector((state) => {
+  const messages = useSelector((state: RootState) => {
     if (chatId) {
       const chat = selectChatById(state, chatId);
       return chat?.messages || [];
@@ -41,19 +45,20 @@ export const useMessageList = (options?: UseMessageListOptions) => {
 
   // Filter messages by role
   const filterByRole = useMemo(
-    () => (role: 'user' | 'assistant') => messages.filter((msg) => msg.role === role),
+    () => (role: "user" | "assistant") =>
+      messages.filter((msg) => msg.role === role),
     [messages]
   );
 
   // Get user messages
   const userMessages = useMemo(
-    () => messages.filter((msg) => msg.role === 'user'),
+    () => messages.filter((msg) => msg.role === "user"),
     [messages]
   );
 
   // Get assistant messages
   const assistantMessages = useMemo(
-    () => messages.filter((msg) => msg.role === 'assistant'),
+    () => messages.filter((msg) => msg.role === "assistant"),
     [messages]
   );
 
@@ -70,20 +75,22 @@ export const useMessageList = (options?: UseMessageListOptions) => {
 
   // Get message by index
   const getMessageAtIndex = useMemo(
-    () => (index: number): ApiChatMessage | null => {
-      if (index >= 0 && index < messages.length) {
-        return messages[index];
-      }
-      return null;
-    },
+    () =>
+      (index: number): ApiChatMessage | null => {
+        if (index >= 0 && index < messages.length) {
+          return messages[index];
+        }
+        return null;
+      },
     [messages]
   );
 
   // Find message index by signature
   const findMessageIndexBySignature = useMemo(
-    () => (signature: string): number => {
-      return messages.findIndex((msg) => msg.signature === signature);
-    },
+    () =>
+      (signature: string): number => {
+        return messages.findIndex((msg) => msg.signature === signature);
+      },
     [messages]
   );
 

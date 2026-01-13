@@ -27,11 +27,13 @@ jest.mock("@/components/ui/CustomAlert", () => ({
 
 describe("useProjectActions", () => {
   const mockDispatch = jest.fn();
+  const mockUseDispatch = useDispatch as unknown as jest.Mock;
+  const mockUseSelector = useSelector as unknown as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useDispatch as jest.Mock).mockReturnValue(mockDispatch);
-    (useSelector as jest.Mock).mockReturnValue({
+    mockUseDispatch.mockReturnValue(mockDispatch);
+    mockUseSelector.mockReturnValue({
       projects: {
         "project-1": {
           id: "project-1",
@@ -93,7 +95,9 @@ describe("useProjectActions", () => {
 
       // Get the alert buttons and find the Delete button
       const alertButtons = (CustomAlert.alert as jest.Mock).mock.calls[0][2];
-      const deleteButton = alertButtons.find((btn: any) => btn.text === "Delete");
+      const deleteButton = alertButtons.find(
+        (btn: any) => btn.text === "Delete"
+      );
 
       deleteButton.onPress();
 

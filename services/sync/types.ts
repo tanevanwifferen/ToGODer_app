@@ -1,4 +1,4 @@
-import { ApiChatMessage, ChatSettings } from '../../model/ChatRequest';
+import { ApiChatMessage, ChatSettings } from "../../model/ChatRequest";
 
 /**
  * Sync payload types for encrypted data synchronization
@@ -70,3 +70,48 @@ export interface SyncPushResponse {
 }
 
 export const SYNC_VERSION = 1;
+
+/**
+ * Interface for CryptoService implementations
+ * Implemented by platform-specific services (iOS, Android, Web)
+ */
+export interface ICryptoService {
+  /**
+   * Derive encryption key from password using PBKDF2
+   * Salt is based on userId for deterministic key derivation
+   */
+  deriveKey(userId: string, password: string): Promise<void>;
+
+  /**
+   * Clear the encryption key (e.g., on logout)
+   */
+  clearKey(): void;
+
+  /**
+   * Check if the service is initialized with a key
+   */
+  isInitialized(): boolean;
+
+  /**
+   * Encrypt data using AES-256-GCM
+   * Returns a single base64 blob: [IV][ciphertext][tag]
+   */
+  encrypt(data: string): Promise<string>;
+
+  /**
+   * Decrypt data using AES-256-GCM
+   * Expects a single base64 blob: [IV][ciphertext][tag]
+   */
+  decrypt(encryptedBlob: string): Promise<string>;
+
+  /**
+   * Re-encrypt data with a new password
+   * Used when user changes their password
+   */
+  reEncrypt(
+    encryptedBlob: string,
+    userId: string,
+    oldPassword: string,
+    newPassword: string
+  ): Promise<string>;
+}

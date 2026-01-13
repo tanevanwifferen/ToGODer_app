@@ -3,48 +3,49 @@ import {
   randomBytes,
   createCipheriv,
   createDecipheriv,
-} from 'react-native-quick-crypto';
-import { Buffer } from '@craftzdog/react-native-buffer';
+} from "react-native-quick-crypto";
+import { Buffer } from "@craftzdog/react-native-buffer";
+import { ICryptoService } from "./types";
+
+// Lazy getter for Buffer to ensure polyfills are loaded before accessing
+// This prevents "undefined is not a function" when the module is imported before polyfills run
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getBuffer = (): any => {
+  // Prefer global.Buffer (set up by react-native-quick-crypto's install())
+  // Fall back to the imported Buffer from @craftzdog/react-native-buffer
+  return global.Buffer || Buffer;
+};
 
 const PBKDF2_ITERATIONS = 100000;
 const KEY_LENGTH = 32; // 32 bytes = 256 bits for AES-256
 const IV_LENGTH = 12; // 12 bytes = 96 bits for GCM
 
 /**
- * CryptoService for iOS/Android using react-native-quick-crypto
+ * CryptoService implementation for Android using react-native-quick-crypto
  * Uses PBKDF2 for key derivation and AES-256-GCM for encryption
  *
  * Blob format: [12 bytes IV][ciphertext][16 bytes tag] - base64 encoded
  */
-export class CryptoService {
-  private static instance: CryptoService;
-  private encryptionKey: Buffer | null = null;
-
-  private constructor() {}
-
-  static getInstance(): CryptoService {
-    if (!CryptoService.instance) {
-      CryptoService.instance = new CryptoService();
-    }
-    return CryptoService.instance;
-  }
+export class AndroidCryptoService implements ICryptoService {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private encryptionKey: any = null;
 
   /**
    * Derive encryption key from password using PBKDF2
    * Salt is based on userId for deterministic key derivation
    */
   async deriveKey(userId: string, password: string): Promise<void> {
-    const salt = Buffer.from(`togoder-sync-${userId}`, 'utf8');
-    const passwordBuffer = Buffer.from(password, 'utf8');
+    const BufferImpl = getBuffer();
+    const salt = BufferImpl.from(`togoder-sync-${userId}`, "utf8");
+    const passwordBuffer = BufferImpl.from(password, "utf8");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.encryptionKey = pbkdf2Sync(
       passwordBuffer,
       salt,
       PBKDF2_ITERATIONS,
       KEY_LENGTH,
-      'sha256' as any
-    ) as Buffer;
+      "SHA-256"
+    );
   }
 
   /**
@@ -67,22 +68,23 @@ export class CryptoService {
    */
   async encrypt(data: string): Promise<string> {
     if (!this.encryptionKey) {
-      throw new Error('CryptoService not initialized - call deriveKey first');
+      throw new Error("CryptoService not initialized - call deriveKey first");
     }
 
+    const BufferImpl = getBuffer();
     const iv = randomBytes(IV_LENGTH);
-    const cipher = createCipheriv('aes-256-gcm', this.encryptionKey, iv);
+    const cipher = createCipheriv("aes-256-gcm", this.encryptionKey, iv);
 
-    const encrypted = Buffer.concat([
-      cipher.update(Buffer.from(data, 'utf8')),
+    const encrypted = BufferImpl.concat([
+      cipher.update(BufferImpl.from(data, "utf8")),
       cipher.final(),
     ]);
 
     const tag = cipher.getAuthTag();
 
     // Combine: [IV][ciphertext][tag]
-    const combined = Buffer.concat([Buffer.from(iv), encrypted, tag]);
-    return combined.toString('base64');
+    const combined = BufferImpl.concat([BufferImpl.from(iv), encrypted, tag]);
+    return combined.toString("base64");
   }
 
   /**
@@ -91,10 +93,11 @@ export class CryptoService {
    */
   async decrypt(encryptedBlob: string): Promise<string> {
     if (!this.encryptionKey) {
-      throw new Error('CryptoService not initialized - call deriveKey first');
+      throw new Error("CryptoService not initialized - call deriveKey first");
     }
 
-    const combined = Buffer.from(encryptedBlob, 'base64');
+    const BufferImpl = getBuffer();
+    const combined = BufferImpl.from(encryptedBlob, "base64");
 
     // Extract IV (first 12 bytes)
     const iv = combined.subarray(0, IV_LENGTH);
@@ -103,15 +106,15 @@ export class CryptoService {
     // Rest is ciphertext
     const ciphertext = combined.subarray(IV_LENGTH, -16);
 
-    const decipher = createDecipheriv('aes-256-gcm', this.encryptionKey, iv);
+    const decipher = createDecipheriv("aes-256-gcm", this.encryptionKey, iv);
     decipher.setAuthTag(tag);
 
-    const decrypted = Buffer.concat([
+    const decrypted = BufferImpl.concat([
       decipher.update(ciphertext),
       decipher.final(),
     ]);
 
-    return decrypted.toString('utf8');
+    return decrypted.toString("utf8");
   }
 
   /**

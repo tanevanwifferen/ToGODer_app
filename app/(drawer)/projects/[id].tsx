@@ -69,7 +69,7 @@ export default function ProjectDetailsScreen() {
           </Text>
           <TouchableOpacity
             style={[styles.backButton, { backgroundColor: theme.tint }]}
-            onPress={() => router.replace("/projects")}
+            onPress={() => router.back()}
           >
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>

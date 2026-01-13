@@ -1,17 +1,24 @@
+import { pbkdf2 } from "@noble/hashes/pbkdf2.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { gcm } from "@noble/ciphers/aes.js";
+import { randomBytes } from "@noble/ciphers/utils.js";
 import { ICryptoService } from "./types";
 
 const PBKDF2_ITERATIONS = 100000;
-const KEY_LENGTH = 256; // bits for AES-256
-const IV_LENGTH = 12; // bytes, 96 bits for GCM
+const KEY_LENGTH = 32; // 32 bytes = 256 bits for AES-256
+const IV_LENGTH = 12; // 12 bytes = 96 bits for GCM
 
 /**
- * CryptoService implementation for Web using native Web Crypto API
+ * CryptoService implementation for iOS using @noble/hashes and @noble/ciphers
  * Uses PBKDF2 for key derivation and AES-256-GCM for encryption
+ *
+ * Noble libraries are pure JavaScript implementations that work reliably on iOS
+ * without the native module issues that affect react-native-quick-crypto
  *
  * Blob format: [12 bytes IV][ciphertext][16 bytes tag] - base64 encoded
  */
-export class WebCryptoService implements ICryptoService {
-  private encryptionKey: CryptoKey | null = null;
+export class IOSCryptoService implements ICryptoService {
+  private encryptionKey: Uint8Array | null = null;
 
   /**
    * Derive encryption key from password using PBKDF2
@@ -20,30 +27,12 @@ export class WebCryptoService implements ICryptoService {
   async deriveKey(userId: string, password: string): Promise<void> {
     const encoder = new TextEncoder();
     const salt = encoder.encode(`togoder-sync-${userId}`);
-    const passwordBuffer = encoder.encode(password);
+    const passwordBytes = encoder.encode(password);
 
-    // Import password as a key for PBKDF2
-    const passwordKey = await crypto.subtle.importKey(
-      "raw",
-      passwordBuffer,
-      "PBKDF2",
-      false,
-      ["deriveKey"]
-    );
-
-    // Derive the actual encryption key
-    this.encryptionKey = await crypto.subtle.deriveKey(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: PBKDF2_ITERATIONS,
-        hash: "SHA-256",
-      },
-      passwordKey,
-      { name: "AES-GCM", length: KEY_LENGTH },
-      false,
-      ["encrypt", "decrypt"]
-    );
+    this.encryptionKey = pbkdf2(sha256, passwordBytes, salt, {
+      c: PBKDF2_ITERATIONS,
+      dkLen: KEY_LENGTH,
+    });
   }
 
   /**
@@ -70,25 +59,20 @@ export class WebCryptoService implements ICryptoService {
     }
 
     const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(data);
+    const dataBytes = encoder.encode(data);
 
     // Generate random IV
-    const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+    const iv = randomBytes(IV_LENGTH);
 
-    // Encrypt with AES-GCM (tag is automatically appended to ciphertext)
-    const encryptedBuffer = await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv },
-      this.encryptionKey,
-      dataBuffer
-    );
+    // Create AES-GCM cipher and encrypt
+    const aes = gcm(this.encryptionKey, iv);
+    const ciphertext = aes.encrypt(dataBytes);
 
-    // Web Crypto appends 16-byte auth tag to ciphertext
-    const encryptedArray = new Uint8Array(encryptedBuffer);
-
+    // noble/ciphers GCM already appends the 16-byte auth tag to ciphertext
     // Combine: [IV][ciphertext+tag]
-    const combined = new Uint8Array(IV_LENGTH + encryptedArray.length);
+    const combined = new Uint8Array(IV_LENGTH + ciphertext.length);
     combined.set(iv, 0);
-    combined.set(encryptedArray, IV_LENGTH);
+    combined.set(ciphertext, IV_LENGTH);
 
     return this.arrayToBase64(combined);
   }
@@ -106,17 +90,15 @@ export class WebCryptoService implements ICryptoService {
 
     // Extract IV (first 12 bytes)
     const iv = combined.slice(0, IV_LENGTH);
-    // Rest is ciphertext + tag (Web Crypto expects them together)
+    // Rest is ciphertext + tag (noble/ciphers expects them together)
     const ciphertextWithTag = combined.slice(IV_LENGTH);
 
-    const decryptedBuffer = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      this.encryptionKey,
-      ciphertextWithTag
-    );
+    // Create AES-GCM cipher and decrypt
+    const aes = gcm(this.encryptionKey, iv);
+    const decrypted = aes.decrypt(ciphertextWithTag);
 
     const decoder = new TextDecoder();
-    return decoder.decode(decryptedBuffer);
+    return decoder.decode(decrypted);
   }
 
   /**

@@ -30,9 +30,7 @@ async function* createDelayedStream(
 }
 
 describe("useMessageSending", () => {
-  const mockMessages: ApiChatMessage[] = [
-    { role: "user", content: "Hello" },
-  ];
+  const mockMessages: ApiChatMessage[] = [{ role: "user", content: "Hello" }];
   const mockMemories: Record<string, string> = { key1: "value1" };
 
   describe("sendMessage flow (non-streaming)", () => {
@@ -126,7 +124,9 @@ describe("useMessageSending", () => {
       const onComplete = jest.fn();
       const callbacks: MessageSendingCallbacks = { onComplete };
 
-      const { result } = renderHook(() => useMessageSending(mockApi, callbacks));
+      const { result } = renderHook(() =>
+        useMessageSending(mockApi, callbacks)
+      );
 
       await act(async () => {
         await result.current.sendMessage(mockMessages, mockMemories);
@@ -143,7 +143,9 @@ describe("useMessageSending", () => {
       const onChunk = jest.fn();
       const callbacks: MessageSendingCallbacks = { onChunk };
 
-      const { result } = renderHook(() => useMessageSending(mockApi, callbacks));
+      const { result } = renderHook(() =>
+        useMessageSending(mockApi, callbacks)
+      );
 
       await act(async () => {
         await result.current.sendMessage(mockMessages, mockMemories);
@@ -165,12 +167,16 @@ describe("useMessageSending", () => {
 
       const mockApi: MessageSendingApi = {
         sendMessage: jest.fn(),
-        sendMessageStream: jest.fn().mockImplementation(() => createMockStream(events)),
+        sendMessageStream: jest
+          .fn()
+          .mockImplementation(() => createMockStream(events)),
       };
       const onChunk = jest.fn();
       const callbacks: MessageSendingCallbacks = { onChunk };
 
-      const { result } = renderHook(() => useMessageSending(mockApi, callbacks));
+      const { result } = renderHook(() =>
+        useMessageSending(mockApi, callbacks)
+      );
 
       let response: MessageResponse | null = null;
       await act(async () => {
@@ -198,12 +204,16 @@ describe("useMessageSending", () => {
 
       const mockApi: MessageSendingApi = {
         sendMessage: jest.fn(),
-        sendMessageStream: jest.fn().mockImplementation(() => createMockStream(events)),
+        sendMessageStream: jest
+          .fn()
+          .mockImplementation(() => createMockStream(events)),
       };
       const onSignature = jest.fn();
       const callbacks: MessageSendingCallbacks = { onSignature };
 
-      const { result } = renderHook(() => useMessageSending(mockApi, callbacks));
+      const { result } = renderHook(() =>
+        useMessageSending(mockApi, callbacks)
+      );
 
       await act(async () => {
         await result.current.sendMessage(mockMessages, mockMemories);
@@ -219,12 +229,16 @@ describe("useMessageSending", () => {
 
       const mockApi: MessageSendingApi = {
         sendMessage: jest.fn(),
-        sendMessageStream: jest.fn().mockImplementation(() => createMockStream(events)),
+        sendMessageStream: jest
+          .fn()
+          .mockImplementation(() => createMockStream(events)),
       };
       const onMemoryRequest = jest.fn();
       const callbacks: MessageSendingCallbacks = { onMemoryRequest };
 
-      const { result } = renderHook(() => useMessageSending(mockApi, callbacks));
+      const { result } = renderHook(() =>
+        useMessageSending(mockApi, callbacks)
+      );
 
       let response: MessageResponse | null = null;
       await act(async () => {
@@ -309,7 +323,9 @@ describe("useMessageSending", () => {
       const onError = jest.fn();
       const callbacks: MessageSendingCallbacks = { onError };
 
-      const { result } = renderHook(() => useMessageSending(mockApi, callbacks));
+      const { result } = renderHook(() =>
+        useMessageSending(mockApi, callbacks)
+      );
 
       await act(async () => {
         await result.current.sendMessage(mockMessages, mockMemories);
@@ -326,7 +342,9 @@ describe("useMessageSending", () => {
 
       const mockApi: MessageSendingApi = {
         sendMessage: jest.fn(),
-        sendMessageStream: jest.fn().mockImplementation(() => createMockStream(events)),
+        sendMessageStream: jest
+          .fn()
+          .mockImplementation(() => createMockStream(events)),
       };
 
       const { result } = renderHook(() => useMessageSending(mockApi));
@@ -345,7 +363,9 @@ describe("useMessageSending", () => {
 
       const mockApi: MessageSendingApi = {
         sendMessage: jest.fn(),
-        sendMessageStream: jest.fn().mockImplementation(() => createMockStream(events)),
+        sendMessageStream: jest
+          .fn()
+          .mockImplementation(() => createMockStream(events)),
       };
 
       const { result } = renderHook(() => useMessageSending(mockApi));
@@ -415,12 +435,14 @@ describe("useMessageSending", () => {
       expect(result.current.error?.message).toBe("First attempt failed");
 
       // Retry succeeds
-      let response: MessageResponse | null = null;
+      let retryResponse: MessageResponse | null = null;
       await act(async () => {
-        response = await result.current.retry();
+        retryResponse = await result.current.retry();
       });
 
-      expect(response?.content).toBe("Retry success");
+      expect((retryResponse as MessageResponse | null)?.content).toBe(
+        "Retry success"
+      );
       expect(result.current.error).toBeNull();
       expect(mockApi.sendMessage).toHaveBeenCalledTimes(2);
     });
@@ -465,7 +487,9 @@ describe("useMessageSending", () => {
       });
 
       expect(response).toBeNull();
-      expect(result.current.error?.message).toBe("No previous request to retry");
+      expect(result.current.error?.message).toBe(
+        "No previous request to retry"
+      );
     });
 
     it("should clear previous error before retry", async () => {
@@ -501,16 +525,18 @@ describe("useMessageSending", () => {
 
       const mockApi: MessageSendingApi = {
         sendMessage: jest.fn(),
-        sendMessageStream: jest.fn().mockImplementation((_m, _mem, _o, signal) =>
-          createDelayedStream(
-            [
-              { type: "chunk", data: "Start" },
-              { type: "chunk", data: "Continue" },
-              { type: "done", data: null },
-            ],
-            50
-          )
-        ),
+        sendMessageStream: jest
+          .fn()
+          .mockImplementation((_m, _mem, _o, signal) =>
+            createDelayedStream(
+              [
+                { type: "chunk", data: "Start" },
+                { type: "chunk", data: "Continue" },
+                { type: "done", data: null },
+              ],
+              50
+            )
+          ),
       };
 
       const { result } = renderHook(() => useMessageSending(mockApi));
@@ -571,7 +597,9 @@ describe("useMessageSending", () => {
       const onMemoryRequest = jest.fn();
       const callbacks: MessageSendingCallbacks = { onMemoryRequest };
 
-      const { result } = renderHook(() => useMessageSending(mockApi, callbacks));
+      const { result } = renderHook(() =>
+        useMessageSending(mockApi, callbacks)
+      );
 
       let response: MessageResponse | null = null;
       await act(async () => {
@@ -594,7 +622,9 @@ describe("useMessageSending", () => {
       const onMemoryRequest = jest.fn();
       const callbacks: MessageSendingCallbacks = { onMemoryRequest };
 
-      const { result } = renderHook(() => useMessageSending(mockApi, callbacks));
+      const { result } = renderHook(() =>
+        useMessageSending(mockApi, callbacks)
+      );
 
       await act(async () => {
         await result.current.sendMessage(mockMessages, mockMemories);

@@ -4,14 +4,17 @@
  * Runs independently of UI to ensure consistent memory management
  */
 
-import { store } from '../redux/store';
-import { selectIsAuthenticated } from '../redux/slices/authSlice';
-import { selectPersonalData, setPersonalData } from '../redux/slices/personalSlice';
-import StorageService from './StorageService';
-import { MemoryApiClient } from '../apiClients/MemoryApiClient';
+import { store } from "../redux/store";
+import { selectIsAuthenticated } from "../redux/slices/authSlice";
+import {
+  selectPersonalData,
+  setPersonalData,
+} from "../redux/slices/personalSlice";
+import StorageService from "./StorageService";
+import { MemoryApiClient } from "../apiClients/MemoryApiClient";
 
 export class MemoryLoopService {
-  private static loopInterval: NodeJS.Timeout | null = null;
+  private static loopInterval: NodeJS.Timeout | number | null = null;
   private static isCompressing = false;
 
   // Check memory every 5 minutes
@@ -26,11 +29,11 @@ export class MemoryLoopService {
    */
   static startMemoryLoop(): void {
     if (this.loopInterval) {
-      console.log('MemoryLoopService already running');
+      console.log("MemoryLoopService already running");
       return;
     }
 
-    console.log('Starting MemoryLoopService');
+    console.log("Starting MemoryLoopService");
 
     this.loopInterval = setInterval(() => {
       this.executeMemoryLoop();
@@ -47,7 +50,7 @@ export class MemoryLoopService {
     if (this.loopInterval) {
       clearInterval(this.loopInterval);
       this.loopInterval = null;
-      console.log('MemoryLoopService stopped');
+      console.log("MemoryLoopService stopped");
     }
   }
 
@@ -67,7 +70,7 @@ export class MemoryLoopService {
 
       // Check if compression is already in progress
       if (this.isCompressing) {
-        console.log('Memory compression already in progress, skipping');
+        console.log("Memory compression already in progress, skipping");
         return;
       }
 
@@ -75,11 +78,11 @@ export class MemoryLoopService {
       const needsCompression = await this.checkMemorySize();
 
       if (needsCompression) {
-        console.log('Memory threshold exceeded, starting compression');
+        console.log("Memory threshold exceeded, starting compression");
         await this.compressMemory();
       }
     } catch (error) {
-      console.error('MemoryLoopService error:', error);
+      console.error("MemoryLoopService error:", error);
     }
   }
 
@@ -124,7 +127,7 @@ export class MemoryLoopService {
       await Promise.all(
         relevantKeys.keys.map(async (key) => {
           const value = await StorageService.get(key);
-          longTermMemory[key] = value || 'null';
+          longTermMemory[key] = value || "null";
         })
       );
 
@@ -134,29 +137,27 @@ export class MemoryLoopService {
         longTermMemory
       );
 
-      console.log('Memory compressed successfully');
+      console.log("Memory compressed successfully");
 
       // Store compressed memories
       await Promise.all(
-        Object.entries(compressedMemory.longTermMemory).map(
-          ([key, value]) => {
-            if (
-              value === '' ||
-              value == null ||
-              value === 'null' ||
-              !/[a-zA-Z]/.test(value)
-            ) {
-              return StorageService.delete(key);
-            }
-            return StorageService.set(key, value);
+        Object.entries(compressedMemory.longTermMemory).map(([key, value]) => {
+          if (
+            value === "" ||
+            value == null ||
+            value === "null" ||
+            !/[a-zA-Z]/.test(value)
+          ) {
+            return StorageService.delete(key);
           }
-        )
+          return StorageService.set(key, value);
+        })
       );
 
       // Update personal data in Redux
       store.dispatch(setPersonalData(compressedMemory.shortTermMemory));
     } catch (error) {
-      console.error('Error compressing memory:', error);
+      console.error("Error compressing memory:", error);
     } finally {
       this.isCompressing = false;
     }
