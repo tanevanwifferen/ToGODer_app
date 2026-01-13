@@ -8,6 +8,8 @@ export interface Project {
   chatIds: string[];
   createdAt: number;
   updatedAt: number;
+  deleted?: boolean; // Tombstone marker for sync
+  deletedAt?: number; // When the project was deleted
 }
 
 export interface ProjectsState {
@@ -43,7 +45,10 @@ const projectsSlice = createSlice({
     },
     updateProject: (
       state,
-      action: PayloadAction<{ id: string; updates: Partial<Omit<Project, "id" | "createdAt">> }>
+      action: PayloadAction<{
+        id: string;
+        updates: Partial<Omit<Project, "id" | "createdAt">>;
+      }>
     ) => {
       const { id, updates } = action.payload;
       const project = state.projects[id];
@@ -56,7 +61,14 @@ const projectsSlice = createSlice({
       }
     },
     deleteProject: (state, action: PayloadAction<string>) => {
-      delete state.projects[action.payload];
+      const project = state.projects[action.payload];
+      if (project) {
+        // Mark as deleted (tombstone) for sync instead of removing
+        const now = new Date().getTime();
+        project.deleted = true;
+        project.deletedAt = now;
+        project.updatedAt = now;
+      }
       if (state.currentProjectId === action.payload) {
         state.currentProjectId = null;
       }
@@ -97,6 +109,20 @@ const projectsSlice = createSlice({
       state.projects = {};
       state.currentProjectId = null;
     },
+    // Set projects from sync - replaces all projects with synced data
+    setProjectsFromSync: (
+      state,
+      action: PayloadAction<Record<string, Project>>
+    ) => {
+      state.projects = action.payload;
+      // Keep current project if it still exists and is not deleted
+      if (state.currentProjectId) {
+        const current = action.payload[state.currentProjectId];
+        if (!current || current.deleted) {
+          state.currentProjectId = null;
+        }
+      }
+    },
   },
 });
 
@@ -110,12 +136,24 @@ export const {
   setLoading,
   setError,
   clearAllProjects,
+  setProjectsFromSync,
 } = projectsSlice.actions;
 
-export const selectProjects = (state: RootState) => state.projects;
-export const selectCurrentProject = (state: RootState) =>
-  state.projects.currentProjectId
-    ? state.projects.projects[state.projects.currentProjectId]
-    : null;
+// Filter out deleted projects in selectors
+export const selectProjects = (state: RootState) => ({
+  ...state.projects,
+  projects: Object.fromEntries(
+    Object.entries(state.projects.projects).filter(([_, p]) => !p.deleted)
+  ),
+});
+
+export const selectProjectList = (state: RootState) =>
+  Object.values(state.projects.projects).filter((p) => !p.deleted);
+
+export const selectCurrentProject = (state: RootState) => {
+  if (!state.projects.currentProjectId) return null;
+  const project = state.projects.projects[state.projects.currentProjectId];
+  return project && !project.deleted ? project : null;
+};
 
 export default projectsSlice.reducer;

@@ -2,17 +2,30 @@ import { ApiChatMessage, ChatSettings } from "../../model/ChatRequest";
 
 /**
  * Sync payload types for encrypted data synchronization
+ *
+ * Sync Strategy:
+ * - Chats, messages, projects, and artifacts use tombstones (deleted + deletedAt) for proper deletion handling
+ * - Messages have unique IDs for message-level merging
+ * - Last-Writer-Wins (LWW) based on timestamps at item level
  */
+
+export interface SyncableMessage extends ApiChatMessage {
+  id: string; // Required for sync
+  timestamp: number; // Required for LWW
+}
 
 export interface SyncableChat {
   id: string;
   title?: string | null;
-  messages: ApiChatMessage[];
+  messages: SyncableMessage[];
   isRequest: boolean;
   last_update?: number;
   memories: string[];
   draftInputText?: string;
+  projectId?: string;
   updatedAt: number;
+  deleted?: boolean; // Tombstone: chat was deleted
+  deletedAt?: number; // When the chat was deleted
 }
 
 export interface SyncablePersonal {
@@ -25,12 +38,38 @@ export interface SyncableUserSettings extends ChatSettings {
   updatedAt: number;
 }
 
+export interface SyncableProject {
+  id: string;
+  name: string;
+  description?: string;
+  chatIds: string[];
+  createdAt: number;
+  updatedAt: number;
+  deleted?: boolean; // Tombstone: project was deleted
+  deletedAt?: number; // When the project was deleted
+}
+
+export interface SyncableArtifact {
+  id: string;
+  projectId: string;
+  name: string;
+  type: "file" | "folder";
+  parentId: string | null;
+  content?: string;
+  createdAt: number;
+  updatedAt: number;
+  deleted?: boolean; // Tombstone: artifact was deleted
+  deletedAt?: number; // When the artifact was deleted
+}
+
 export interface SyncPayload {
   version: number;
   syncedAt: number;
   chats: Record<string, SyncableChat>;
   personal: SyncablePersonal;
   userSettings: SyncableUserSettings;
+  projects: Record<string, SyncableProject>;
+  artifacts: Record<string, SyncableArtifact>;
 }
 
 /**

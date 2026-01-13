@@ -10,6 +10,8 @@ export interface Artifact {
   content?: string; // for files
   createdAt: number;
   updatedAt: number;
+  deleted?: boolean; // tombstone for sync
+  deletedAt?: number; // when deletion occurred
 }
 
 export interface ArtifactsState {
@@ -59,38 +61,56 @@ const artifactsSlice = createSlice({
       const artifact = state.artifacts[artifactId];
       if (!artifact) return;
 
-      // If it's a folder, recursively delete children
+      const now = Date.now();
+
+      // Mark as deleted (tombstone) for sync instead of removing
+      const markDeleted = (id: string) => {
+        const a = state.artifacts[id];
+        if (a) {
+          a.deleted = true;
+          a.deletedAt = now;
+          a.updatedAt = now;
+        }
+      };
+
+      // If it's a folder, recursively mark children as deleted
       if (artifact.type === "folder") {
         const childIds = Object.values(state.artifacts)
-          .filter((a) => a.parentId === artifactId)
+          .filter((a) => a.parentId === artifactId && !a.deleted)
           .map((a) => a.id);
 
-        // Delete children recursively
+        // Mark children recursively as deleted
         const deleteRecursive = (ids: string[]) => {
           for (const id of ids) {
             const child = state.artifacts[id];
             if (child?.type === "folder") {
               const grandchildIds = Object.values(state.artifacts)
-                .filter((a) => a.parentId === id)
+                .filter((a) => a.parentId === id && !a.deleted)
                 .map((a) => a.id);
               deleteRecursive(grandchildIds);
             }
-            delete state.artifacts[id];
+            markDeleted(id);
           }
         };
         deleteRecursive(childIds);
       }
 
-      delete state.artifacts[artifactId];
+      markDeleted(artifactId);
     },
     deleteProjectArtifacts: (state, action: PayloadAction<string>) => {
       const projectId = action.payload;
+      const now = Date.now();
       const artifactIds = Object.values(state.artifacts)
-        .filter((a) => a.projectId === projectId)
+        .filter((a) => a.projectId === projectId && !a.deleted)
         .map((a) => a.id);
 
       for (const id of artifactIds) {
-        delete state.artifacts[id];
+        const artifact = state.artifacts[id];
+        if (artifact) {
+          artifact.deleted = true;
+          artifact.deletedAt = now;
+          artifact.updatedAt = now;
+        }
       }
     },
     moveArtifact: (
@@ -104,6 +124,13 @@ const artifactsSlice = createSlice({
         artifact.updatedAt = Date.now();
       }
     },
+    // Set artifacts from sync - replaces all artifacts with synced data
+    setArtifactsFromSync: (
+      state,
+      action: PayloadAction<Record<string, Artifact>>
+    ) => {
+      state.artifacts = action.payload;
+    },
   },
 });
 
@@ -113,14 +140,18 @@ export const {
   deleteArtifact,
   deleteProjectArtifacts,
   moveArtifact,
+  setArtifactsFromSync,
 } = artifactsSlice.actions;
 
-// Selectors
-export const selectAllArtifacts = (state: RootState) => state.artifacts.artifacts;
+// Selectors - filter out deleted artifacts
+export const selectAllArtifacts = (state: RootState) =>
+  Object.fromEntries(
+    Object.entries(state.artifacts.artifacts).filter(([_, a]) => !a.deleted)
+  );
 
 export const selectProjectArtifacts = (state: RootState, projectId: string) =>
   Object.values(state.artifacts.artifacts).filter(
-    (artifact) => artifact.projectId === projectId
+    (artifact) => artifact.projectId === projectId && !artifact.deleted
   );
 
 export const selectArtifactChildren = (
@@ -130,7 +161,9 @@ export const selectArtifactChildren = (
 ) =>
   Object.values(state.artifacts.artifacts).filter(
     (artifact) =>
-      artifact.projectId === projectId && artifact.parentId === parentId
+      artifact.projectId === projectId &&
+      artifact.parentId === parentId &&
+      !artifact.deleted
   );
 
 export default artifactsSlice.reducer;

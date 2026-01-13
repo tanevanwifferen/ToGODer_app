@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ApiChatMessage } from "../../model/ChatRequest";
+import { v4 as uuidv4 } from "uuid";
 
 export interface Chat {
   id: string;
@@ -10,6 +11,8 @@ export interface Chat {
   memories: string[];
   draftInputText?: string;
   projectId?: string;
+  deleted?: boolean; // Tombstone marker for sync
+  deletedAt?: number; // When the chat was deleted
 }
 
 export interface ChatsState {
@@ -52,13 +55,15 @@ const chatsSlice = createSlice({
         return;
       }
       delete message.updateData;
+      const now = new Date().getTime();
       chat.messages.push({
         ...message,
-        timestamp: message.timestamp || new Date().getTime(),
+        id: message.id || uuidv4(), // Ensure message has ID for sync
+        timestamp: message.timestamp || now,
       });
       // Do not sort messages here; keep insertion order so streaming updates
       // using messageIndex remain stable for the just-appended placeholder.
-      chat.last_update = new Date().getTime();
+      chat.last_update = now;
       // Only auto-generate when a USER message is appended; assistant/system should not flip this on
       state.auto_generate_answer = message.role === "user";
     },
@@ -114,9 +119,15 @@ const chatsSlice = createSlice({
         return;
       }
       if (messageIndex >= 0 && messageIndex < chat.messages.length) {
-        // Create new array to trigger re-render
-        chat.messages = chat.messages.filter((_, i) => i !== messageIndex);
-        chat.last_update = new Date().getTime();
+        const now = new Date().getTime();
+        const message = chat.messages[messageIndex];
+
+        // Mark message as deleted (tombstone) for sync instead of removing
+        chat.messages = chat.messages.map((m, i) =>
+          i === messageIndex ? { ...m, deleted: true, deletedAt: now } : m
+        );
+
+        chat.last_update = now;
       }
       state.auto_generate_answer = false;
     },
@@ -140,7 +151,14 @@ const chatsSlice = createSlice({
       }
     },
     deleteChat: (state, action: PayloadAction<string>) => {
-      delete state.chats[action.payload];
+      const chat = state.chats[action.payload];
+      if (chat) {
+        // Mark as deleted (tombstone) for sync instead of removing
+        const now = new Date().getTime();
+        chat.deleted = true;
+        chat.deletedAt = now;
+        chat.last_update = now;
+      }
       if (state.currentChatId === action.payload) {
         state.currentChatId = null;
       }
@@ -156,9 +174,9 @@ const chatsSlice = createSlice({
       state,
       action: PayloadAction<{ id: string; memories: string[] }>
     ) => {
-      var existing = state.chats[action.payload.id].memories;
+      const existing = state.chats[action.payload.id].memories;
       console.log("existing", existing);
-      for (let memory of action.payload.memories) {
+      for (const memory of action.payload.memories) {
         if (existing.includes(memory)) {
           continue;
         }
@@ -213,17 +231,15 @@ const chatsSlice = createSlice({
       }
 
       // Create a new array with messages up to and including the edited message
-      const newMessages = chat.messages
-        .slice(0, messageIndex + 1)
-        .map((m, i) =>
-          i === messageIndex
-            ? {
-                ...m,
-                content,
-                timestamp: new Date().getTime(),
-              }
-            : m
-        );
+      const newMessages = chat.messages.slice(0, messageIndex + 1).map((m, i) =>
+        i === messageIndex
+          ? {
+              ...m,
+              content,
+              timestamp: new Date().getTime(),
+            }
+          : m
+      );
 
       chat.messages = newMessages;
       chat.last_update = new Date().getTime();

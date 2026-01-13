@@ -6,6 +6,7 @@ export enum ChatRequestCommunicationStyle {
 }
 
 export interface ApiChatMessage {
+  id?: string; // Unique ID for sync tracking
   content: string;
   role: "user" | "assistant" | "tool";
   signature?: string;
@@ -14,6 +15,8 @@ export interface ApiChatMessage {
   hidden?: boolean;
   artifactId?: string;
   tool_call_id?: string;
+  deleted?: boolean; // Tombstone marker for sync
+  deletedAt?: number; // When the message was deleted
 }
 
 export interface ChatSettings {
@@ -44,10 +47,13 @@ export interface ToolSchema {
     description: string;
     parameters: {
       type: "object";
-      properties: Record<string, {
-        type: string;
-        description: string;
-      }>;
+      properties: Record<
+        string,
+        {
+          type: string;
+          description: string;
+        }
+      >;
       required: string[];
     };
   };
