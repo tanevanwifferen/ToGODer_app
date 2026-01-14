@@ -1,20 +1,17 @@
 import { StyleSheet, View, Text, useColorScheme } from "react-native";
+import { Colors } from "../../constants/Colors";
 
 interface ChatSectionHeaderProps {
   title: string;
 }
 
 export function ChatSectionHeader({ title }: ChatSectionHeaderProps) {
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() ?? "light";
+  const theme = Colors[colorScheme];
 
   return (
     <View style={styles.sectionHeader}>
-      <Text
-        style={[
-          styles.sectionHeaderText,
-          { color: colorScheme === "dark" ? "#9BA1A6" : "#666" },
-        ]}
-      >
+      <Text style={[styles.sectionHeaderText, { color: theme.icon }]}>
         {title}
       </Text>
     </View>
@@ -23,12 +20,14 @@ export function ChatSectionHeader({ title }: ChatSectionHeaderProps) {
 
 const styles = StyleSheet.create({
   sectionHeader: {
-    paddingVertical: 8,
-    marginBottom: 8,
+    paddingTop: 4,
+    paddingBottom: 10,
+    marginBottom: 4,
   },
   sectionHeaderText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
     textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
 });

@@ -40,6 +40,19 @@ const formatLastUpdate = (timestamp?: number) => {
   });
 };
 
+// Theme-aware colors for better consistency
+const getItemColors = (colorScheme: "light" | "dark") => ({
+  cardBackground: colorScheme === "dark" ? "#1E1E1E" : "#FAFAFA",
+  cardBorder: colorScheme === "dark" ? "#2A2A2A" : "#E5E5E5",
+  requestBackground: colorScheme === "dark" ? "#2A2318" : "#FFF8F0",
+  requestBorder: colorScheme === "dark" ? "#4A3A28" : "#F5D9B8",
+  requestText: colorScheme === "dark" ? "#F5B878" : "#C87A2A",
+  deleteBackground: colorScheme === "dark" ? "#3A2A2A" : "#FEF2F2",
+  deleteText: colorScheme === "dark" ? "#F87171" : "#DC2626",
+  deleteHover: colorScheme === "dark" ? "#4A3535" : "#FEE2E2",
+  timestampText: colorScheme === "dark" ? "#6B7280" : "#9CA3AF",
+});
+
 interface ChatListItemProps {
   item: Chat;
   isRequest?: boolean;
@@ -87,8 +100,9 @@ export function ChatListItem({
   onLongPress,
   projectName,
 }: ChatListItemProps) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? "light"];
+  const colorScheme = useColorScheme() ?? "light";
+  const theme = Colors[colorScheme];
+  const itemColors = getItemColors(colorScheme);
 
   if (Platform.OS === "web") {
     return (
@@ -96,43 +110,43 @@ export function ChatListItem({
         <TouchableOpacity
           style={[
             styles.chatItem,
+            styles.chatItemWeb,
             {
-              backgroundColor: colorScheme === "dark" ? "#2D2D2D" : "#f5f5f5",
-              flex: 1,
+              backgroundColor: itemColors.cardBackground,
+              borderColor: itemColors.cardBorder,
             },
-            isRequest && [
-              styles.requestItem,
-              {
-                backgroundColor: colorScheme === "dark" ? "#2D2015" : "#fff3e0",
-                borderColor: colorScheme === "dark" ? "#8B5E3C" : "#ffb74d",
-              },
-            ],
+            isRequest && {
+              backgroundColor: itemColors.requestBackground,
+              borderColor: itemColors.requestBorder,
+            },
           ]}
           onPress={() => onSelect(item.id)}
           onLongPress={() => onLongPress?.(item.id)}
           delayLongPress={500}
         >
           <View style={styles.chatItemContent}>
-            <View style={styles.chatTitleContainer}>
+            <View style={styles.chatTitleRow}>
               <Text
                 style={[
                   styles.chatTitle,
                   { color: theme.text },
-                  isRequest && [
-                    styles.requestTitle,
-                    { color: colorScheme === "dark" ? "#FFB74D" : "#f57c00" },
-                  ],
+                  isRequest && { color: itemColors.requestText },
                 ]}
                 numberOfLines={1}
               >
                 {isRequest ? "🔔 " : ""}
                 {item.title || "Untitled Chat"}
               </Text>
-              {projectName && (
+              <Text style={[styles.timestamp, { color: itemColors.timestampText }]}>
+                {formatLastUpdate(item.last_update)}
+              </Text>
+            </View>
+            {projectName && (
+              <View style={styles.chatMetaRow}>
                 <View
                   style={[
                     styles.projectBadge,
-                    { backgroundColor: theme.tint + "20" },
+                    { backgroundColor: theme.tint + "15" },
                   ]}
                 >
                   <Text
@@ -142,18 +156,18 @@ export function ChatListItem({
                     {projectName}
                   </Text>
                 </View>
-              )}
-            </View>
-            <Text style={[styles.timestamp, { color: theme.text + "99" }]}>
-              {formatLastUpdate(item.last_update)}
-            </Text>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.webDeleteButton}
+          style={[
+            styles.webDeleteButton,
+            { backgroundColor: itemColors.deleteBackground },
+          ]}
           onPress={() => onDelete(item.id, item.title)}
         >
-          <Text style={styles.webDeleteButtonText}>×</Text>
+          <Text style={[styles.webDeleteButtonText, { color: itemColors.deleteText }]}>×</Text>
         </TouchableOpacity>
       </View>
     );
@@ -181,41 +195,42 @@ export function ChatListItem({
           style={[
             styles.chatItem,
             {
-              backgroundColor: colorScheme === "dark" ? "#2D2D2D" : "#f5f5f5",
+              backgroundColor: itemColors.cardBackground,
+              borderColor: itemColors.cardBorder,
+              borderWidth: 1,
             },
-            isRequest && [
-              styles.requestItem,
-              {
-                backgroundColor: colorScheme === "dark" ? "#2D2015" : "#fff3e0",
-                borderColor: colorScheme === "dark" ? "#8B5E3C" : "#ffb74d",
-              },
-            ],
+            isRequest && {
+              backgroundColor: itemColors.requestBackground,
+              borderColor: itemColors.requestBorder,
+            },
           ]}
           onPress={() => onSelect(item.id)}
           onLongPress={() => onLongPress?.(item.id)}
           delayLongPress={500}
         >
           <View style={styles.chatItemContent}>
-            <View style={styles.chatTitleContainer}>
+            <View style={styles.chatTitleRow}>
               <Text
                 style={[
                   styles.chatTitle,
                   { color: theme.text },
-                  isRequest && [
-                    styles.requestTitle,
-                    { color: colorScheme === "dark" ? "#FFB74D" : "#f57c00" },
-                  ],
+                  isRequest && { color: itemColors.requestText },
                 ]}
                 numberOfLines={1}
               >
                 {isRequest ? "🔔 " : ""}
                 {item.title || "Untitled Chat"}
               </Text>
-              {projectName && (
+              <Text style={[styles.timestamp, { color: itemColors.timestampText }]}>
+                {formatLastUpdate(item.messages[item.messages.length - 1]?.timestamp as number ?? new Date().getTime())}
+              </Text>
+            </View>
+            {projectName && (
+              <View style={styles.chatMetaRow}>
                 <View
                   style={[
                     styles.projectBadge,
-                    { backgroundColor: theme.tint + "20" },
+                    { backgroundColor: theme.tint + "15" },
                   ]}
                 >
                   <Text
@@ -225,11 +240,8 @@ export function ChatListItem({
                     {projectName}
                   </Text>
                 </View>
-              )}
-            </View>
-            <Text style={[styles.timestamp, { color: theme.text + "99" }]}>
-              {formatLastUpdate(item.messages[item.messages.length - 1]?.timestamp as number ?? new Date().getTime())}
-            </Text>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
       </Animated.View>
@@ -239,78 +251,90 @@ export function ChatListItem({
 
 const styles = StyleSheet.create({
   chatItem: {
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 8,
   },
-  requestItem: {
+  chatItemWeb: {
+    flex: 1,
     borderWidth: 1,
+    // Web-specific shadow for depth
+    ...Platform.select({
+      web: {
+        transition: "all 0.15s ease",
+        cursor: "pointer",
+      } as any,
+    }),
   },
   chatTitle: {
-    fontSize: 16,
-  },
-  requestTitle: {
+    fontSize: 15,
     fontWeight: "500",
+    flex: 1,
+    letterSpacing: -0.2,
   },
   deleteAction: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: "#EF4444",
     justifyContent: "center",
     alignItems: "flex-end",
-    width: 100,
-    borderRadius: 8,
+    width: 80,
+    borderRadius: 10,
+    marginLeft: 8,
   },
   deleteActionText: {
     color: "white",
     fontWeight: "600",
-    padding: 20,
+    fontSize: 14,
+    padding: 16,
   },
   chatItemContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-    gap: 8,
+    alignItems: "stretch",
+    marginBottom: 8,
+    gap: 10,
   },
   webDeleteButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FF3B30",
+    width: 36,
+    height: 36,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     flexShrink: 0,
+    alignSelf: "center",
   },
   webDeleteButtonText: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "bold",
-    lineHeight: 24,
+    fontSize: 20,
+    fontWeight: "500",
+    lineHeight: 20,
   },
   chatItemContent: {
+    flexDirection: "column",
+    gap: 6,
+  },
+  chatTitleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 12,
   },
-  chatTitleContainer: {
-    flex: 1,
+  chatMetaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginRight: 8,
   },
   projectBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    flexShrink: 0,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   projectBadgeText: {
     fontSize: 11,
-    fontWeight: "500",
-    maxWidth: 80,
+    fontWeight: "600",
+    maxWidth: 120,
+    letterSpacing: 0.2,
   },
   timestamp: {
-    fontSize: 12,
-    marginLeft: 8,
+    fontSize: 13,
+    fontWeight: "400",
     flexShrink: 0,
   },
 });

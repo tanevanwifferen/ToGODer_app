@@ -19,14 +19,19 @@ import { addChatToProject } from "../../redux/slices/projectsSlice";
 import { ChatListItem } from "../chat-list/ChatListItem";
 import { IconSymbol } from "../ui/IconSymbol";
 
+const getProjectColors = (colorScheme: "light" | "dark") => ({
+  emptyText: colorScheme === "dark" ? "#6B7280" : "#9CA3AF",
+});
+
 interface ProjectChatsTabProps {
   projectId: string;
 }
 
 export function ProjectChatsTab({ projectId }: ProjectChatsTabProps) {
   const dispatch = useDispatch();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? "light"];
+  const colorScheme = useColorScheme() ?? "light";
+  const theme = Colors[colorScheme];
+  const projectColors = getProjectColors(colorScheme);
 
   const chats = useSelector((state: RootState) => state.chats.chats);
 
@@ -88,14 +93,14 @@ export function ProjectChatsTab({ projectId }: ProjectChatsTabProps) {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={[styles.emptyText, { color: theme.text + "99" }]}>
+      <Text style={[styles.emptyText, { color: projectColors.emptyText }]}>
         No chats in this project yet
       </Text>
       <TouchableOpacity
         style={[styles.newChatButton, { backgroundColor: theme.tint }]}
         onPress={handleNewChat}
       >
-        <IconSymbol name="plus" size={16} color="white" />
+        <IconSymbol name="plus" size={14} color="white" />
         <Text style={styles.newChatButtonText}>Start a Chat</Text>
       </TouchableOpacity>
     </View>
@@ -137,20 +142,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 8,
     gap: 6,
+    ...Platform.select({
+      web: {
+        cursor: "pointer",
+        transition: "opacity 0.15s ease",
+      } as any,
+    }),
   },
   addButtonText: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   emptyContainer: {
     alignItems: "center",
-    paddingVertical: 32,
+    paddingVertical: 40,
   },
   emptyText: {
     fontSize: 14,
     marginBottom: 16,
+    letterSpacing: -0.1,
   },
   emptyList: {
     flex: 1,
@@ -162,10 +174,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     gap: 8,
+    ...Platform.select({
+      web: {
+        cursor: "pointer",
+        transition: "opacity 0.15s ease",
+      } as any,
+    }),
   },
   newChatButtonText: {
-    color: "white",
+    color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
+    letterSpacing: 0.1,
   },
 });

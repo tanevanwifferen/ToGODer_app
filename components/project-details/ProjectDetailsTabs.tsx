@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   useColorScheme,
+  Platform,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 
@@ -17,14 +18,21 @@ interface ProjectDetailsTabsProps {
   artifactCount: number;
 }
 
+const getTabColors = (colorScheme: "light" | "dark") => ({
+  containerBackground: colorScheme === "dark" ? "#1E1E1E" : "#F3F4F6",
+  containerBorder: colorScheme === "dark" ? "#2A2A2A" : "#E5E7EB",
+  inactiveText: colorScheme === "dark" ? "#9CA3AF" : "#6B7280",
+});
+
 export function ProjectDetailsTabs({
   activeTab,
   onTabChange,
   chatCount,
   artifactCount,
 }: ProjectDetailsTabsProps) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? "light"];
+  const colorScheme = useColorScheme() ?? "light";
+  const theme = Colors[colorScheme];
+  const tabColors = getTabColors(colorScheme);
 
   const tabs: { key: TabType; label: string; count: number }[] = [
     { key: "chats", label: "Chats", count: chatCount },
@@ -35,7 +43,10 @@ export function ProjectDetailsTabs({
     <View
       style={[
         styles.container,
-        { backgroundColor: colorScheme === "dark" ? "#2D2D2D" : "#f5f5f5" },
+        {
+          backgroundColor: tabColors.containerBackground,
+          borderColor: tabColors.containerBorder,
+        },
       ]}
     >
       {tabs.map((tab) => (
@@ -45,7 +56,7 @@ export function ProjectDetailsTabs({
             styles.tab,
             activeTab === tab.key && [
               styles.activeTab,
-              { backgroundColor: theme.primary },
+              { backgroundColor: theme.tint },
             ],
           ]}
           onPress={() => onTabChange(tab.key)}
@@ -53,7 +64,9 @@ export function ProjectDetailsTabs({
           <Text
             style={[
               styles.tabText,
-              { color: activeTab === tab.key ? "white" : theme.text },
+              {
+                color: activeTab === tab.key ? "#FFFFFF" : tabColors.inactiveText,
+              },
             ]}
           >
             {tab.label}
@@ -63,14 +76,14 @@ export function ProjectDetailsTabs({
               styles.badge,
               {
                 backgroundColor:
-                  activeTab === tab.key ? "rgba(255,255,255,0.3)" : theme.tint + "20",
+                  activeTab === tab.key ? "rgba(255,255,255,0.25)" : theme.tint + "18",
               },
             ]}
           >
             <Text
               style={[
                 styles.badgeText,
-                { color: activeTab === tab.key ? "white" : theme.tint },
+                { color: activeTab === tab.key ? "#FFFFFF" : theme.tint },
               ]}
             >
               {tab.count}
@@ -85,9 +98,10 @@ export function ProjectDetailsTabs({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 4,
     marginBottom: 16,
+    borderWidth: 1,
   },
   tab: {
     flex: 1,
@@ -95,8 +109,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,
-    borderRadius: 6,
-    gap: 6,
+    borderRadius: 7,
+    gap: 8,
+    ...Platform.select({
+      web: {
+        cursor: "pointer",
+        transition: "all 0.15s ease",
+      } as any,
+    }),
   },
   activeTab: {
     // backgroundColor set dynamically
@@ -104,16 +124,17 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: "600",
+    letterSpacing: -0.1,
   },
   badge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 20,
+    borderRadius: 8,
+    minWidth: 22,
     alignItems: "center",
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });

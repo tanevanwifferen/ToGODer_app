@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TouchableOpacity, useColorScheme } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, useColorScheme, Platform } from "react-native";
 import { Colors } from "../../constants/Colors";
 
 interface ChatListHeaderProps {
@@ -7,17 +7,22 @@ interface ChatListHeaderProps {
   onClearProjectFilter?: () => void;
 }
 
+const getHeaderColors = (colorScheme: "light" | "dark") => ({
+  borderColor: colorScheme === "dark" ? "#262626" : "#EEEEEE",
+  badgeBackground: colorScheme === "dark" ? "#262626" : "#F3F4F6",
+  badgeBorder: colorScheme === "dark" ? "#333333" : "#E5E7EB",
+});
+
 export function ChatListHeader({ onNewChat, projectName, onClearProjectFilter }: ChatListHeaderProps) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? "light"];
+  const colorScheme = useColorScheme() ?? "light";
+  const theme = Colors[colorScheme];
+  const headerColors = getHeaderColors(colorScheme);
 
   return (
     <View
       style={[
         styles.header,
-        {
-          borderBottomColor: colorScheme === "dark" ? "#2D2D2D" : "#e0e0e0",
-        },
+        { borderBottomColor: headerColors.borderColor },
       ]}
     >
       <View style={styles.titleContainer}>
@@ -26,14 +31,17 @@ export function ChatListHeader({ onNewChat, projectName, onClearProjectFilter }:
           <TouchableOpacity
             style={[
               styles.projectBadge,
-              { backgroundColor: colorScheme === "dark" ? "#3D3D3D" : "#e8e8e8" },
+              {
+                backgroundColor: headerColors.badgeBackground,
+                borderColor: headerColors.badgeBorder,
+              },
             ]}
             onPress={onClearProjectFilter}
           >
             <Text style={[styles.projectBadgeText, { color: theme.tint }]}>
               {projectName}
             </Text>
-            <Text style={[styles.clearIcon, { color: theme.text + "99" }]}>×</Text>
+            <Text style={[styles.clearIcon, { color: theme.icon }]}>×</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -41,14 +49,7 @@ export function ChatListHeader({ onNewChat, projectName, onClearProjectFilter }:
         style={[styles.newChatButton, { backgroundColor: theme.tint }]}
         onPress={onNewChat}
       >
-        <Text
-          style={[
-            styles.newChatButtonText,
-            { color: colorScheme === "dark" ? "#000" : "#fff" },
-          ]}
-        >
-          + New Chat
-        </Text>
+        <Text style={styles.newChatButtonText}>+ New Chat</Text>
       </TouchableOpacity>
     </View>
   );
@@ -56,7 +57,8 @@ export function ChatListHeader({ onNewChat, projectName, onClearProjectFilter }:
 
 const styles = StyleSheet.create({
   header: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -66,35 +68,45 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flexShrink: 1,
-    gap: 8,
+    gap: 10,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: -0.5,
   },
   projectBadge: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 6,
   },
   projectBadgeText: {
     fontSize: 13,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   clearIcon: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontWeight: "600",
   },
   newChatButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
+    ...Platform.select({
+      web: {
+        cursor: "pointer",
+        transition: "opacity 0.15s ease",
+      } as any,
+    }),
   },
   newChatButtonText: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.1,
   },
 });
