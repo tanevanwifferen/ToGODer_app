@@ -138,7 +138,7 @@ export function ChatListItem({
                 {item.title || "Untitled Chat"}
               </Text>
               <Text style={[styles.timestamp, { color: itemColors.timestampText }]}>
-                {formatLastUpdate(item.last_update)}
+                {formatLastUpdate(item.messages[item.messages.length - 1]?.timestamp as number ?? new Date().getTime())}
               </Text>
             </View>
             {projectName && (
