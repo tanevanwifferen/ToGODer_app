@@ -17,6 +17,7 @@ import { setAuthData } from '../redux/slices/authSlice';
 import { useRoute } from '../components/providers/RouteProvider';
 import { ExperienceService } from '../services/ExperienceService';
 import { v4 as uuidv4 } from 'uuid';
+import { router } from 'expo-router';
 
 export function useInitialization() {
   const { isSharedRoute } = useRoute();
@@ -55,6 +56,7 @@ export function useInitialization() {
           memories: [],
         }));
         store.dispatch(setCurrentChat(newChatId));
+        router.push({ pathname: '/chat/[id]', params: { id: newChatId } });
 
         // Mark app as no longer first launch and user as onboarded
         store.dispatch(setGlobalConfig({
