@@ -44,6 +44,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
     sendMessage: sendApiMessage,
     retry: retrySend,
     regenerate: regenerateResponse,
+    cancel: cancelRequest,
     typing,
     error: errorMessage,
   } = useMessageSending(chatId);

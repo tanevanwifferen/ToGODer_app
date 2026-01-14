@@ -18,7 +18,7 @@ import { useMessageSending } from "./useMessageSending";
  */
 export function MessageSendingExample({ chatId }: { chatId: string }) {
   const [inputText, setInputText] = useState("");
-  const { sendMessage, isLoading, typing, error, retry } = useMessageSending(chatId);
+  const { sendMessage, isLoading, typing, error, retry, cancel } = useMessageSending(chatId);
 
   const handleSend = async () => {
     if (inputText.trim()) {
@@ -41,6 +41,13 @@ export function MessageSendingExample({ chatId }: { chatId: string }) {
         onPress={handleSend}
         disabled={isLoading || !inputText.trim()}
       />
+
+      {isLoading && (
+        <Button
+          title="Cancel"
+          onPress={cancel}
+        />
+      )}
 
       {typing && <Text>Assistant is typing...</Text>}
 
@@ -94,7 +101,7 @@ export function FullChatExample({ chatId }: { chatId: string }) {
   const { messages, onDeleteMessage } = useMessages(chatId);
 
   // useMessageSending handles the sending logic
-  const { sendMessage, isLoading, typing, error, retry } = useMessageSending(chatId);
+  const { sendMessage, isLoading, typing, error, retry, cancel } = useMessageSending(chatId);
 
   const handleSend = async () => {
     if (inputText.trim()) {
@@ -161,6 +168,8 @@ export function FullChatExample({ chatId }: { chatId: string }) {
  * 5. Clear API:
  *    - sendMessage(content: string): Send a message
  *    - retry(): Retry last failed message
+ *    - regenerate(): Regenerate the last AI response
+ *    - cancel(): Cancel an ongoing request
  *    - isLoading: Is a send operation in progress?
  *    - typing: Is the assistant generating a response?
  *    - error: Error message if send failed
