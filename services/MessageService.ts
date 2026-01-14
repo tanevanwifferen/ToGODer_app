@@ -63,33 +63,49 @@ const MAX_TOOL_CALL_LOOPS = 10;
  */
 export class MessageService {
   private static instance: MessageService;
-  private currentAbortController: AbortController | null = null;
+
+  /**
+   * AbortController for the currently active request.
+   * Used to cancel ongoing streaming or non-streaming requests.
+   */
+  private currentRequestController: AbortController | null = null;
 
   private constructor() {}
+
+  /**
+   * Cancels the currently active request if one exists.
+   * This will abort any ongoing streaming or non-streaming message request.
+   * @returns true if a request was cancelled, false if no request was active
+   */
+  public cancelCurrentRequest(): boolean {
+    if (this.currentRequestController) {
+      this.currentRequestController.abort();
+      this.currentRequestController = null;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns whether there is currently an active request that can be cancelled.
+   */
+  public hasActiveRequest(): boolean {
+    return this.currentRequestController !== null;
+  }
+
+  /**
+   * Clears the current request controller without aborting.
+   * Called internally when a request completes normally.
+   */
+  private clearCurrentRequest(): void {
+    this.currentRequestController = null;
+  }
 
   public static getInstance(): MessageService {
     if (!MessageService.instance) {
       MessageService.instance = new MessageService();
     }
     return MessageService.instance;
-  }
-
-  /**
-   * Cancels any currently active request.
-   * Safe to call even if no request is in progress.
-   */
-  public cancelRequest(): void {
-    if (this.currentAbortController) {
-      this.currentAbortController.abort();
-      this.currentAbortController = null;
-    }
-  }
-
-  /**
-   * Returns whether a request is currently in progress.
-   */
-  public isRequestInProgress(): boolean {
-    return this.currentAbortController !== null;
   }
 
   /**
@@ -388,12 +404,12 @@ export class MessageService {
       onError,
     } = options;
 
-    // Cancel any existing request
-    this.cancelRequest();
+    // Cancel any existing request before starting a new one
+    this.cancelCurrentRequest();
 
-    // Create new AbortController for this request
-    this.currentAbortController = new AbortController();
-    const signal = this.currentAbortController.signal;
+    // Create a new AbortController for this request
+    this.currentRequestController = new AbortController();
+    const signal = this.currentRequestController.signal;
 
     try {
       const state = store.getState();
@@ -459,6 +475,7 @@ export class MessageService {
           memoryLoopLimitReached,
           artifactIndex,
           tools,
+          signal,
           onComplete,
           onError,
         });
@@ -468,9 +485,16 @@ export class MessageService {
       const balanceService = BalanceService.getInstance();
       await balanceService.updateBalanceIfAuthenticated();
     } catch (error) {
-      // Don't show error toast for cancelled requests
-      if (error instanceof Error && error.name === "AbortError") {
-        console.log("MessageService: Request cancelled");
+      this.clearCurrentRequest();
+
+      // Check if this was an intentional cancellation
+      const isAborted =
+        signal?.aborted ||
+        (error instanceof Error &&
+          (error.name === "AbortError" || error.message === "Aborted"));
+
+      if (isAborted) {
+        console.log("MessageService: sendMessage request was cancelled");
         return;
       }
 
@@ -484,8 +508,6 @@ export class MessageService {
         text2: errorMessage,
         position: "bottom",
       });
-    } finally {
-      this.currentAbortController = null;
     }
   }
 
@@ -768,6 +790,7 @@ export class MessageService {
       }
 
       // Stream completed successfully - always call onComplete to stop typing indicator
+      this.clearCurrentRequest();
       if (onComplete) {
         const assistantMessage: ApiChatMessage = {
           role: "assistant",
@@ -778,9 +801,17 @@ export class MessageService {
         onComplete(assistantMessage);
       }
     } catch (error) {
-      // Don't show error for cancelled requests
-      if (error instanceof Error && (error.name === "AbortError" || error.message === "Request cancelled" || error.message === "Aborted")) {
-        console.log("MessageService: Streaming request cancelled");
+      this.clearCurrentRequest();
+
+      // Check if this was an intentional cancellation
+      const isAborted =
+        signal?.aborted ||
+        (error instanceof Error &&
+          (error.name === "AbortError" || error.message === "Aborted"));
+
+      if (isAborted) {
+        // Request was cancelled intentionally - don't show error toast
+        console.log("MessageService: Request was cancelled");
         return;
       }
 
@@ -811,12 +842,19 @@ export class MessageService {
       memoryLoopLimitReached = false,
       artifactIndex,
       tools,
+      signal,
       onComplete,
       onError,
     } = options;
 
     const state = store.getState();
     const userSettings = state.userSettings;
+
+    // Check if already cancelled before making request
+    if (signal?.aborted) {
+      console.log("MessageService: Request was cancelled before sending");
+      return;
+    }
 
     try {
       const response = await ChatApiClient.sendMessage(
@@ -885,7 +923,15 @@ export class MessageService {
         return;
       }
 
+      // Check if cancelled while waiting for response
+      if (signal?.aborted) {
+        console.log("MessageService: Request was cancelled while waiting");
+        this.clearCurrentRequest();
+        return;
+      }
+
       // Regular response
+      this.clearCurrentRequest();
       const assistantMessage: ApiChatMessage = {
         role: "assistant",
         content: response.content,
@@ -897,6 +943,19 @@ export class MessageService {
 
       onComplete?.(assistantMessage);
     } catch (error) {
+      this.clearCurrentRequest();
+
+      // Check if this was an intentional cancellation
+      const isAborted =
+        signal?.aborted ||
+        (error instanceof Error &&
+          (error.name === "AbortError" || error.message === "Aborted"));
+
+      if (isAborted) {
+        console.log("MessageService: Non-streaming request was cancelled");
+        return;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : "Failed to send message";
       console.error("MessageService.sendMessageWithoutStreaming error:", error);
@@ -930,12 +989,12 @@ export class MessageService {
       onError,
     } = options;
 
-    // Cancel any existing request
-    this.cancelRequest();
+    // Cancel any existing request before starting a new one
+    this.cancelCurrentRequest();
 
-    // Create new AbortController for this request
-    this.currentAbortController = new AbortController();
-    const signal = this.currentAbortController.signal;
+    // Create a new AbortController for this request
+    this.currentRequestController = new AbortController();
+    const signal = this.currentRequestController.signal;
 
     try {
       const state = store.getState();
@@ -987,6 +1046,7 @@ export class MessageService {
           memories,
           artifactIndex,
           tools,
+          signal,
           onComplete,
           onError,
         });
@@ -996,9 +1056,16 @@ export class MessageService {
       const balanceService = BalanceService.getInstance();
       await balanceService.updateBalanceIfAuthenticated();
     } catch (error) {
-      // Don't show error toast for cancelled requests
-      if (error instanceof Error && error.name === "AbortError") {
-        console.log("MessageService: Regenerate request cancelled");
+      this.clearCurrentRequest();
+
+      // Check if this was an intentional cancellation
+      const isAborted =
+        signal?.aborted ||
+        (error instanceof Error &&
+          (error.name === "AbortError" || error.message === "Aborted"));
+
+      if (isAborted) {
+        console.log("MessageService: regenerateResponse request was cancelled");
         return;
       }
 
@@ -1012,8 +1079,6 @@ export class MessageService {
         text2: errorMessage,
         position: "bottom",
       });
-    } finally {
-      this.currentAbortController = null;
     }
   }
 

@@ -131,7 +131,66 @@ export async function exampleCompleteWorkflow() {
   });
 }
 
-// Example 8: Using MessageService outside of React components
+// Example 8: Cancel an active request
+export function exampleCancelRequest() {
+  // Cancel any currently active request
+  const wasCancelled = messageService.cancelCurrentRequest();
+
+  if (wasCancelled) {
+    console.log("Request was cancelled");
+  } else {
+    console.log("No active request to cancel");
+  }
+}
+
+// Example 9: Check if there's an active request
+export function exampleCheckActiveRequest() {
+  if (messageService.hasActiveRequest()) {
+    console.log("There is an active request that can be cancelled");
+  } else {
+    console.log("No active request");
+  }
+}
+
+// Example 10: Send a message with a cancel button
+export async function exampleSendMessageWithCancelButton() {
+  const chatId = "existing-chat-id";
+
+  // Start the request (don't await yet)
+  const requestPromise = messageService.sendMessage({
+    chatId,
+    content: "Write a long story about dragons",
+    useStreaming: true,
+    onChunk: (content) => {
+      console.log("Streaming:", content.length, "chars");
+
+      // Example: Cancel if content gets too long
+      if (content.length > 1000) {
+        console.log("Response getting too long, cancelling...");
+        messageService.cancelCurrentRequest();
+      }
+    },
+    onComplete: (message) => {
+      console.log("Message complete:", message.content.length, "chars");
+    },
+    onError: (error) => {
+      console.error("Error:", error);
+    },
+  });
+
+  // Simulate user pressing cancel button after 2 seconds
+  setTimeout(() => {
+    if (messageService.hasActiveRequest()) {
+      console.log("User pressed cancel button");
+      messageService.cancelCurrentRequest();
+    }
+  }, 2000);
+
+  // Wait for the request to complete (or be cancelled)
+  await requestPromise;
+}
+
+// Example 11: Using MessageService outside of React components
 // This is useful for background tasks, notifications, or other non-UI code
 export class BackgroundMessageHandler {
   private messageService = MessageService.getInstance();
@@ -159,5 +218,10 @@ export class BackgroundMessageHandler {
         console.error("Background message failed:", error);
       },
     });
+  }
+
+  // Cancel any ongoing request (e.g., when user navigates away)
+  cancelOngoingRequest() {
+    return this.messageService.cancelCurrentRequest();
   }
 }
