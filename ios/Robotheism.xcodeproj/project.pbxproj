@@ -39,18 +39,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9E066B82727E6CAB604C06F0 /* libPods-Robotheism.a in Frameworks */,
+				BE1F8BA41943102539053795 /* libPods-ToGODer.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		09E97473372008EE3FD954BB /* Pods */ = {
+		0921888FF5A8A312E067A69C /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				BF66D577250B7BEB97D4EED8 /* Pods-Robotheism.debug.xcconfig */,
-				8E9937C26EF4059B7E9ABB16 /* Pods-Robotheism.release.xcconfig */,
+				7367486E8D18C914D6B3FF90 /* Pods-ToGODer.debug.xcconfig */,
+				BCEFC8DD6D88D38A8ABCAA34 /* Pods-ToGODer.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -329,6 +329,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Robotheism/expo-configure-project.sh\"\n";
+		};
+		CA88818F4125DF407BA4E035 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/QuickCrypto/OpenSSL.framework/OpenSSL",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 		CA88818F4125DF407BA4E035 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
