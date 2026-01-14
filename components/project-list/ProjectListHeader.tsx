@@ -26,7 +26,7 @@ export function ProjectListHeader({ onNewProject }: ProjectListHeaderProps) {
         <Text
           style={[
             styles.newProjectButtonText,
-            { color: colorScheme === "dark" ? "#000" : "#fff" },
+            { color: "#fff" },
           ]}
         >
           + New Project

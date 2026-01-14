@@ -157,7 +157,7 @@ export function ProjectList() {
                 <Text
                   style={[
                     styles.createButtonText,
-                    { color: colorScheme === "dark" ? "#000" : "#fff" },
+                    { color: "#fff" },
                   ]}
                 >
                   Create
