@@ -330,9 +330,15 @@ describe("chatsSlice", () => {
         deleteMessage({ chatId: "chat-1", messageIndex: 1 })
       );
 
-      expect(state.chats["chat-1"].messages).toHaveLength(2);
+      // Tombstone: message is soft-deleted, not removed
+      expect(state.chats["chat-1"].messages).toHaveLength(3);
       expect(state.chats["chat-1"].messages[0].content).toBe("First");
-      expect(state.chats["chat-1"].messages[1].content).toBe("Third");
+      expect(state.chats["chat-1"].messages[0].deleted).toBeUndefined();
+      expect(state.chats["chat-1"].messages[1].content).toBe("Second");
+      expect(state.chats["chat-1"].messages[1].deleted).toBe(true);
+      expect(state.chats["chat-1"].messages[1].deletedAt).toBeDefined();
+      expect(state.chats["chat-1"].messages[2].content).toBe("Third");
+      expect(state.chats["chat-1"].messages[2].deleted).toBeUndefined();
     });
 
     it("should set auto_generate_answer to false", () => {
@@ -496,8 +502,12 @@ describe("chatsSlice", () => {
 
       const state = chatsReducer(stateWithChats, deleteChat("chat-1"));
 
-      expect(state.chats["chat-1"]).toBeUndefined();
+      // Tombstone: chat is soft-deleted, not removed
+      expect(state.chats["chat-1"]).toBeDefined();
+      expect(state.chats["chat-1"].deleted).toBe(true);
+      expect(state.chats["chat-1"].deletedAt).toBeDefined();
       expect(state.chats["chat-2"]).toBeDefined();
+      expect(state.chats["chat-2"].deleted).toBeUndefined();
     });
 
     it("should clear currentChatId if deleted chat was current", () => {
