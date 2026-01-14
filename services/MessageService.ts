@@ -10,6 +10,7 @@ import {
   addArtifact,
   updateArtifact,
   deleteArtifact,
+  moveArtifact,
   selectProjectArtifacts,
   Artifact,
 } from "../redux/slices/artifactsSlice";
@@ -183,7 +184,7 @@ export class MessageService {
     artifactId?: string;
     artifactPath: string;
     isError: boolean;
-    operation: "read" | "write" | "delete";
+    operation: "read" | "write" | "delete" | "move";
   } {
     const state = store.getState();
     const artifacts = selectProjectArtifacts(state, projectId);
@@ -375,6 +376,77 @@ export class MessageService {
           artifactPath: path,
           isError: false,
           operation: "delete" as const,
+        };
+      }
+
+      case "move_artifact": {
+        const artifact = findArtifactByPath(path);
+        if (!artifact) {
+          return {
+            message: `Artifact not found at path "${path}"`,
+            artifactPath: path,
+            isError: true,
+            operation: "move" as const,
+          };
+        }
+
+        const destination = toolCall.arguments.destination;
+        if (!destination) {
+          return {
+            message: `Destination path is required`,
+            artifactPath: path,
+            isError: true,
+            operation: "move" as const,
+          };
+        }
+
+        // Determine the new parent
+        let newParentId: string | null = null;
+        if (destination !== "/") {
+          const destArtifact = findArtifactByPath(destination);
+          if (!destArtifact) {
+            return {
+              message: `Destination folder not found at path "${destination}"`,
+              artifactPath: path,
+              isError: true,
+              operation: "move" as const,
+            };
+          }
+          if (destArtifact.type !== "folder") {
+            return {
+              message: `Destination "${destination}" is not a folder`,
+              artifactPath: path,
+              isError: true,
+              operation: "move" as const,
+            };
+          }
+          // Prevent circular moves (moving folder into its own descendant)
+          if (artifact.type === "folder") {
+            const isDescendant = (parentId: string | null, targetId: string): boolean => {
+              if (!parentId) return false;
+              if (parentId === targetId) return true;
+              const parent = artifacts.find((a) => a.id === parentId);
+              return parent ? isDescendant(parent.parentId, targetId) : false;
+            };
+            if (destArtifact.id === artifact.id || isDescendant(destArtifact.parentId, artifact.id)) {
+              return {
+                message: `Cannot move folder "${path}" into itself or its descendant`,
+                artifactPath: path,
+                isError: true,
+                operation: "move" as const,
+              };
+            }
+          }
+          newParentId = destArtifact.id;
+        }
+
+        store.dispatch(moveArtifact({ id: artifact.id, newParentId }));
+        return {
+          message: `Moved artifact "${path}" to "${destination}"`,
+          artifactId: artifact.id,
+          artifactPath: path,
+          isError: false,
+          operation: "move" as const,
         };
       }
 

@@ -15,12 +15,13 @@ import { getApiUrl } from "../constants/Env";
 
 export interface ArtifactToolCall {
   id: string;
-  name: "read_artifact" | "write_artifact" | "delete_artifact";
+  name: "read_artifact" | "write_artifact" | "delete_artifact" | "move_artifact";
   arguments: {
     path: string;
     content?: string;
     name?: string;
     mimeType?: string;
+    destination?: string;
   };
 }
 
@@ -115,6 +116,27 @@ export const ARTIFACT_TOOL_SCHEMAS: ToolSchema[] = [
           }
         },
         required: ["path"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "move_artifact",
+      description: "Move an artifact to a different folder. Use this to reorganize files and folders.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path to the artifact to move (e.g., '/src/old-location.ts')"
+          },
+          destination: {
+            type: "string",
+            description: "The destination folder path (e.g., '/lib' or '/' for root)"
+          }
+        },
+        required: ["path", "destination"]
       }
     }
   }

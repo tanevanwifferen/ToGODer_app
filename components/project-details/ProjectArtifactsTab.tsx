@@ -7,6 +7,7 @@ import {
   Alert,
   Platform,
   useColorScheme,
+  ActionSheetIOS,
 } from "react-native";
 import { useDispatch } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
@@ -15,11 +16,13 @@ import {
   addArtifact,
   deleteArtifact,
   updateArtifact,
+  moveArtifact,
   Artifact,
 } from "../../redux/slices/artifactsSlice";
 import { ArtifactTree } from "../artifact-tree";
 import { IconSymbol } from "../ui/IconSymbol";
 import { ArtifactEditorModal } from "./ArtifactEditorModal";
+import { MoveArtifactModal } from "./MoveArtifactModal";
 
 interface ProjectArtifactsTabProps {
   projectId: string;
@@ -33,6 +36,8 @@ export function ProjectArtifactsTab({ projectId }: ProjectArtifactsTabProps) {
   const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
   const [editorVisible, setEditorVisible] = useState(false);
   const [editingArtifact, setEditingArtifact] = useState<Artifact | null>(null);
+  const [moveModalVisible, setMoveModalVisible] = useState(false);
+  const [movingArtifact, setMovingArtifact] = useState<Artifact | null>(null);
 
   const handleAddFolder = () => {
     const createFolder = (name: string) => {
@@ -119,6 +124,65 @@ export function ProjectArtifactsTab({ projectId }: ProjectArtifactsTabProps) {
     }
   };
 
+  const handleMoveArtifact = (artifact: Artifact) => {
+    setMovingArtifact(artifact);
+    setMoveModalVisible(true);
+  };
+
+  const handleMoveConfirm = (newParentId: string | null) => {
+    if (movingArtifact) {
+      dispatch(moveArtifact({ id: movingArtifact.id, newParentId }));
+    }
+    setMoveModalVisible(false);
+    setMovingArtifact(null);
+  };
+
+  const handleLongPressArtifact = (artifact: Artifact) => {
+    const options = ["Move to...", "Delete", "Cancel"];
+    const destructiveButtonIndex = 1;
+    const cancelButtonIndex = 2;
+
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          destructiveButtonIndex,
+          cancelButtonIndex,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) {
+            handleMoveArtifact(artifact);
+          } else if (buttonIndex === 1) {
+            handleDeleteArtifact(artifact);
+          }
+        }
+      );
+    } else if (Platform.OS === "web") {
+      // Web fallback - show simple confirm for delete, or move modal
+      const action = prompt("Enter 'move' to move or 'delete' to delete:");
+      if (action?.toLowerCase() === "move") {
+        handleMoveArtifact(artifact);
+      } else if (action?.toLowerCase() === "delete") {
+        handleDeleteArtifact(artifact);
+      }
+    } else {
+      // Android fallback using Alert
+      Alert.alert(
+        artifact.name,
+        "Choose an action",
+        [
+          { text: "Move to...", onPress: () => handleMoveArtifact(artifact) },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: () => handleDeleteArtifact(artifact),
+          },
+          { text: "Cancel", style: "cancel" },
+        ]
+      );
+    }
+  };
+
   const handleSelectArtifact = (artifact: Artifact) => {
     setSelectedArtifact(artifact);
     if (artifact.type === "file") {
@@ -167,7 +231,7 @@ export function ProjectArtifactsTab({ projectId }: ProjectArtifactsTabProps) {
         <ArtifactTree
           projectId={projectId}
           onSelectArtifact={handleSelectArtifact}
-          onLongPressArtifact={handleDeleteArtifact}
+          onLongPressArtifact={handleLongPressArtifact}
         />
       </View>
 
@@ -178,6 +242,17 @@ export function ProjectArtifactsTab({ projectId }: ProjectArtifactsTabProps) {
         onClose={() => {
           setEditorVisible(false);
           setEditingArtifact(null);
+        }}
+      />
+
+      <MoveArtifactModal
+        visible={moveModalVisible}
+        artifact={movingArtifact}
+        projectId={projectId}
+        onMove={handleMoveConfirm}
+        onClose={() => {
+          setMoveModalVisible(false);
+          setMovingArtifact(null);
         }}
       />
     </View>
