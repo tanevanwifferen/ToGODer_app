@@ -41,7 +41,9 @@ export default function DrawerLayout() {
           drawerType: "front",
           drawerItemStyle: {
             // Hide any routes that start with chat/, shared/, or projects/ except the main routes
-            display: route.name.startsWith('chat/') ||
+            // Also hide the standalone 'chat' route
+            display: route.name === 'chat' ||
+                     route.name.startsWith('chat/') ||
                      (route.name.startsWith('shared/') && route.name !== 'shared') ||
                      (route.name.startsWith('projects/') && route.name !== 'projects')
               ? 'none'

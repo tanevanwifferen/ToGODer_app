@@ -143,6 +143,7 @@ const chatsSlice = createSlice({
       if (chat && messageIndex >= 0) {
         chat.messages.splice(messageIndex, 1);
       }
+      chat.last_update = new Date().getTime();
     },
     setTitle: (state, action: PayloadAction<{ id: string; title: string }>) => {
       const chat = state.chats[action.payload.id];
@@ -207,6 +208,7 @@ const chatsSlice = createSlice({
       if (chat) {
         chat.projectId = action.payload.projectId;
       }
+      chat.last_update = new Date().getTime();
     },
     // Edit a message and truncate all messages after it (for conversation branching)
     editMessageAndTruncate: (
