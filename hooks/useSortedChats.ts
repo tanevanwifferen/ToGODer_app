@@ -41,8 +41,8 @@ export const useSortedChats = () => {
 
   function get_last_updated(chat: Chat) {
     return Math.max(
-      chat.messages[0].timestamp as number,
-      chat.messages[chat.messages.length - 1].timestamp as number
+      (chat.messages[0]?.timestamp as number) ?? 0,
+      (chat.messages[chat.messages.length - 1]?.timestamp as number) ?? 0
     );
   }
 
