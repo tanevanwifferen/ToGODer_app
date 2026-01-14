@@ -5,7 +5,7 @@
 
 // Base message type for shared conversations
 export interface SharedMessage {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant" | "tool";
   content: string;
 }
 
@@ -16,7 +16,7 @@ export interface SignedMessage {
 }
 
 // Request body for sharing a conversation
-export type ShareVisibility = 'PUBLIC' | 'PRIVATE';
+export type ShareVisibility = "PUBLIC" | "PRIVATE";
 
 export interface ShareRequest {
   messages: SignedMessage[];

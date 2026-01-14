@@ -13,10 +13,162 @@ import {
 import { store } from "../redux";
 import { getApiUrl } from "../constants/Env";
 
+export interface ArtifactToolCall {
+  id: string;
+  name: "read_artifact" | "write_artifact" | "delete_artifact" | "move_artifact" | "list_directory";
+  arguments: {
+    path: string;
+    content?: string;
+    name?: string;
+    mimeType?: string;
+    destination?: string;
+    depth?: number;
+  };
+}
+
+export interface ArtifactIndexItem {
+  path: string;
+  name: string;
+  mimeType?: string;
+  type: "file" | "folder";
+}
+
+/**
+ * Tool schema definition for AI function calling (OpenAI format)
+ */
+export interface ToolSchema {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: "object";
+      properties: Record<string, {
+        type: string;
+        description: string;
+      }>;
+      required: string[];
+    };
+  };
+}
+
+/**
+ * Artifact tool schemas for AI function calling.
+ * These define the tools the AI can use to manipulate artifacts.
+ */
+export const ARTIFACT_TOOL_SCHEMAS: ToolSchema[] = [
+  {
+    type: "function",
+    function: {
+      name: "read_artifact",
+      description: "Read the content of an artifact file or list contents of a folder. Use this to view existing artifacts.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path to the artifact to read (e.g., '/src/main.ts' or '/docs')"
+          }
+        },
+        required: ["path"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "write_artifact",
+      description: "Create a new artifact or update an existing artifact's content. Use this to save code, documents, or other files.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path where the artifact should be saved (e.g., '/src/utils.ts')"
+          },
+          content: {
+            type: "string",
+            description: "The content to write to the artifact"
+          },
+          name: {
+            type: "string",
+            description: "Optional display name for the artifact. If not provided, the filename from the path will be used."
+          },
+          mimeType: {
+            type: "string",
+            description: "Optional MIME type for the artifact (e.g., 'text/typescript', 'application/json')"
+          }
+        },
+        required: ["path", "content"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "delete_artifact",
+      description: "Delete an existing artifact. Use this to remove files or folders that are no longer needed.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path to the artifact to delete (e.g., '/old-file.txt')"
+          }
+        },
+        required: ["path"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "move_artifact",
+      description: "Move an artifact to a different folder. Use this to reorganize files and folders.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The path to the artifact to move (e.g., '/src/old-location.ts')"
+          },
+          destination: {
+            type: "string",
+            description: "The destination folder path (e.g., '/lib' or '/' for root)"
+          }
+        },
+        required: ["path", "destination"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_directory",
+      description: "List the contents of a directory incrementally. Use this for navigating the artifact tree without loading everything at once. Returns immediate children of the specified path.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The directory path to list (e.g., '/' for root, '/src' for a subfolder)"
+          },
+          depth: {
+            type: "number",
+            description: "How many levels deep to list (default: 1 for immediate children only, use higher values for nested listing)"
+          }
+        },
+        required: ["path"]
+      }
+    }
+  }
+];
+
 export type StreamEvent =
   | { type: "chunk"; data: string }
   | { type: "signature"; data: string }
   | { type: "memory_request"; data: { keys: string[] } }
+  | { type: "tool_call"; data: ArtifactToolCall }
   | { type: "error"; data: any }
   | { type: "done"; data: null };
 
@@ -67,7 +219,12 @@ export class ChatApiClient {
     memoryIndex?: string[] | undefined,
     memories?: Record<string, string> | undefined,
     customSystemPrompt?: string | undefined,
-    persona?: string | undefined
+    persona?: string | undefined,
+    libraryIntegrationEnabled: boolean = false,
+    memoryLoopCount?: number,
+    memoryLoopLimitReached?: boolean,
+    artifactIndex?: ArtifactIndexItem[] | undefined,
+    tools?: ToolSchema[] | undefined
   ): Promise<ChatResponse> {
     const response = await ApiClient.post<ChatResponse>("/chat", {
       model,
@@ -84,6 +241,11 @@ export class ChatApiClient {
       memories,
       customSystemPrompt,
       persona,
+      libraryIntegrationEnabled,
+      memoryLoopCount,
+      memoryLoopLimitReached,
+      artifactIndex,
+      tools,
     });
 
     if (response instanceof Error) {
@@ -111,6 +273,11 @@ export class ChatApiClient {
     memories?: Record<string, string> | undefined,
     customSystemPrompt?: string | undefined,
     persona?: string | undefined,
+    libraryIntegrationEnabled: boolean = false,
+    memoryLoopCount?: number,
+    memoryLoopLimitReached?: boolean,
+    artifactIndex?: ArtifactIndexItem[] | undefined,
+    tools?: ToolSchema[] | undefined,
     signal?: AbortSignal
   ): AsyncGenerator<StreamEvent> {
     const baseUrl = getApiUrl();
@@ -146,6 +313,11 @@ export class ChatApiClient {
       memories,
       customSystemPrompt,
       persona,
+      libraryIntegrationEnabled,
+      memoryLoopCount,
+      memoryLoopLimitReached,
+      artifactIndex,
+      tools,
     };
 
     // Use correct API prefix for streaming endpoint
@@ -266,6 +438,12 @@ export class ChatApiClient {
                 yield {
                   type: "memory_request",
                   data: data as { keys: string[] },
+                };
+                break;
+              case "tool_call":
+                yield {
+                  type: "tool_call",
+                  data: data as ArtifactToolCall,
                 };
                 break;
               case "error":
@@ -461,6 +639,12 @@ export class ChatApiClient {
                 data: data as { keys: string[] },
               };
               break;
+            case "tool_call":
+              yield {
+                type: "tool_call",
+                data: data as ArtifactToolCall,
+              };
+              break;
             case "error":
               yield { type: "error", data };
               break;
@@ -530,7 +714,9 @@ export class ChatApiClient {
     staticData?: Record<string, any> | undefined,
     assistant_name?: string | undefined,
     memoryIndex?: string[] | undefined,
-    memories?: Record<string, string> | undefined
+    memories?: Record<string, string> | undefined,
+    memoryLoopCount?: number,
+    memoryLoopLimitReached?: boolean
   ): Promise<SystemPromptResponse> {
     const response = await ApiClient.post<SystemPromptResponse>(
       "/generate-system-prompt",
@@ -547,6 +733,8 @@ export class ChatApiClient {
         assistant_name,
         memoryIndex,
         memories,
+        memoryLoopCount,
+        memoryLoopLimitReached,
       }
     );
 

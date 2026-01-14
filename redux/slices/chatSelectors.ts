@@ -1,75 +1,77 @@
-import { createSelector } from '@reduxjs/toolkit';
-import { ChatsState } from './chatsSlice';
+import { createSelector } from "@reduxjs/toolkit";
+import { ChatsState, Chat } from "./chatsSlice";
+import { ApiChatMessage } from "../../model/ChatRequest";
+
+/**
+ * Helper to filter out deleted chats
+ */
+const filterActiveChats = (chats: Record<string, Chat>): Chat[] =>
+  Object.values(chats).filter((chat) => !chat.deleted);
+
+/**
+ * Helper to filter out deleted messages
+ */
+const filterActiveMessages = (messages: ApiChatMessage[]): ApiChatMessage[] =>
+  messages.filter((msg) => !msg.deleted);
 
 export const selectChatList = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
-  (chats) => Object.values(chats)
+  (chats) => filterActiveChats(chats)
 );
 
 export const selectChats = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
-  (chats) => Object.values(chats).filter(chat => !chat.isRequest)
+  (chats) => filterActiveChats(chats).filter((chat) => !chat.isRequest)
 );
 
 export const selectChatRequests = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
-  (chats) => Object.values(chats).filter(chat => chat.isRequest)
+  (chats) => filterActiveChats(chats).filter((chat) => chat.isRequest)
 );
 
 export const selectChatById = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
   (_: any, chatId: string) => chatId,
-  (chats, chatId) => chats[chatId]
+  (chats, chatId) => {
+    const chat = chats[chatId];
+    // Return null if chat is deleted
+    if (!chat || chat.deleted) return null;
+    return chat;
+  }
 );
 
-export const selectCurrentChatId = (state: { chats: ChatsState }) => state.chats.currentChatId;
+export const selectCurrentChatId = (state: { chats: ChatsState }) =>
+  state.chats.currentChatId;
 
 export const selectCurrentChat = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
   selectCurrentChatId,
-  (chats, currentChatId) => currentChatId ? chats[currentChatId] : null
+  (chats, currentChatId) => {
+    if (!currentChatId) return null;
+    const chat = chats[currentChatId];
+    // Return null if chat is deleted
+    if (!chat || chat.deleted) return null;
+    return chat;
+  }
 );
 
 export const selectCurrentMessages = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
   selectCurrentChatId,
-  (chats, currentChatId) => currentChatId ? chats[currentChatId].messages : []
+  (chats, currentChatId) => {
+    if (!currentChatId) return [];
+    const chat = chats[currentChatId];
+    if (!chat || chat.deleted) return [];
+    // Filter out deleted messages
+    return filterActiveMessages(chat.messages);
+  }
 );
 
 export const selectCurrentMemories = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
   selectCurrentChatId,
-  (chats, currentChatId) => currentChatId ? chats[currentChatId].memories : []
-);
-
-export const selectModel = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.model
-);
-
-export const selectKeepGoing = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.keepGoing
-);
-
-export const selectOutsideBox = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.outsideBox
-);
-
-export const selectHolisticTherapist = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.holisticTherapist
-);
-
-export const selectCommunicationStyle = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.communicationStyle
-);
-
-export const selectHumanPrompt = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.humanPrompt
+  (chats, currentChatId) =>
+    currentChatId ? chats[currentChatId]?.memories || [] : []
 );
 
 export const selectAutoGenerateAnswer = createSelector(
@@ -77,13 +79,17 @@ export const selectAutoGenerateAnswer = createSelector(
   (chats) => chats.auto_generate_answer
 );
 
-export const selectLanguage = createSelector(
-  (state: { chats: ChatsState }) => state.chats,
-  (chats) => chats.language
-);
-
 export const selectDraftInputText = createSelector(
   (state: { chats: ChatsState }) => state.chats.chats,
   (_: any, chatId: string) => chatId,
-  (chats, chatId) => chatId && chats[chatId] ? (chats[chatId].draftInputText || '') : ''
+  (chats, chatId) =>
+    chatId && chats[chatId] ? chats[chatId].draftInputText || "" : ""
+);
+
+/**
+ * Select all chats including deleted ones (for sync purposes)
+ */
+export const selectAllChatsIncludingDeleted = createSelector(
+  (state: { chats: ChatsState }) => state.chats.chats,
+  (chats) => Object.values(chats)
 );

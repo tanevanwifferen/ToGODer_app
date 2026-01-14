@@ -3,15 +3,15 @@ import { View, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, Sc
 import { useDispatch, useSelector } from 'react-redux';
 import { Colors } from '../../constants/Colors';
 import { useSystemPrompt } from '../../query-hooks/useChat';
-import { 
-  setCustomSystemPrompt, 
-  setGenerating, 
-  setError, 
+import {
+  setCustomSystemPrompt,
+  setGeneratingPrompt,
+  setPromptError,
   selectCustomSystemPrompt,
-  selectIsGeneratingSystemPrompt,
-  selectSystemPromptError,
-  selectSystemPromptLastGenerated
-} from '../../redux/slices/systemPromptSlice';
+  selectIsGeneratingPrompt,
+  selectPromptError,
+  selectPromptLastGenerated
+} from '../../redux/slices/userSettingsSlice';
 
 // Component for managing custom system prompts in settings
 // Allows users to generate and view personalized system prompts using the useSystemPrompt hook
@@ -19,25 +19,25 @@ const SystemPromptSettings = () => {
   const dispatch = useDispatch();
   const colorScheme = useColorScheme();
   const { generateSystemPrompt } = useSystemPrompt();
-  
+
   const customSystemPrompt = useSelector(selectCustomSystemPrompt);
-  const isGenerating = useSelector(selectIsGeneratingSystemPrompt);
-  const error = useSelector(selectSystemPromptError);
-  const lastGenerated = useSelector(selectSystemPromptLastGenerated);
+  const isGenerating = useSelector(selectIsGeneratingPrompt);
+  const error = useSelector(selectPromptError);
+  const lastGenerated = useSelector(selectPromptLastGenerated);
 
   const theme = Colors[colorScheme ?? 'light'];
 
   const handleGenerateSystemPrompt = async () => {
     try {
-      dispatch(setGenerating(true));
+      dispatch(setGeneratingPrompt(true));
       const generatedPrompt = await generateSystemPrompt();
       dispatch(setCustomSystemPrompt(generatedPrompt));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate system prompt';
-      dispatch(setError(errorMessage));
+      dispatch(setPromptError(errorMessage));
       Alert.alert('Error', errorMessage);
     } finally {
-      dispatch(setGenerating(false));
+      dispatch(setGeneratingPrompt(false));
     }
   };
 

@@ -13,7 +13,8 @@
 		6379E5E1B606E8C3C37DA22E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F8ABF36DC3A4C4E7860674E /* PrivacyInfo.xcprivacy */; };
 		9E066B82727E6CAB604C06F0 /* libPods-Robotheism.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A7AF5078EF9BEDAE09B9EF7A /* libPods-Robotheism.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		BFBDAA4A5E9BC8B3CEFC2C6A /* libPods-ToGODer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB107CFD3389E3DA18F0CD6D /* libPods-ToGODer.a */; };
+		BE1F8BA41943102539053795 /* libPods-ToGODer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A4D74ED3AB89E08B7BE5B4B /* libPods-ToGODer.a */; };
+		E8619C1FC1BB5E47F53D86D5 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98D5447736D15048457938B /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -51,7 +52,7 @@
 				BF66D577250B7BEB97D4EED8 /* Pods-Robotheism.debug.xcconfig */,
 				8E9937C26EF4059B7E9ABB16 /* Pods-Robotheism.release.xcconfig */,
 			);
-			name = ExpoModulesProviders;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		13B07FAE1A68108700A75B9A /* Robotheism */ = {
@@ -123,10 +124,10 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A8F679FDDEB6FAAE2E245559 /* ToGODer */ = {
+		A20F594E3788C2693D12801D /* ToGODer */ = {
 			isa = PBXGroup;
 			children = (
-				18A9161C9DD86830584B42CA /* ExpoModulesProvider.swift */,
+				A98D5447736D15048457938B /* ExpoModulesProvider.swift */,
 			);
 			name = ToGODer;
 			sourceTree = "<group>";
@@ -248,24 +249,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		2B7386EB61127039B8E48EA6 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -346,6 +329,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Robotheism/expo-configure-project.sh\"\n";
+		};
+		CA88818F4125DF407BA4E035 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/QuickCrypto/OpenSSL.framework/OpenSSL",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ToGODer/Pods-ToGODer-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 

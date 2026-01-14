@@ -3,10 +3,14 @@
  * Handles token refresh and re-authentication when needed
  */
 
-import { clearAuth, selectIsAuthenticated, setAuthData } from '@/redux/slices/authSlice';
-import { AuthApiClient } from '../apiClients/AuthApiClient';
-import { store } from '../redux/store';
-import { AppState } from 'react-native';
+import {
+  clearAuth,
+  selectIsAuthenticated,
+  setAuthData,
+} from "../redux/slices/authSlice";
+import { AuthApiClient } from "../apiClients/AuthApiClient";
+import { store } from "../redux/store";
+import { AppState } from "react-native";
 
 /**
  * Service class for managing authentication lifecycle
@@ -14,7 +18,7 @@ import { AppState } from 'react-native';
  * Stores credentials securely for automatic re-authentication
  */
 export class AuthService {
-  private static refreshInterval: NodeJS.Timeout | null = null;
+  private static refreshInterval: NodeJS.Timeout | number | null = null;
   public static get RefreshInterval() {
     return AuthService.refreshInterval;
   }
@@ -84,8 +88,10 @@ export class AuthService {
       return;
     }
 
-    const shouldRefresh = lastTokenRefresh && 
-      (Date.now() - lastTokenRefresh > this.REFRESH_INTERVAL - this.TOKEN_EXPIRY_BUFFER);
+    const shouldRefresh =
+      lastTokenRefresh &&
+      Date.now() - lastTokenRefresh >
+        this.REFRESH_INTERVAL - this.TOKEN_EXPIRY_BUFFER;
 
     if (shouldRefresh) {
       try {
@@ -103,20 +109,20 @@ export class AuthService {
    * Clears auth state if re-authentication fails
    */
   public static async tryReAuthenticate(
-    email: string | null = null, 
+    email: string | null = null,
     password: string | null = null
   ) {
     // Use provided credentials or fall back to stored ones
     const useEmail = email || this.storedEmail;
     const usePassword = password || this.storedPassword;
-    
+
     if (useEmail && usePassword) {
       try {
         const response = await AuthApiClient.login(useEmail, usePassword);
         store.dispatch(setAuthData(response));
       } catch (error) {
         store.dispatch(clearAuth());
-        console.error('Re-authentication failed:', error);
+        console.error("Re-authentication failed:", error);
       }
     } else {
       store.dispatch(clearAuth());
@@ -143,13 +149,16 @@ export class AuthService {
    * Sets up app focus monitoring
    */
   static startAppFocusHandler() {
-    this.appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        // When app becomes active, get a fresh token if possible
-        const state = store.getState();
-        this.tryReAuthenticate(state.auth.email, state.auth.password);
+    this.appStateSubscription = AppState.addEventListener(
+      "change",
+      (nextAppState) => {
+        if (nextAppState === "active") {
+          // When app becomes active, get a fresh token if possible
+          const state = store.getState();
+          this.tryReAuthenticate(state.auth.email, state.auth.password);
+        }
       }
-    });
+    );
   }
 
   /**

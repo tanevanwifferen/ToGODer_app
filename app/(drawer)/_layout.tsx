@@ -15,6 +15,7 @@ import { usePasscode } from "../../hooks/usePasscode";
 import { EditPasscodeModal } from "../../components/passcode/PasscodeModal";
 import { LockScreen } from "../../components/passcode/LockScreen";
 import { ExternalDrawerLink } from "../../components/drawer/ExternalDrawerLink";
+import { ProjectSelector } from "../../components/drawer/ProjectSelector";
 import { useMemoryCheck } from "../../hooks/useMemoryCheck";
 import { DreamingView } from "../../components/DreamingView";
 
@@ -39,12 +40,19 @@ export default function DrawerLayout() {
           headerTintColor: Colors[colorScheme ?? "light"].tint,
           drawerType: "front",
           drawerItemStyle: {
-            // Hide any routes that start with shared/ except the main shared route
-            display: route.name.startsWith('shared/') && route.name !== 'shared' ? 'none' : undefined
+            // Hide any routes that start with chat/, shared/, or projects/ except the main routes
+            // Also hide the standalone 'chat' route
+            display: route.name === 'chat' ||
+                     route.name.startsWith('chat/') ||
+                     (route.name.startsWith('shared/') && route.name !== 'shared') ||
+                     (route.name.startsWith('projects/') && route.name !== 'projects')
+              ? 'none'
+              : undefined
           }
         })}
         drawerContent={(props: DrawerContentComponentProps) => (
           <DrawerContentScrollView {...props}>
+            <ProjectSelector />
             <DrawerItemList {...props} />
             <ExternalDrawerLink
               href="https://github.com/tanevanwifferen/ToGODer"
@@ -65,6 +73,15 @@ export default function DrawerLayout() {
             title: "Chat",
             drawerIcon: ({ color }: { color: string }) => (
               <IconSymbol size={28} name="house.fill" color={color} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="projects"
+          options={{
+            title: "Projects",
+            drawerIcon: ({ color }: { color: string }) => (
+              <IconSymbol size={28} name="folder.fill" color={color} />
             ),
           }}
         />

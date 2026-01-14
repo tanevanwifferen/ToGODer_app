@@ -1,8 +1,9 @@
+import '../polyfills';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
-import { getShareUrl } from '@/constants/Env';
+import { getShareUrl } from '../constants/Env';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -17,7 +18,7 @@ import { ExperienceProvider } from '../components/providers/ExperienceProvider';
 import { RouteProvider } from '../components/providers/RouteProvider';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { useInitialization } from '../hooks/useInitialization';
-import { useInitialize } from '@/hooks/useInitialize';
+import { useInitialize } from '../hooks/useInitialize';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -38,10 +39,29 @@ export default function RootLayout() {
     AntDesign: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf"),
   });
 
-  const init = useInitialize();
+  const _init = useInitialize();
 
   // Handle deep linking
   useEffect(() => {
+    // Parse and handle the deep link URL
+    const handleDeepLink = (url: string) => {
+      const { hostname, path } = Linking.parse(url);
+      
+      // Get hostname from config (app.json -> expo.extra.shareUrl)
+      const shareUrl = getShareUrl();
+      const validHostname = shareUrl ? new URL(shareUrl).hostname : null;
+      
+      // Check if it's a shared chat URL from either the app scheme or web URL
+      if (path) {
+        // Handle both app scheme and web URL formats
+        const match = path.match(/^shared\/([^\/]+)$/) || path.match(/^\/shared\/([^\/]+)$/);
+        if (match && (!hostname || hostname === validHostname)) {
+          const chatId = match[1];
+          router.push(`/shared/${chatId}`);
+        }
+      }
+    };
+
     // Handle URLs when app is already running
     const subscription = Linking.addEventListener('url', (event) => {
       handleDeepLink(event.url);
@@ -57,26 +77,7 @@ export default function RootLayout() {
     return () => {
       subscription.remove();
     };
-  }, []);
-
-  // Parse and handle the deep link URL
-  const handleDeepLink = (url: string) => {
-    const { hostname, path } = Linking.parse(url);
-    
-    // Get hostname from config (app.json -> expo.extra.shareUrl)
-    const shareUrl = getShareUrl();
-    const validHostname = shareUrl ? new URL(shareUrl).hostname : null;
-    
-    // Check if it's a shared chat URL from either the app scheme or web URL
-    if (path) {
-      // Handle both app scheme and web URL formats
-      const match = path.match(/^shared\/([^\/]+)$/) || path.match(/^\/shared\/([^\/]+)$/);
-      if (match && (!hostname || hostname === validHostname)) {
-        const chatId = match[1];
-        router.push(`/shared/${chatId}`);
-      }
-    }
-  };
+  }, [router]);
 
   useEffect(() => {
     if (loaded) {

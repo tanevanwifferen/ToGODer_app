@@ -23,6 +23,7 @@ import { ShareApiClient } from '../../apiClients/ShareApiClient';
 import { addChat, setCurrentChat } from '../../redux/slices/chatsSlice';
 import Toast from 'react-native-toast-message';
 import { useQueryClient } from '@tanstack/react-query';
+import { v4 as uuidv4 } from 'uuid';
 
 interface SharedConversationViewProps {
   conversation: SharedConversation;
@@ -39,8 +40,8 @@ export function SharedConversationView({ conversation, onBack }: SharedConversat
 
   const handleCopy = () => {
     // Create a new chat ID
-    const newChatId = `chat_${Date.now()}`;
-    
+    const newChatId = uuidv4();
+
     // Parse messages and transform to ApiChatMessage format
     const messages = JSON.parse(conversation.messages).map((msg: any) => ({
       role: msg.message.role,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View, useColorScheme, TouchableOpacity } from "react-native";
 import {
   InputToolbar,
   InputToolbarProps,
@@ -16,18 +16,26 @@ interface CustomInputToolbarProps extends InputToolbarProps<IMessage> {
   showPrompts: boolean;
   inputText: string;
   filteredPrompts: [string, { description: string }][];
+  libraryIntegrationEnabled: boolean;
+  onToggleLibraryIntegration: (value: boolean) => void;
   onInputTextChanged: (text: string) => void;
   onSelectPrompt: (key: string) => void;
   onSend: (messages: {text:string}[]) => void;
+  isGenerating?: boolean;
+  onCancel?: () => void;
 }
 
 export function CustomInputToolbar({
   showPrompts,
   inputText,
   filteredPrompts,
+  libraryIntegrationEnabled,
+  onToggleLibraryIntegration,
   onInputTextChanged,
   onSelectPrompt,
   onSend,
+  isGenerating,
+  onCancel,
   ...toolbarProps
 }: CustomInputToolbarProps) {
   const colorScheme = useColorScheme();
@@ -63,6 +71,21 @@ export function CustomInputToolbar({
   );
 
   const renderSend = (props: SendProps<IMessage>, onSend: any, inputText: string) => {
+    // Show stop button when generating
+    if (isGenerating && onCancel) {
+      return (
+        <View style={styles.sendContainer}>
+          <TouchableOpacity onPress={onCancel} style={styles.sendButton}>
+            <Ionicons
+              name="stop-circle"
+              size={28}
+              color={theme.tint}
+            />
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
       <Send
         {...props}
@@ -71,9 +94,9 @@ export function CustomInputToolbar({
         disabled={!props.text}
       >
         <View style={[styles.sendButton, !props.text && styles.sendButtonDisabled]}>
-          <Ionicons 
-            name="send" 
-            size={24} 
+          <Ionicons
+            name="send"
+            size={24}
             color={props.text ? theme.tint : (colorScheme === 'dark' ? '#4A4A4A' : '#B8B8B8')}
           />
         </View>
@@ -83,12 +106,13 @@ export function CustomInputToolbar({
 
   return (
     <View>
-      {showPrompts && (
-        <PromptSuggestions
-          prompts={filteredPrompts}
-          onSelectPrompt={onSelectPrompt}
-        />
-      )}
+      <PromptSuggestions
+        prompts={filteredPrompts}
+        showPrompts={showPrompts}
+        libraryIntegrationEnabled={libraryIntegrationEnabled}
+        onToggleLibraryIntegration={onToggleLibraryIntegration}
+        onSelectPrompt={onSelectPrompt}
+      />
       <InputToolbar
         {...toolbarProps}
         containerStyle={[

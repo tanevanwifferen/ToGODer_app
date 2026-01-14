@@ -3,6 +3,7 @@ import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 export interface PersonalState {
   data: any;
   persona: string;
+  updatedAt: number;
 }
 
 const initialState: PersonalState = {
@@ -26,6 +27,7 @@ const initialState: PersonalState = {
     friends: [],
   },
   persona: "",
+  updatedAt: Date.now(),
 };
 
 const personalSlice = createSlice({
@@ -37,14 +39,24 @@ const personalSlice = createSlice({
       action: PayloadAction<string | Record<string, any>>
     ) => {
       state.data = action.payload;
+      state.updatedAt = Date.now();
     },
     setPersona: (state, action: PayloadAction<string>) => {
       state.persona = action.payload;
+      state.updatedAt = Date.now();
+    },
+    setPersonalFromSync: (
+      state,
+      action: PayloadAction<{ data: any; persona: string; updatedAt: number }>
+    ) => {
+      state.data = action.payload.data;
+      state.persona = action.payload.persona;
+      state.updatedAt = action.payload.updatedAt;
     },
   },
 });
 
-export const { setPersonalData, setPersona } = personalSlice.actions;
+export const { setPersonalData, setPersona, setPersonalFromSync } = personalSlice.actions;
 
 export const selectPersonalData = createSelector(
   (state: { personal: PersonalState }) => state.personal,

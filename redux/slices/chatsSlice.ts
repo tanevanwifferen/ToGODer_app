@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ApiChatMessage, ChatSettings } from "../../model/ChatRequest";
+import { ApiChatMessage } from "../../model/ChatRequest";
+import { v4 as uuidv4 } from "uuid";
 
 export interface Chat {
   id: string;
@@ -9,9 +10,12 @@ export interface Chat {
   last_update?: number;
   memories: string[];
   draftInputText?: string;
+  projectId?: string;
+  deleted?: boolean; // Tombstone marker for sync
+  deletedAt?: number; // When the chat was deleted
 }
 
-export interface ChatsState extends ChatSettings {
+export interface ChatsState {
   chats: {
     [id: string]: Chat;
   };
@@ -21,16 +25,10 @@ export interface ChatsState extends ChatSettings {
 }
 
 const initialState: ChatsState = {
-  chats: {},
+  chats: {
+    [id: string]: Chat;
+  },
   currentChatId: null,
-  model: "meta-llama/llama-3.2-90b-vision-instruct",
-  humanPrompt: true,
-  keepGoing: true,
-  outsideBox: true,
-  holisticTherapist: true,
-  communicationStyle: 2,
-  assistant_name: "Robo",
-  language: "",
   auto_generate_answer: true,
 };
 
@@ -59,14 +57,17 @@ const chatsSlice = createSlice({
         return;
       }
       delete message.updateData;
+      const now = new Date().getTime();
       chat.messages.push({
         ...message,
-        timestamp: message.timestamp || new Date().getTime(),
+        id: message.id || uuidv4(), // Ensure message has ID for sync
+        timestamp: message.timestamp || now,
       });
       // Do not sort messages here; keep insertion order so streaming updates
       // using messageIndex remain stable for the just-appended placeholder.
-      chat.last_update = new Date().getTime();
-      state.auto_generate_answer = true;
+      chat.last_update = now;
+      // Only auto-generate when a USER message is appended; assistant/system should not flip this on
+      state.auto_generate_answer = message.role === "user";
     },
     // New: update message content/signature at a specific index (for streaming)
     updateMessageAtIndex: (
@@ -120,9 +121,15 @@ const chatsSlice = createSlice({
         return;
       }
       if (messageIndex >= 0 && messageIndex < chat.messages.length) {
-        // Create new array to trigger re-render
-        chat.messages = chat.messages.filter((_, i) => i !== messageIndex);
-        chat.last_update = new Date().getTime();
+        const now = new Date().getTime();
+        const message = chat.messages[messageIndex];
+
+        // Mark message as deleted (tombstone) for sync instead of removing
+        chat.messages = chat.messages.map((m, i) =>
+          i === messageIndex ? { ...m, deleted: true, deletedAt: now } : m
+        );
+
+        chat.last_update = now;
       }
       state.auto_generate_answer = false;
     },
@@ -138,16 +145,7 @@ const chatsSlice = createSlice({
       if (chat && messageIndex >= 0) {
         chat.messages.splice(messageIndex, 1);
       }
-    },
-    updateSettings: (state, action: PayloadAction<Partial<ChatSettings>>) => {
-      console.log("old_state", state.humanPrompt);
-      console.log("new_state", action.payload);
-      return {
-        ...state,
-        ...action.payload,
-        chats: state.chats, // Preserve existing chats
-        currentChatId: state.currentChatId, // Preserve current chat id
-      };
+      chat.last_update = new Date().getTime();
     },
     setTitle: (state, action: PayloadAction<{ id: string; title: string }>) => {
       const chat = state.chats[action.payload.id];
@@ -156,7 +154,14 @@ const chatsSlice = createSlice({
       }
     },
     deleteChat: (state, action: PayloadAction<string>) => {
-      delete state.chats[action.payload];
+      const chat = state.chats[action.payload];
+      if (chat) {
+        // Mark as deleted (tombstone) for sync instead of removing
+        const now = new Date().getTime();
+        chat.deleted = true;
+        chat.deletedAt = now;
+        chat.last_update = now;
+      }
       if (state.currentChatId === action.payload) {
         state.currentChatId = null;
       }
@@ -172,9 +177,9 @@ const chatsSlice = createSlice({
       state,
       action: PayloadAction<{ id: string; memories: string[] }>
     ) => {
-      var existing = state.chats[action.payload.id].memories;
+      const existing = state.chats[action.payload.id].memories;
       console.log("existing", existing);
-      for (let memory of action.payload.memories) {
+      for (const memory of action.payload.memories) {
         if (existing.includes(memory)) {
           continue;
         }
@@ -192,6 +197,67 @@ const chatsSlice = createSlice({
         chat.draftInputText = text;
       }
     },
+    // Explicitly control whether the UI should auto-trigger a response.
+    // This lets us turn it off as soon as a send starts to prevent duplicates.
+    setAutoGenerateAnswer: (state, action: PayloadAction<boolean>) => {
+      state.auto_generate_answer = action.payload;
+    },
+    setProjectForChat: (
+      state,
+      action: PayloadAction<{ chatId: string; projectId: string | undefined }>
+    ) => {
+      const chat = state.chats[action.payload.chatId];
+      if (chat) {
+        chat.projectId = action.payload.projectId;
+      }
+      chat.last_update = new Date().getTime();
+    },
+    // Edit a message and truncate all messages after it (for conversation branching)
+    editMessageAndTruncate: (
+      state,
+      action: PayloadAction<{
+        chatId: string;
+        messageIndex: number;
+        content: string;
+      }>
+    ) => {
+      const { chatId, messageIndex, content } = action.payload;
+      const chat = state.chats[chatId];
+      if (!chat) {
+        console.warn(`Chat ${chatId} not found when editing message`);
+        return;
+      }
+      if (messageIndex < 0 || messageIndex >= chat.messages.length) {
+        console.warn(
+          `Invalid message index ${messageIndex} for chat ${chatId}`
+        );
+        return;
+      }
+
+      // Create a new array with messages up to and including the edited message
+      const newMessages = chat.messages.slice(0, messageIndex + 1).map((m, i) =>
+        i === messageIndex
+          ? {
+              ...m,
+              content,
+              timestamp: new Date().getTime(),
+            }
+          : m
+      );
+
+      chat.messages = newMessages;
+      chat.last_update = new Date().getTime();
+      // Set to true since editing a user message typically means wanting a new response
+      state.auto_generate_answer = true;
+    },
+    // Set chats from sync - replaces all chats with synced data
+    setChatsFromSync: (state, action: PayloadAction<Record<string, Chat>>) => {
+      state.chats = action.payload;
+      // Keep current chat if it still exists, otherwise clear it
+      if (state.currentChatId && !action.payload[state.currentChatId]) {
+        state.currentChatId = null;
+      }
+    },
   },
 });
 
@@ -201,13 +267,16 @@ export const {
   updateMessageAtIndex,
   deleteMessage,
   deleteMessageByContent,
-  updateSettings,
   setTitle,
   deleteChat,
   setCurrentChat,
   clearAllChats,
   addMemories,
   updateDraftInputText,
+  setAutoGenerateAnswer,
+  setProjectForChat,
+  editMessageAndTruncate,
+  setChatsFromSync,
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;
