@@ -25,9 +25,7 @@ export interface ChatsState {
 }
 
 const initialState: ChatsState = {
-  chats: {
-    [id: string]: Chat;
-  },
+  chats: {},
   currentChatId: null,
   auto_generate_answer: true,
 };
