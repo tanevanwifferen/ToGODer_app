@@ -17,9 +17,9 @@ export class ExperienceService {
   static showLanguageInputIfNeeded(forceShow = false) {
     const state = store.getState();
     
-    // Check if we're at the chat route (root)
+    // Check if we're at a chat route (root or chat view)
     const currentRoute = RouteService.getCurrentRoute();
-    const isChatRoute = currentRoute === '/' || currentRoute === '/index';
+    const isChatRoute = currentRoute === '/' || currentRoute === '/index' || currentRoute.startsWith('/chat/');
     
     // Check if we're on a shared route
     const isSharedRoute = RouteService.isSharedRoute();
