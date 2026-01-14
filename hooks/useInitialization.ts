@@ -3,20 +3,21 @@
  * Replaces the static InitializationService to properly handle route-aware initialization.
  */
 
-import { useEffect } from 'react';
-import { store } from '../redux/store';
-import { ApiClient } from '../apiClients/ApiClient';
-import { AuthService } from '../services/AuthService';
-import { BalanceService } from '../services/BalanceService';
-import { MemoryLoopService } from '../services/MemoryLoopService';
-import { setGlobalConfig } from '../redux/slices/globalConfigSlice';
-import { addChat, setCurrentChat } from '../redux/slices/chatsSlice';
-import * as Calendar from 'expo-calendar';
-import { AuthApiClient } from '../apiClients/AuthApiClient';
-import { setAuthData } from '../redux/slices/authSlice';
-import { useRoute } from '../components/providers/RouteProvider';
-import { ExperienceService } from '../services/ExperienceService';
-import { v4 as uuidv4 } from 'uuid';
+import { useEffect } from "react";
+import { store } from "../redux/store";
+import { ApiClient } from "../apiClients/ApiClient";
+import { AuthService } from "../services/AuthService";
+import { BalanceService } from "../services/BalanceService";
+import { MemoryLoopService } from "../services/MemoryLoopService";
+import { setGlobalConfig } from "../redux/slices/globalConfigSlice";
+import { addChat, setCurrentChat } from "../redux/slices/chatsSlice";
+import * as Calendar from "expo-calendar";
+import { AuthApiClient } from "../apiClients/AuthApiClient";
+import { setAuthData } from "../redux/slices/authSlice";
+import { useRoute } from "../components/providers/RouteProvider";
+import { ExperienceService } from "../services/ExperienceService";
+import { v4 as uuidv4 } from "uuid";
+import { router } from "expo-router";
 
 export function useInitialization() {
   const { isSharedRoute } = useRoute();
@@ -49,18 +50,23 @@ export function useInitialization() {
 
         // Create initial chat
         const newChatId = uuidv4();
-        store.dispatch(addChat({
-          id: newChatId,
-          messages: [],
-          memories: [],
-        }));
+        store.dispatch(
+          addChat({
+            id: newChatId,
+            messages: [],
+            memories: [],
+          })
+        );
         store.dispatch(setCurrentChat(newChatId));
+        router.push({ pathname: "/chat/[id]", params: { id: newChatId } });
 
         // Mark app as no longer first launch and user as onboarded
-        store.dispatch(setGlobalConfig({
-          appFirstLaunch: false,
-          userOnboarded: true
-        }));
+        store.dispatch(
+          setGlobalConfig({
+            appFirstLaunch: false,
+            userOnboarded: true,
+          })
+        );
       }
 
       // Start token refresh service if user is authenticated
@@ -79,7 +85,10 @@ export function useInitialization() {
 
           isAuthenticated = true;
         } catch (error) {
-          console.error("Failed to authenticate with stored credentials:", error);
+          console.error(
+            "Failed to authenticate with stored credentials:",
+            error
+          );
         }
       }
 
