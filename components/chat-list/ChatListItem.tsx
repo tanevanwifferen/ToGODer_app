@@ -228,7 +228,7 @@ export function ChatListItem({
               )}
             </View>
             <Text style={[styles.timestamp, { color: theme.text + "99" }]}>
-              {formatLastUpdate(item.last_update)}
+              {formatLastUpdate(item.messages[item.messages.length - 1]?.timestamp as number ?? new Date().getTime())}
             </Text>
           </View>
         </TouchableOpacity>
