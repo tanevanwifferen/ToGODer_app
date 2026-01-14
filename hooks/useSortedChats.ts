@@ -1,6 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { selectChats, selectChatRequests, selectChatList } from "../redux/slices/chatSelectors";
+import {
+  selectChats,
+  selectChatRequests,
+  selectChatList,
+} from "../redux/slices/chatSelectors";
 import { Chat, ChatsState } from "../redux/slices/chatsSlice";
 import { selectProjects } from "../redux/slices/projectsSlice";
 
@@ -35,16 +39,23 @@ export const useSortedChats = () => {
     return regularChats.filter((chat) => chat.projectId === currentProjectId);
   }, [regularChats, currentProjectId]);
 
+  function get_last_updated(chat: Chat) {
+    return Math.max(
+      chat.messages[0].timestamp as number,
+      chat.messages[chat.messages.length - 1].timestamp as number
+    );
+  }
+
   useEffect(() => {
     const sortedRequests = [...filteredChatRequests].sort((a, b) =>
-      (b.last_update ?? 0) - (a.last_update ?? 0) < 0 ? -1 : 1
+      (get_last_updated(b) ?? 0) - (get_last_updated(a) ?? 0) < 0 ? -1 : 1
     );
     setSortedChatRequests(sortedRequests);
   }, [filteredChatRequests]);
 
   useEffect(() => {
     const sorted = [...filteredRegularChats].sort((a, b) =>
-      (b.last_update ?? 0) - (a.last_update ?? 0) < 0 ? -1 : 1
+      (get_last_updated(b) ?? 0) - (get_last_updated(a) ?? 0) < 0 ? -1 : 1
     );
     setSortedChats(sorted);
   }, [filteredRegularChats]);
