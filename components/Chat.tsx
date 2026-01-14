@@ -160,6 +160,8 @@ export function Chat({ chatId, onBack }: ChatProps) {
       onToggleLibraryIntegration={handleLibraryIntegrationToggle}
       onInputTextChanged={handleInputTextChanged}
       onSelectPrompt={handleSelectPrompt}
+      isGenerating={typing}
+      onCancel={cancelRequest}
     />
   );
 
