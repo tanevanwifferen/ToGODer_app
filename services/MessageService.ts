@@ -450,6 +450,84 @@ export class MessageService {
         };
       }
 
+      case "list_directory": {
+        const depth = toolCall.arguments.depth ?? 1;
+
+        // Helper to get children at a specific depth
+        const listChildren = (parentId: string | null, currentDepth: number): Array<{name: string; type: string; id: string; path: string}> => {
+          const children = artifacts.filter((a) => a.parentId === parentId);
+          const result: Array<{name: string; type: string; id: string; path: string}> = [];
+
+          for (const child of children) {
+            const childPath = parentId === null
+              ? `/${child.name}`
+              : (() => {
+                  const parts: string[] = [child.name];
+                  let current = child;
+                  while (current.parentId) {
+                    const parent = artifacts.find((a) => a.id === current.parentId);
+                    if (parent) {
+                      parts.unshift(parent.name);
+                      current = parent;
+                    } else {
+                      break;
+                    }
+                  }
+                  return "/" + parts.join("/");
+                })();
+
+            result.push({
+              name: child.name,
+              type: child.type,
+              id: child.id,
+              path: childPath,
+            });
+
+            // Recursively get nested children if depth > 1 and this is a folder
+            if (currentDepth < depth && child.type === "folder") {
+              result.push(...listChildren(child.id, currentDepth + 1));
+            }
+          }
+
+          return result;
+        };
+
+        // Determine the parent ID for the requested path
+        let targetParentId: string | null = null;
+        if (path !== "/" && path !== "") {
+          const targetFolder = findArtifactByPath(path);
+          if (!targetFolder) {
+            return {
+              message: `Directory not found at path "${path}"`,
+              artifactPath: path,
+              isError: true,
+              operation: "read" as const,
+            };
+          }
+          if (targetFolder.type !== "folder") {
+            return {
+              message: `Path "${path}" is not a directory`,
+              artifactPath: path,
+              isError: true,
+              operation: "read" as const,
+            };
+          }
+          targetParentId = targetFolder.id;
+        }
+
+        const contents = listChildren(targetParentId, 1);
+        const listing = JSON.stringify(contents, null, 2);
+
+        return {
+          message: contents.length > 0
+            ? `Directory listing for "${path}":\n${listing}`
+            : `Directory "${path}" is empty`,
+          artifactPath: path,
+          isError: false,
+          operation: "read" as const,
+        };
+      }
+
       default:
         return {
           message: `Unknown tool "${(toolCall as any).name}"`,
