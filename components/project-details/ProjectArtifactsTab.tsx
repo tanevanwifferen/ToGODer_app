@@ -2,12 +2,8 @@ import React, { useState } from "react";
 import {
   StyleSheet,
   View,
-  Text,
   TouchableOpacity,
-  Alert,
-  Platform,
   useColorScheme,
-  ActionSheetIOS,
 } from "react-native";
 import { useDispatch } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
@@ -23,6 +19,9 @@ import { ArtifactTree } from "../artifact-tree";
 import { IconSymbol } from "../ui/IconSymbol";
 import { ArtifactEditorModal } from "./ArtifactEditorModal";
 import { MoveArtifactModal } from "./MoveArtifactModal";
+import { TextInputModal } from "./TextInputModal";
+import { DeleteConfirmModal } from "./DeleteConfirmModal";
+import { ArtifactActionsModal } from "./ArtifactActionsModal";
 
 interface ProjectArtifactsTabProps {
   projectId: string;
@@ -39,89 +38,78 @@ export function ProjectArtifactsTab({ projectId }: ProjectArtifactsTabProps) {
   const [moveModalVisible, setMoveModalVisible] = useState(false);
   const [movingArtifact, setMovingArtifact] = useState<Artifact | null>(null);
 
-  const handleAddFolder = () => {
-    const createFolder = (name: string) => {
-      if (name) {
-        dispatch(
-          addArtifact({
-            id: uuidv4(),
-            projectId,
-            name,
-            type: "folder",
-            parentId: selectedArtifact?.type === "folder" ? selectedArtifact.id : null,
-          })
-        );
-      }
-    };
+  // New modal states
+  const [createFolderModalVisible, setCreateFolderModalVisible] = useState(false);
+  const [createFileModalVisible, setCreateFileModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletingArtifact, setDeletingArtifact] = useState<Artifact | null>(null);
+  const [actionsModalVisible, setActionsModalVisible] = useState(false);
+  const [actionArtifact, setActionArtifact] = useState<Artifact | null>(null);
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [renamingArtifact, setRenamingArtifact] = useState<Artifact | null>(null);
 
-    if (Platform.OS === "web") {
-      const name = prompt("Folder name:");
-      if (name) createFolder(name);
-    } else {
-      Alert.prompt(
-        "New Folder",
-        "Enter folder name:",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Create", onPress: (name) => name && createFolder(name) },
-        ],
-        "plain-text"
-      );
-    }
+  const handleAddFolder = () => {
+    setCreateFolderModalVisible(true);
+  };
+
+  const handleCreateFolder = (name: string) => {
+    dispatch(
+      addArtifact({
+        id: uuidv4(),
+        projectId,
+        name,
+        type: "folder",
+        parentId: selectedArtifact?.type === "folder" ? selectedArtifact.id : null,
+      })
+    );
   };
 
   const handleAddFile = () => {
-    const createFile = (name: string) => {
-      if (name) {
-        const newArtifact: Omit<Artifact, "createdAt" | "updatedAt"> = {
-          id: uuidv4(),
-          projectId,
-          name,
-          type: "file",
-          parentId: selectedArtifact?.type === "folder" ? selectedArtifact.id : null,
-          content: "",
-        };
-        dispatch(addArtifact(newArtifact));
-      }
-    };
+    setCreateFileModalVisible(true);
+  };
 
-    if (Platform.OS === "web") {
-      const name = prompt("File name:");
-      if (name) createFile(name);
-    } else {
-      Alert.prompt(
-        "New File",
-        "Enter file name:",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Create", onPress: (name) => name && createFile(name) },
-        ],
-        "plain-text"
-      );
-    }
+  const handleCreateFile = (name: string) => {
+    const newArtifact: Omit<Artifact, "createdAt" | "updatedAt"> = {
+      id: uuidv4(),
+      projectId,
+      name,
+      type: "file",
+      parentId: selectedArtifact?.type === "folder" ? selectedArtifact.id : null,
+      content: "",
+    };
+    dispatch(addArtifact(newArtifact));
   };
 
   const handleDeleteArtifact = (artifact: Artifact) => {
-    const message =
-      artifact.type === "folder"
-        ? `Delete folder "${artifact.name}" and all its contents?`
-        : `Delete file "${artifact.name}"?`;
+    setDeletingArtifact(artifact);
+    setDeleteModalVisible(true);
+  };
 
-    const confirmDelete = () => {
-      dispatch(deleteArtifact(artifact.id));
-      if (selectedArtifact?.id === artifact.id) {
+  const handleConfirmDelete = () => {
+    if (deletingArtifact) {
+      dispatch(deleteArtifact(deletingArtifact.id));
+      if (selectedArtifact?.id === deletingArtifact.id) {
         setSelectedArtifact(null);
       }
-    };
-
-    if (Platform.OS === "web") {
-      if (confirm(message)) confirmDelete();
-    } else {
-      Alert.alert("Delete", message, [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: confirmDelete },
-      ]);
     }
+    setDeletingArtifact(null);
+  };
+
+  const handleRenameArtifact = (artifact: Artifact) => {
+    setRenamingArtifact(artifact);
+    setRenameModalVisible(true);
+  };
+
+  const handleConfirmRename = (newName: string) => {
+    if (renamingArtifact) {
+      dispatch(
+        updateArtifact({
+          id: renamingArtifact.id,
+          updates: { name: newName },
+        })
+      );
+    }
+    setRenamingArtifact(null);
   };
 
   const handleMoveArtifact = (artifact: Artifact) => {
@@ -138,49 +126,8 @@ export function ProjectArtifactsTab({ projectId }: ProjectArtifactsTabProps) {
   };
 
   const handleLongPressArtifact = (artifact: Artifact) => {
-    const options = ["Move to...", "Delete", "Cancel"];
-    const destructiveButtonIndex = 1;
-    const cancelButtonIndex = 2;
-
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options,
-          destructiveButtonIndex,
-          cancelButtonIndex,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 0) {
-            handleMoveArtifact(artifact);
-          } else if (buttonIndex === 1) {
-            handleDeleteArtifact(artifact);
-          }
-        }
-      );
-    } else if (Platform.OS === "web") {
-      // Web fallback - show simple confirm for delete, or move modal
-      const action = prompt("Enter 'move' to move or 'delete' to delete:");
-      if (action?.toLowerCase() === "move") {
-        handleMoveArtifact(artifact);
-      } else if (action?.toLowerCase() === "delete") {
-        handleDeleteArtifact(artifact);
-      }
-    } else {
-      // Android fallback using Alert
-      Alert.alert(
-        artifact.name,
-        "Choose an action",
-        [
-          { text: "Move to...", onPress: () => handleMoveArtifact(artifact) },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: () => handleDeleteArtifact(artifact),
-          },
-          { text: "Cancel", style: "cancel" },
-        ]
-      );
-    }
+    setActionArtifact(artifact);
+    setActionsModalVisible(true);
   };
 
   const handleSelectArtifact = (artifact: Artifact) => {
@@ -253,6 +200,60 @@ export function ProjectArtifactsTab({ projectId }: ProjectArtifactsTabProps) {
         onClose={() => {
           setMoveModalVisible(false);
           setMovingArtifact(null);
+        }}
+      />
+
+      <TextInputModal
+        visible={createFolderModalVisible}
+        title="New Folder"
+        placeholder="Folder name"
+        submitLabel="Create"
+        onSubmit={handleCreateFolder}
+        onClose={() => setCreateFolderModalVisible(false)}
+      />
+
+      <TextInputModal
+        visible={createFileModalVisible}
+        title="New File"
+        placeholder="File name"
+        submitLabel="Create"
+        onSubmit={handleCreateFile}
+        onClose={() => setCreateFileModalVisible(false)}
+      />
+
+      <TextInputModal
+        visible={renameModalVisible}
+        title="Rename"
+        placeholder="New name"
+        initialValue={renamingArtifact?.name ?? ""}
+        submitLabel="Rename"
+        onSubmit={handleConfirmRename}
+        onClose={() => {
+          setRenameModalVisible(false);
+          setRenamingArtifact(null);
+        }}
+      />
+
+      <DeleteConfirmModal
+        visible={deleteModalVisible}
+        itemName={deletingArtifact?.name ?? ""}
+        itemType={deletingArtifact?.type ?? "file"}
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          setDeleteModalVisible(false);
+          setDeletingArtifact(null);
+        }}
+      />
+
+      <ArtifactActionsModal
+        visible={actionsModalVisible}
+        artifact={actionArtifact}
+        onRename={() => actionArtifact && handleRenameArtifact(actionArtifact)}
+        onMove={() => actionArtifact && handleMoveArtifact(actionArtifact)}
+        onDelete={() => actionArtifact && handleDeleteArtifact(actionArtifact)}
+        onClose={() => {
+          setActionsModalVisible(false);
+          setActionArtifact(null);
         }}
       />
     </View>

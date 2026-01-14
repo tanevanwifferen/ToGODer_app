@@ -15,13 +15,14 @@ import { getApiUrl } from "../constants/Env";
 
 export interface ArtifactToolCall {
   id: string;
-  name: "read_artifact" | "write_artifact" | "delete_artifact" | "move_artifact";
+  name: "read_artifact" | "write_artifact" | "delete_artifact" | "move_artifact" | "list_directory";
   arguments: {
     path: string;
     content?: string;
     name?: string;
     mimeType?: string;
     destination?: string;
+    depth?: number;
   };
 }
 
@@ -137,6 +138,27 @@ export const ARTIFACT_TOOL_SCHEMAS: ToolSchema[] = [
           }
         },
         required: ["path", "destination"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_directory",
+      description: "List the contents of a directory incrementally. Use this for navigating the artifact tree without loading everything at once. Returns immediate children of the specified path.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "The directory path to list (e.g., '/' for root, '/src' for a subfolder)"
+          },
+          depth: {
+            type: "number",
+            description: "How many levels deep to list (default: 1 for immediate children only, use higher values for nested listing)"
+          }
+        },
+        required: ["path"]
       }
     }
   }
