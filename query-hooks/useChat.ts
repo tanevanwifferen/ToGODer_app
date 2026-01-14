@@ -14,9 +14,10 @@ import {
   selectLanguage,
   selectHolisticTherapist,
   selectLibraryIntegrationEnabled,
-} from "../redux/slices/chatSelectors";
+  selectAssistantName,
+  selectCustomSystemPrompt,
+} from "../redux/slices/userSettingsSlice";
 import { selectPersonalData } from "../redux/slices/personalSlice";
-import { selectCustomSystemPrompt } from "../redux/slices/systemPromptSlice";
 import { ChatResponse, SystemPromptResponse } from "../model/ChatResponse";
 import { CalendarService } from "../services/CalendarService";
 import { Platform } from "react-native";
@@ -45,9 +46,7 @@ export function useChat() {
   const communicationStyle = useSelector(selectCommunicationStyle);
   const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled);
   const personalData = useSelector(selectPersonalData);
-  const assistant_name = useSelector(
-    (state: RootState) => state.chats.assistant_name
-  );
+  const assistant_name = useSelector(selectAssistantName);
   const customSystemPrompt = useSelector(selectCustomSystemPrompt);
   const persona = useSelector((state: RootState) => state.personal.persona);
   let staticData: () => Promise<any> = async () => {
@@ -227,6 +226,8 @@ export function useChat() {
         libraryIntegrationEnabled ?? false,
         memoryLoopCount,
         memoryLoopLimitReached,
+        undefined, // artifactIndex
+        undefined, // tools
         signal
       )) {
         yield evt;
@@ -273,9 +274,7 @@ export function useSystemPrompt() {
   const preferredLanguage = useSelector(selectLanguage);
   const communicationStyle = useSelector(selectCommunicationStyle);
   const personalData = useSelector(selectPersonalData);
-  const assistant_name = useSelector(
-    (state: RootState) => state.chats.assistant_name
-  );
+  const assistant_name = useSelector(selectAssistantName);
 
   let staticData: () => Promise<any> = async () => {
     let sd: any = {

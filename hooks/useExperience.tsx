@@ -3,9 +3,10 @@
  * Centralizes all language input modal visibility logic and handles language submission.
  */
 import { useDispatch, useSelector } from 'react-redux';
-import { addMessage, updateSettings } from '../redux/slices/chatsSlice';
+import { addMessage } from '../redux/slices/chatsSlice';
 import { selectCurrentChat } from '../redux/slices/chatSelectors';
 import { setModalVisible } from '../redux/slices/experienceSlice';
+import { setLanguage, selectLanguage } from '../redux/slices/userSettingsSlice';
 import { ExperienceApiClient } from '../apiClients/ExperienceApiClient';
 import { selectPersonalData } from '../redux/slices/personalSlice';
 import { LanguageInputModal } from '../components/experience/LanguageInputModal';
@@ -19,9 +20,9 @@ export const useExperience = () => {
   const personalData = useSelector(selectPersonalData);
   const { isSharedRoute } = useRoute();
   const pathname = usePathname();
-  
+
   // Get language from state
-  const language = useSelector((state: any) => state.chats.language);
+  const language = useSelector(selectLanguage);
   const hasLanguageConfigured = language !== '' && language != null;
 
   // TODO: add calendar / health
@@ -30,7 +31,7 @@ export const useExperience = () => {
 
   const handleSubmit = async (lang: string) => {
     dispatch(setModalVisible(false));
-    dispatch(updateSettings({language:lang}));
+    dispatch(setLanguage(lang));
     
     try {
       const response = await ExperienceApiClient.getExperience({

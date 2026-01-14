@@ -1,19 +1,29 @@
 import { Platform } from "react-native";
-import { AndroidHealthService } from "../health/AndroidHealthService";
-import { IOSHealthService } from "../health/IOSHealthService";
-import { WebHealthService } from "../health/WebHealthService";
 import { IHealthService } from "../health/types";
 
+/**
+ * HealthService facade that provides platform-specific health data implementations.
+ *
+ * - iOS: Uses @kingstinct/react-native-healthkit via IOSHealthService
+ * - Android: Uses Google Fit via AndroidHealthService (not yet implemented)
+ * - Web: Returns empty data via WebHealthService
+ *
+ * Platform-specific implementations are loaded dynamically to avoid bundling
+ * native modules (like react-native-healthkit) in web builds.
+ */
 export class HealthService {
   private static instance: IHealthService;
 
   private static getInstance(): IHealthService {
     if (!HealthService.instance) {
       if (Platform.OS === "ios") {
+        const { IOSHealthService } = require("./IOSHealthService");
         HealthService.instance = new IOSHealthService();
       } else if (Platform.OS === "android") {
+        const { AndroidHealthService } = require("./AndroidHealthService");
         HealthService.instance = new AndroidHealthService();
       } else {
+        const { WebHealthService } = require("./WebHealthService");
         HealthService.instance = new WebHealthService();
       }
     }
@@ -82,7 +92,13 @@ export class HealthService {
       weeklyMentalHealthStats.averageValence !== 0 &&
       monthlyMentalHealthStats.averageValence !== 0
     ) {
-      toreturn.push(`average weekly mood (0-10) ${weeklyMentalHealthStats.averageValence * 10} and average monthly mood is ${monthlyMentalHealthStats.averageValence * 10}`);
+      toreturn.push(
+        `average weekly mood (0-10) ${
+          weeklyMentalHealthStats.averageValence * 10
+        } and average monthly mood is ${
+          monthlyMentalHealthStats.averageValence * 10
+        }`
+      );
     }
 
     if (
@@ -95,9 +111,11 @@ export class HealthService {
       )} hours in bed, typically at ${weeklySleepStats.averageGoingToBedtime}\n\
       Monthly: ${Math.round(
         monthlySleepStats.averageTimeSpentInBed / 60
-      )} hours in bed, typically at ${monthlySleepStats.averageGoingToBedtime}`);
+      )} hours in bed, typically at ${
+        monthlySleepStats.averageGoingToBedtime
+      }`);
     }
 
-    return toreturn.length == 0 ? 'unknown' : toreturn.join('\n\n'); 
+    return toreturn.length == 0 ? "unknown" : toreturn.join("\n\n");
   }
 }

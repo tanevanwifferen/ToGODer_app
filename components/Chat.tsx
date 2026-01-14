@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -6,54 +6,48 @@ import {
   Platform,
   useColorScheme,
 } from "react-native";
-import { GiftedChat, IMessage } from "react-native-gifted-chat";
+import { GiftedChat, IMessage, BubbleProps } from "react-native-gifted-chat";
 import { Colors } from "../constants/Colors";
 import { ChatHeader } from "./chat/ChatHeader";
 import { CustomInputToolbar } from "./chat/CustomInputToolbar";
 import { EmptyChat } from "./chat/EmptyChat";
+import { EditMessageModal } from "./chat/EditMessageModal";
+import { EmbeddedArtifact } from "./chat/EmbeddedArtifact";
 import { useMessages } from "../hooks/useMessages";
+import { useMessageSending } from "../hooks/useMessageSending";
 import { useChatTitle } from "../hooks/useChatTitle";
-import { usePrompts } from "../hooks/usePrompts";
-import { useChatInput } from "../hooks/useChatInput";
+import { useMessageInput } from "../hooks/useMessageInput";
 import { useChatActions } from "../hooks/useChatActions";
-import { ApiChatMessage } from "../model/ChatRequest";
+import { useGiftedMessages, ExtendedIMessage } from "../hooks/useGiftedMessages";
+import { useLibraryIntegration } from "../hooks/useLibraryIntegration";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "./ThemedText";
 import { useExperienceContext } from "./providers/ExperienceProvider";
-import { useDispatch, useSelector } from "react-redux";
-import { updateSettings } from "../redux/slices/chatsSlice";
-import { selectLibraryIntegrationEnabled } from "../redux/slices/chatSelectors";
+import { useDispatch } from "react-redux";
+import { editMessageAndTruncate } from "../redux/slices/chatsSlice";
 
 interface ChatProps {
   chatId: string;
   onBack: () => void;
 }
 
-const convertToGiftedMessage = (
-  msg: ApiChatMessage,
-  index: number
-): IMessage => ({
-  _id: index.toString(),
-  text: msg.content,
-  createdAt: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-  user: {
-    _id: msg.role === "user" ? 1 : 2,
-    name: msg.role === "user" ? "User" : "Assistant",
-  },
-});
-
 export function Chat({ chatId, onBack }: ChatProps) {
   const colorScheme = useColorScheme();
   const { showLanguageInput } = useExperienceContext();
   const dispatch = useDispatch();
+
+  // useMessages provides message display and deletion
+  const { messages: apiMessages, onDeleteMessage } = useMessages(chatId);
+
+  // useMessageSending provides message sending functionality
   const {
-    messages: apiMessages,
-    onSend: sendApiMessage,
-    onDeleteMessage,
-    errorMessage,
-    retrySend,
-    typing
-  } = useMessages(chatId);
+    sendMessage: sendApiMessage,
+    retry: retrySend,
+    regenerate: regenerateResponse,
+    cancel: cancelRequest,
+    typing,
+    error: errorMessage,
+  } = useMessageSending(chatId);
 
   // Check language configuration when chat is loaded or changes
   useEffect(() => {
@@ -66,25 +60,76 @@ export function Chat({ chatId, onBack }: ChatProps) {
   }, [showLanguageInput, chatId]);
 
   // Convert API messages to Gifted Chat messages
-  const giftedMessages = useMemo(() => {
-    if(apiMessages == null){
-      return [];
-    }
-    return [...apiMessages].map(convertToGiftedMessage).reverse();
-  }, [apiMessages]);
-
+  const giftedMessages = useGiftedMessages(apiMessages);
   const chatTitle = useChatTitle(chatId, giftedMessages);
-  
-  // Get persistent chat input state from Redux
-  const { inputText, setInputText } = useChatInput(chatId);
-  const libraryIntegrationEnabled = useSelector(selectLibraryIntegrationEnabled);
-  
+
+  // Edit modal state
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(null);
+  const [editingMessageContent, setEditingMessageContent] = useState("");
+
+  // Get message input state and handlers using the consolidated hook
   const {
+    inputText,
+    setInputText,
     showPrompts,
     filteredPrompts,
     handleInputTextChanged,
-    handleSelectPrompt
-  } = usePrompts(giftedMessages, inputText, setInputText);
+    handleSelectPrompt,
+    clearInput
+  } = useMessageInput(chatId, giftedMessages);
+
+  // Get library integration state and handler
+  const { libraryIntegrationEnabled, handleLibraryIntegrationToggle } = useLibraryIntegration();
+
+  // Handle edit message action from long press menu
+  const handleEditMessage = useCallback(
+    (messageId: string, content: string) => {
+      const messageIndex = giftedMessages.findIndex(
+        (msg) => msg._id === messageId
+      );
+      if (messageIndex !== -1 && apiMessages != null) {
+        // Convert from reversed index to original index
+        const originalIndex = apiMessages.length - 1 - messageIndex;
+        setEditingMessageIndex(originalIndex);
+        setEditingMessageContent(content);
+        setEditModalVisible(true);
+      }
+    },
+    [giftedMessages, apiMessages]
+  );
+
+  // Handle save from edit modal
+  const handleSaveEdit = useCallback(
+    (newContent: string) => {
+      if (editingMessageIndex !== null) {
+        dispatch(
+          editMessageAndTruncate({
+            chatId,
+            messageIndex: editingMessageIndex,
+            content: newContent,
+          })
+        );
+        // Trigger backend sync by regenerating response after edit
+        // Use setTimeout to ensure Redux state is updated first
+        setTimeout(() => {
+          regenerateResponse();
+        }, 0);
+      }
+      setEditModalVisible(false);
+      setEditingMessageIndex(null);
+      setEditingMessageContent("");
+    },
+    [dispatch, chatId, editingMessageIndex, regenerateResponse]
+  );
+
+  // Handle close edit modal
+  const handleCloseEditModal = useCallback(() => {
+    setEditModalVisible(false);
+    setEditingMessageIndex(null);
+    setEditingMessageContent("");
+  }, []);
+
   const { onLongPress } = useChatActions(
     giftedMessages,
     (messageId: string) => {
@@ -95,14 +140,8 @@ export function Chat({ chatId, onBack }: ChatProps) {
         // Convert from reversed index to original index
         onDeleteMessage(apiMessages.length - 1 - messageIndex);
       }
-    }
-  );
-
-  const handleLibraryIntegrationToggle = useCallback(
-    (value: boolean) => {
-      dispatch(updateSettings({ libraryIntegrationEnabled: value }));
     },
-    [dispatch]
+    handleEditMessage
   );
 
   const renderInputToolbar = (toolbarProps: any) => (
@@ -111,7 +150,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
       onSend={(messages: IMessage[]) => {
         if (messages[0]) {
           sendApiMessage(messages[0].text);
-          setInputText("");
+          clearInput();
         }
       }}
       showPrompts={showPrompts}
@@ -121,11 +160,21 @@ export function Chat({ chatId, onBack }: ChatProps) {
       onToggleLibraryIntegration={handleLibraryIntegrationToggle}
       onInputTextChanged={handleInputTextChanged}
       onSelectPrompt={handleSelectPrompt}
+      isGenerating={typing}
+      onCancel={cancelRequest}
     />
   );
 
   const renderSystemMessage = () => {
     if (errorMessage) return <ThemedText>{errorMessage}</ThemedText>;
+    return null;
+  };
+
+  const renderCustomView = (props: BubbleProps<ExtendedIMessage>) => {
+    const message = props.currentMessage as ExtendedIMessage;
+    if (message?.artifactId) {
+      return <EmbeddedArtifact artifactId={message.artifactId} />;
+    }
     return null;
   };
 
@@ -144,7 +193,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
           onSend={(messages) => {
             if (messages[0]) {
               sendApiMessage(messages[0].text);
-              setInputText("");
+              clearInput();
             }
           }}
           user={{
@@ -157,7 +206,6 @@ export function Chat({ chatId, onBack }: ChatProps) {
           renderInputToolbar={renderInputToolbar}
           renderAvatar={null}
           alwaysShowSend
-          scrollToBottom
           maxComposerHeight={200}
           minComposerHeight={60}
           inverted={true}
@@ -165,8 +213,15 @@ export function Chat({ chatId, onBack }: ChatProps) {
           minInputToolbarHeight={0}
           onLongPress={onLongPress}
           renderSystemMessage={renderSystemMessage}
+          renderCustomView={renderCustomView}
         />
       </View>
+      <EditMessageModal
+        visible={editModalVisible}
+        onClose={handleCloseEditModal}
+        onSave={handleSaveEdit}
+        initialContent={editingMessageContent}
+      />
       <Toast />
     </SafeAreaView>
   );

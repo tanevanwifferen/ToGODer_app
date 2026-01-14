@@ -5,10 +5,9 @@ import {
   selectOldDefaultModel,
   setGlobalConfig,
 } from "../redux/slices/globalConfigSlice";
-import { updateSettings } from "../redux/slices/chatsSlice";
+import { updateSettings } from "../redux/slices/userSettingsSlice";
 import { store } from "../redux/store";
 import { InitializationService } from "../services/InitializationService";
-import { useSelector } from "react-redux";
 
 export function useInitialize() {
   const initializeApp = useCallback(async () => {
@@ -21,7 +20,7 @@ export function useInitialize() {
       store.dispatch(setGlobalConfig(globalConfig));
       const oldDefualtModel = selectOldDefaultModel(store.getState());
       const defaultModel = selectDefaultModel(store.getState());
-      if (defaultModel != oldDefualtModel && defaultModel != "") {
+      if (defaultModel !== oldDefualtModel && defaultModel !== "") {
         store.dispatch(
           updateSettings({
             model: defaultModel,

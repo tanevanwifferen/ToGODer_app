@@ -8,6 +8,7 @@ import { store } from '../redux/store';
 import { ApiClient } from '../apiClients/ApiClient';
 import { AuthService } from '../services/AuthService';
 import { BalanceService } from '../services/BalanceService';
+import { MemoryLoopService } from '../services/MemoryLoopService';
 import { setGlobalConfig } from '../redux/slices/globalConfigSlice';
 import { addChat, setCurrentChat } from '../redux/slices/chatsSlice';
 import * as Calendar from 'expo-calendar';
@@ -15,6 +16,7 @@ import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';
 import { useRoute } from '../components/providers/RouteProvider';
 import { ExperienceService } from '../services/ExperienceService';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useInitialization() {
   const { isSharedRoute } = useRoute();
@@ -46,7 +48,7 @@ export function useInitialization() {
         ExperienceService.showLanguageInputIfNeeded();
 
         // Create initial chat
-        const newChatId = `chat-${Date.now()}`;
+        const newChatId = uuidv4();
         store.dispatch(addChat({
           id: newChatId,
           messages: [],
@@ -85,6 +87,8 @@ export function useInitialization() {
         // Start auth services with the fresh token
         AuthService.startAuthServices();
         AuthService.startAppFocusHandler();
+        // Start memory loop service
+        MemoryLoopService.startMemoryLoop();
         // Fetch initial balance if authenticated
         BalanceService.getInstance().fetchBalance();
       }
@@ -96,8 +100,10 @@ export function useInitialization() {
 
         if (currentIsAuthenticated && !AuthService.RefreshInterval) {
           AuthService.startTokenRefreshService();
+          MemoryLoopService.startMemoryLoop();
         } else {
           AuthService.stopTokenRefreshService();
+          MemoryLoopService.stopMemoryLoop();
         }
       });
     };

@@ -25,7 +25,7 @@ export class ExperienceService {
     const isSharedRoute = RouteService.isSharedRoute();
     
     // Check if language is configured
-    const language = state.chats.language;
+    const language = state.userSettings.language;
     const hasLanguageConfigured = language !== '' && language != null;
     
     // Only show language input if:

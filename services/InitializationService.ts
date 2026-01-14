@@ -8,12 +8,14 @@ import { store } from '../redux/store';
 import { ApiClient } from '../apiClients/ApiClient';
 import { AuthService } from './AuthService';
 import { BalanceService } from './BalanceService';
+import { SyncService } from './SyncService';
 import { setGlobalConfig } from '../redux/slices/globalConfigSlice';
 import { addChat, setCurrentChat } from '../redux/slices/chatsSlice';
 import * as Calendar from 'expo-calendar';
 import { AuthApiClient } from '../apiClients/AuthApiClient';
 import { setAuthData } from '../redux/slices/authSlice';
 import { RouteService } from './RouteService';
+import { v4 as uuidv4 } from 'uuid';
 
 // Import the ExperienceService to handle language input modal
 import { ExperienceService } from './ExperienceService';
@@ -56,7 +58,7 @@ export class InitializationService {
       ExperienceService.showLanguageInputIfNeeded();
       
       // Create initial chat
-      const newChatId = `chat-${Date.now()}`;
+      const newChatId = uuidv4();
       store.dispatch(addChat({
         id: newChatId,
         messages: [],
@@ -97,6 +99,19 @@ export class InitializationService {
       AuthService.startAppFocusHandler();
       // Fetch initial balance if authenticated
       BalanceService.getInstance().fetchBalance();
+
+      // Initialize sync service if we have credentials
+      const currentState = store.getState();
+      const userId = currentState.auth.userId;
+      const password = currentState.auth.password;
+      if (userId && password) {
+        try {
+          await SyncService.getInstance().initialize(userId, password);
+          await SyncService.getInstance().pullAndMerge();
+        } catch (error) {
+          console.error('Failed to initialize sync service:', error);
+        }
+      }
     }
 
     // Subscribe to auth state changes
