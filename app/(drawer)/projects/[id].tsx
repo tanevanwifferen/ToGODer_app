@@ -79,7 +79,7 @@ export default function ProjectDetailsScreen() {
             Project not found
           </Text>
           <TouchableOpacity
-            style={[styles.backButton, { backgroundColor: theme.tint }]}
+            style={[styles.backButton, { backgroundColor: theme.primary }]}
             onPress={() => router.back()}
           >
             <Text style={styles.backButtonText}>Go Back</Text>
@@ -153,7 +153,7 @@ export default function ProjectDetailsScreen() {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.editButton, { backgroundColor: theme.tint }]}
+                    style={[styles.editButton, { backgroundColor: theme.primary }]}
                     onPress={handleSaveName}
                   >
                     <Text style={styles.saveButtonText}>Save</Text>
@@ -205,7 +205,7 @@ export default function ProjectDetailsScreen() {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.editButton, { backgroundColor: theme.tint }]}
+                    style={[styles.editButton, { backgroundColor: theme.primary }]}
                     onPress={handleSaveDescription}
                   >
                     <Text style={styles.saveButtonText}>Save</Text>

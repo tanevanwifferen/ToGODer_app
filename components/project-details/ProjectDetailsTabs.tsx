@@ -45,7 +45,7 @@ export function ProjectDetailsTabs({
             styles.tab,
             activeTab === tab.key && [
               styles.activeTab,
-              { backgroundColor: theme.tint },
+              { backgroundColor: theme.primary },
             ],
           ]}
           onPress={() => onTabChange(tab.key)}
