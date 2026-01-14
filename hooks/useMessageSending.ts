@@ -348,7 +348,7 @@ function useChatMessageSending(chatId: string): UseChatMessageSendingResult {
 
   const cancel = useCallback(() => {
     const messageService = MessageService.getInstance();
-    messageService.cancelRequest();
+    messageService.cancelCurrentRequest();
     setIsLoading(false);
     setTyping(false);
   }, []);
