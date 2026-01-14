@@ -44,10 +44,6 @@ export function useInitialization() {
       const isFirstLaunch = state.globalConfig.appFirstLaunch;
 
       if (isFirstLaunch) {
-        // Use the ExperienceService to show language input modal
-        // This will handle all the necessary checks internally
-        ExperienceService.showLanguageInputIfNeeded();
-
         // Create initial chat
         const newChatId = uuidv4();
         store.dispatch(addChat({
@@ -57,6 +53,13 @@ export function useInitialization() {
         }));
         store.dispatch(setCurrentChat(newChatId));
         router.push({ pathname: '/chat/[id]', params: { id: newChatId } });
+
+        // Navigate to the chat view
+        router.replace({ pathname: '/chat/[id]', params: { id: newChatId } });
+
+        // Use the ExperienceService to show language input modal
+        // This will handle all the necessary checks internally
+        ExperienceService.showLanguageInputIfNeeded();
 
         // Mark app as no longer first launch and user as onboarded
         store.dispatch(setGlobalConfig({
