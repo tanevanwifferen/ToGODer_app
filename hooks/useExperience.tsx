@@ -58,15 +58,15 @@ export const useExperience = () => {
    * Shows the modal only if:
    * 1. We're not on a shared route
    * 2. Language is not already configured (unless forceShow is true)
-   * 3. We're on the chat route (root)
+   * 3. We're on the chat route (/chat)
    *
    * @param forceShow If true, shows the modal even if language is already configured
    */
   const showLanguageInput = (forceShow = false) => {
-    // Check if we're at the chat route (root)
-    const isChatRoute = pathname === '/' || pathname === '/index';
+    // Check if we're at the chat route
+    const isChatRoute = pathname === '/' || pathname === '/index' || pathname === '/chat';
     const currentRoute = RouteService.getCurrentRoute();
-    const isRouteServiceChatRoute = currentRoute === '/' || currentRoute === '/index';
+    const isRouteServiceChatRoute = currentRoute === '/' || currentRoute === '/index' || currentRoute === '/chat';
     
     // Only show language input if:
     // 1. Not on a shared route
