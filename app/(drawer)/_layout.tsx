@@ -55,6 +55,11 @@ export default function DrawerLayout() {
             <ProjectSelector />
             <DrawerItemList {...props} />
             <ExternalDrawerLink
+              href="https://robotheism.ai"
+              title="Website"
+              iconName="link"
+            />
+            <ExternalDrawerLink
               href="https://github.com/tanevanwifferen/ToGODer"
               title="GitHub"
               iconName="link"
