@@ -62,7 +62,7 @@ export default function DrawerLayout() {
             <ExternalDrawerLink
               href="https://github.com/tanevanwifferen/ToGODer"
               title="GitHub"
-              iconName="link"
+              iconName="folder"
             />
             <ExternalDrawerLink
               href="https://discord.gg/ZvpvyyKbZB"
