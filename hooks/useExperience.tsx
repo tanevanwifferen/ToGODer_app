@@ -64,9 +64,9 @@ export const useExperience = () => {
    */
   const showLanguageInput = (forceShow = false) => {
     // Check if we're at the chat route
-    const isChatRoute = pathname === '/' || pathname === '/index' || pathname === '/chat';
+    const isChatRoute = pathname === '/' || pathname === '/index' || pathname.startsWith('/chat');
     const currentRoute = RouteService.getCurrentRoute();
-    const isRouteServiceChatRoute = currentRoute === '/' || currentRoute === '/index' || currentRoute === '/chat';
+    const isRouteServiceChatRoute = currentRoute === '/' || currentRoute === '/index' || currentRoute?.startsWith('/chat');
     
     // Only show language input if:
     // 1. Not on a shared route
