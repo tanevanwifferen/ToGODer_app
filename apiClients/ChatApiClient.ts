@@ -164,11 +164,19 @@ export const ARTIFACT_TOOL_SCHEMAS: ToolSchema[] = [
   }
 ];
 
+export interface ToolResultEvent {
+  tool_call_id: string;
+  name: string;
+  result: string;
+  is_error: boolean;
+}
+
 export type StreamEvent =
   | { type: "chunk"; data: string }
   | { type: "signature"; data: string }
   | { type: "memory_request"; data: { keys: string[] } }
   | { type: "tool_call"; data: ArtifactToolCall }
+  | { type: "tool_result"; data: ToolResultEvent }
   | { type: "error"; data: any }
   | { type: "done"; data: null };
 
@@ -446,6 +454,12 @@ export class ChatApiClient {
                   data: data as ArtifactToolCall,
                 };
                 break;
+              case "tool_result":
+                yield {
+                  type: "tool_result",
+                  data: data as ToolResultEvent,
+                };
+                break;
               case "error":
                 yield { type: "error", data };
                 break;
@@ -643,6 +657,12 @@ export class ChatApiClient {
               yield {
                 type: "tool_call",
                 data: data as ArtifactToolCall,
+              };
+              break;
+            case "tool_result":
+              yield {
+                type: "tool_result",
+                data: data as ToolResultEvent,
               };
               break;
             case "error":

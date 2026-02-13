@@ -19,6 +19,7 @@ import {
   StreamEvent,
   ArtifactIndexItem,
   ArtifactToolCall,
+  ToolResultEvent,
   ARTIFACT_TOOL_SCHEMAS,
 } from "../apiClients/ChatApiClient";
 import { ApiChatMessage } from "../model/ChatRequest";
@@ -832,6 +833,23 @@ export class MessageService {
           case "tool_call": {
             const toolCall = evt.data;
 
+            // Check if this is a known frontend tool (artifact tools)
+            const FRONTEND_TOOL_NAMES = [
+              "read_artifact",
+              "write_artifact",
+              "delete_artifact",
+              "move_artifact",
+              "list_directory",
+            ];
+
+            if (!FRONTEND_TOOL_NAMES.includes(toolCall.name)) {
+              // Not a frontend tool - backend handles execution.
+              // Don't collect results; the backend will send tool_result events
+              // or continue streaming text after execution.
+              console.log(`Tool "${toolCall.name}" is backend-executed, skipping frontend handling`);
+              break;
+            }
+
             // Notify callback if provided
             onToolCall?.(toolCall);
 
@@ -864,6 +882,13 @@ export class MessageService {
                 store.dispatch(addMessage({ id: chatId, message: artifactMessage }));
               }
             }
+            break;
+          }
+
+          case "tool_result": {
+            // Backend-executed tool result - log for visibility
+            const toolResult = evt.data as ToolResultEvent;
+            console.log(`Backend tool result for "${toolResult.name}":`, toolResult.is_error ? "error" : "success");
             break;
           }
 
