@@ -42,4 +42,4 @@ app-example
 .expo
 dist/
 dist.zip
-web-build/
+web-build/.runtime/
