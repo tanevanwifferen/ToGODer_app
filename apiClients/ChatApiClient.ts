@@ -53,6 +53,28 @@ export interface ToolSchema {
 }
 
 /**
+ * Library query tool schema for AI function calling.
+ * Included when library integration is enabled.
+ */
+export const LIBRARY_TOOL_SCHEMA: ToolSchema = {
+  type: "function",
+  function: {
+    name: "query_library",
+    description: "Search the user's personal library for relevant information. Use this to find notes, saved content, or knowledge the user has stored.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "The search query to find relevant content in the library"
+        }
+      },
+      required: ["query"]
+    }
+  }
+};
+
+/**
  * Artifact tool schemas for AI function calling.
  * These define the tools the AI can use to manipulate artifacts.
  */
