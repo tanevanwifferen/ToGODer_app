@@ -858,7 +858,7 @@ export class MessageService {
                     ? `Error: ${result.message}`
                     : result.message,
                   timestamp: Date.now(),
-                  hidden: true,
+                  hidden: result.isError,
                   artifactId: result.isError ? undefined : result.artifactId,
                 };
                 store.dispatch(addMessage({ id: chatId, message: artifactMessage }));
