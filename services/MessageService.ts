@@ -20,6 +20,8 @@ import {
   ArtifactIndexItem,
   ArtifactToolCall,
   ARTIFACT_TOOL_SCHEMAS,
+  LIBRARY_TOOL_SCHEMA,
+  ToolSchema,
 } from "../apiClients/ChatApiClient";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
@@ -107,6 +109,28 @@ export class MessageService {
       MessageService.instance = new MessageService();
     }
     return MessageService.instance;
+  }
+
+  /**
+   * Builds the tools array based on project and library settings.
+   * Includes artifact tools when chat has a project, and library tool
+   * when library integration is enabled.
+   */
+  private buildTools(projectId: string | undefined): ToolSchema[] | undefined {
+    const state = store.getState();
+    const libraryEnabled = state.userSettings.libraryIntegrationEnabled;
+
+    const tools: ToolSchema[] = [];
+
+    if (projectId) {
+      tools.push(...ARTIFACT_TOOL_SCHEMAS);
+    }
+
+    if (libraryEnabled) {
+      tools.push(LIBRARY_TOOL_SCHEMA);
+    }
+
+    return tools.length > 0 ? tools : undefined;
   }
 
   /**
@@ -599,7 +623,7 @@ export class MessageService {
       const artifactIndex = chat.projectId
         ? this.buildArtifactIndex(chat.projectId)
         : undefined;
-      const tools = chat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+      const tools = this.buildTools(chat.projectId);
 
       // Send the message and get response
       if (useStreaming) {
@@ -810,7 +834,7 @@ export class MessageService {
             const updatedArtifactIndex = updatedChat.projectId
               ? this.buildArtifactIndex(updatedChat.projectId)
               : undefined;
-            const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+            const updatedTools = this.buildTools(updatedChat.projectId);
 
             await this.sendMessageWithStreaming({
               chatId,
@@ -916,7 +940,7 @@ export class MessageService {
           : undefined;
 
         // Build tools if project has artifacts
-        const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+        const updatedTools = this.buildTools(updatedChat.projectId);
 
         // Continue the conversation with tool results
         console.log(`Tool call loop ${toolCallLoopCount + 1}: sending ${toolCallResults.length} results back to AI`);
@@ -1057,7 +1081,7 @@ export class MessageService {
         const updatedArtifactIndex = updatedChat.projectId
           ? this.buildArtifactIndex(updatedChat.projectId)
           : undefined;
-        const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+        const updatedTools = this.buildTools(updatedChat.projectId);
 
         await this.sendMessageWithoutStreaming({
           chatId,
@@ -1174,7 +1198,7 @@ export class MessageService {
       const artifactIndex = chat.projectId
         ? this.buildArtifactIndex(chat.projectId)
         : undefined;
-      const tools = chat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+      const tools = this.buildTools(chat.projectId);
 
       // Send the message and get response
       if (useStreaming) {
