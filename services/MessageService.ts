@@ -26,8 +26,11 @@ import {
 } from "../apiClients/ChatApiClient";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
+import { Platform } from "react-native";
 import { BalanceService } from "./BalanceService";
 import StorageService from "./StorageService";
+import { CalendarService } from "./CalendarService";
+import { HealthService } from "./health";
 import { v4 as uuidv4 } from "uuid";
 
 const MAX_MEMORY_FETCH_LOOPS = 4;
@@ -75,6 +78,28 @@ export class MessageService {
   private currentRequestController: AbortController | null = null;
 
   private constructor() {}
+
+  private async buildStaticData(): Promise<any> {
+    const state = store.getState();
+    const preferredLanguage = state.userSettings.language;
+    let sd: any = {
+      preferredLanguage,
+      date: new Date().toDateString() + " " + new Date().toTimeString(),
+    };
+    if (Platform.OS !== "web") {
+      const upcomingEventsInCalendar =
+        await CalendarService.getUpcomingEvents();
+      const pastEventsInCalendar = await CalendarService.getPastWeekEvents();
+      const health = await HealthService.getHealthDataSummerized();
+      sd = {
+        ...sd,
+        upcomingEventsInCalendar,
+        pastEventsInCalendar,
+        health,
+      };
+    }
+    return sd;
+  }
 
   /**
    * Cancels the currently active request if one exists.
@@ -712,6 +737,29 @@ export class MessageService {
     const userSettings = state.userSettings;
     const chat = state.chats.chats[chatId];
 
+    // Resolve memory payload
+    const personalData = state.personal.data;
+    const configurableData =
+      typeof personalData === "string"
+        ? personalData
+        : JSON.stringify(personalData);
+    const staticData = await this.buildStaticData();
+    const memoryIndex = await StorageService.listKeys();
+    const resolvedMemories: Record<string, string> = {};
+    for (const key of memories) {
+      if (!StorageService.keyIsValid(key)) continue;
+      const value = await StorageService.get(key);
+      if (value != null) resolvedMemories[key] = value;
+    }
+
+    // Resolve custom system prompt and persona
+    const customSystemPrompt = userSettings.customSystemPrompt;
+    const useCustomPrompt =
+      messages.length > 0 &&
+      messages[0].content.startsWith("/custom") &&
+      !!customSystemPrompt;
+    const persona = state.personal.persona;
+
     let accumulated = "";
     let messageSignature: string | undefined;
     let assistantIndex = -1;
@@ -739,13 +787,13 @@ export class MessageService {
         userSettings.holisticTherapist,
         userSettings.communicationStyle,
         messages,
-        undefined,
-        undefined,
+        configurableData,
+        staticData,
         userSettings.assistant_name,
-        memories,
-        undefined,
-        undefined,
-        undefined,
+        memoryIndex,
+        resolvedMemories,
+        useCustomPrompt ? customSystemPrompt : undefined,
+        persona && persona.length > 0 ? persona : undefined,
         userSettings.libraryIntegrationEnabled,
         memoryLoopCount,
         memoryLoopLimitReached,
@@ -1049,6 +1097,29 @@ export class MessageService {
     const state = store.getState();
     const userSettings = state.userSettings;
 
+    // Resolve memory payload
+    const personalData = state.personal.data;
+    const configurableData =
+      typeof personalData === "string"
+        ? personalData
+        : JSON.stringify(personalData);
+    const staticData = await this.buildStaticData();
+    const memoryIndex = await StorageService.listKeys();
+    const resolvedMemories: Record<string, string> = {};
+    for (const key of memories) {
+      if (!StorageService.keyIsValid(key)) continue;
+      const value = await StorageService.get(key);
+      if (value != null) resolvedMemories[key] = value;
+    }
+
+    // Resolve custom system prompt and persona
+    const customSystemPrompt = userSettings.customSystemPrompt;
+    const useCustomPrompt =
+      messages.length > 0 &&
+      messages[0].content.startsWith("/custom") &&
+      !!customSystemPrompt;
+    const persona = state.personal.persona;
+
     // Check if already cancelled before making request
     if (signal?.aborted) {
       console.log("MessageService: Request was cancelled before sending");
@@ -1064,13 +1135,13 @@ export class MessageService {
         userSettings.holisticTherapist,
         userSettings.communicationStyle,
         messages,
-        undefined,
-        undefined,
+        configurableData,
+        staticData,
         userSettings.assistant_name,
-        memories,
-        undefined,
-        undefined,
-        undefined,
+        memoryIndex,
+        resolvedMemories,
+        useCustomPrompt ? customSystemPrompt : undefined,
+        persona && persona.length > 0 ? persona : undefined,
         userSettings.libraryIntegrationEnabled,
         memoryLoopCount,
         memoryLoopLimitReached,
