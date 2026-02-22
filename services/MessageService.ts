@@ -765,6 +765,40 @@ export class MessageService {
     let assistantIndex = -1;
     let placeholderCreated = false;
 
+    // Throttle Redux updates to avoid excessive re-renders on low-CPU devices.
+    // Instead of dispatching on every chunk, we batch updates at ~60ms intervals.
+    let pendingFlush = false;
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+    const FLUSH_INTERVAL_MS = 60;
+
+    const flushAccumulated = () => {
+      flushTimer = null;
+      pendingFlush = false;
+      if (placeholderCreated && assistantIndex >= 0) {
+        store.dispatch(
+          updateMessageAtIndex({
+            chatId,
+            messageIndex: assistantIndex,
+            content: accumulated,
+          })
+        );
+      }
+    };
+
+    const scheduleFlush = () => {
+      pendingFlush = true;
+      if (flushTimer === null) {
+        flushTimer = setTimeout(flushAccumulated, FLUSH_INTERVAL_MS);
+      }
+    };
+
+    const cancelFlush = () => {
+      if (flushTimer !== null) {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+      }
+    };
+
     // Track tool calls and their results for chaining
     const toolCallResults: Array<{
       toolCallId: string;
@@ -826,13 +860,7 @@ export class MessageService {
             const part = typeof evt.data === "string" ? evt.data : "";
             accumulated += part;
 
-            store.dispatch(
-              updateMessageAtIndex({
-                chatId,
-                messageIndex: assistantIndex,
-                content: accumulated,
-              })
-            );
+            scheduleFlush();
 
             onChunk?.(accumulated);
             break;
@@ -869,6 +897,7 @@ export class MessageService {
               console.warn(
                 "MessageService: memory request received but fetch limit reached"
               );
+              cancelFlush();
               return;
             }
 
@@ -965,6 +994,9 @@ export class MessageService {
           }
 
           case "error": {
+            cancelFlush();
+            if (pendingFlush) flushAccumulated();
+
             const errorMsg =
               typeof evt.data === "string"
                 ? evt.data
@@ -986,6 +1018,10 @@ export class MessageService {
           }
         }
       }
+
+      // Flush any remaining throttled content to Redux
+      cancelFlush();
+      if (pendingFlush) flushAccumulated();
 
       // If there were tool calls, send results back to AI for chaining
       if (toolCallResults.length > 0 && toolCallLoopCount < MAX_TOOL_CALL_LOOPS) {
@@ -1048,6 +1084,7 @@ export class MessageService {
         onComplete(assistantMessage);
       }
     } catch (error) {
+      cancelFlush();
       this.clearCurrentRequest();
 
       // Check if this was an intentional cancellation

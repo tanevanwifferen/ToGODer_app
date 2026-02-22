@@ -12,6 +12,7 @@ import {
 } from "../model/ChatResponse";
 import { store } from "../redux";
 import { getApiUrl } from "../constants/Env";
+import { Platform } from "react-native";
 
 export interface ArtifactToolCall {
   id: string;
@@ -350,28 +351,39 @@ export class ChatApiClient {
       tools,
     };
 
-    // Use correct API prefix for streaming endpoint
-    const res = await fetch(`${baseUrl}/chat/stream`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-      signal,
-    });
+    // On React Native mobile, fetch() does not support ReadableStream for
+    // response bodies. Previously we would call fetch() first, discover that
+    // res.body is null, and then fall back to XHR — but that caused TWO
+    // backend requests per message (the first response was silently discarded).
+    // Skip fetch entirely on mobile and go straight to XHR.
+    const canUseReadableStream =
+      typeof ReadableStream !== "undefined" &&
+      Platform.OS !== "ios" &&
+      Platform.OS !== "android";
 
-    if (!res.ok) {
-      throw new Error(`Stream error: ${res.status} ${res.statusText}`);
+    let reader: any = null;
+
+    if (canUseReadableStream) {
+      const res = await fetch(`${baseUrl}/chat/stream`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+        signal,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Stream error: ${res.status} ${res.statusText}`);
+      }
+
+      const bodyAny: any = res.body as any;
+      reader =
+        bodyAny && typeof bodyAny.getReader === "function"
+          ? bodyAny.getReader()
+          : null;
     }
-    // Ensure streaming supported
-    // Note: On React Native iOS, res.body may be null; in that case we will fall back to XHR below.
 
-    // Avoid DOM-specific typings to satisfy RN/Node environments
-    const bodyAny: any = res.body as any;
-    const reader =
-      bodyAny && typeof bodyAny.getReader === "function"
-        ? bodyAny.getReader()
-        : null;
     if (!reader) {
-      // React Native iOS does not expose ReadableStream.getReader().
+      // React Native mobile: use XHR for streaming SSE.
       // Fallback to XHR with onprogress to parse SSE frames incrementally.
       const streamUrl = `${baseUrl}/chat/stream`;
       const xhrPayload = JSON.stringify(payload);
