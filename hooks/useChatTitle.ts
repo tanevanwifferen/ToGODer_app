@@ -4,6 +4,8 @@ import { setTitle } from "../redux/slices/chatsSlice";
 import { ChatApiClient } from "../apiClients/ChatApiClient";
 import { selectChatById } from "@/redux/slices/chatSelectors";
 import { store } from "@/redux/store";
+import { IMessage } from "react-native-gifted-chat";
+
 
 /**
  * Hook to manage chat title fetching.
@@ -26,6 +28,9 @@ export const useChatTitle = (chatId: string): string | undefined => {
   // Refs to track fetch state without causing re-renders
   const fetchingRef = useRef(false);
   const fetchedChatIdRef = useRef<string | null>(null);
+
+
+  const messagesLength = messages.length;
 
   useEffect(() => {
     // Guard: need a valid chatId
