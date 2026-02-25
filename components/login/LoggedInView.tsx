@@ -12,11 +12,13 @@ import { usePasscode } from "../../hooks/usePasscode";
 interface LoggedInViewProps {
   email: string;
   onLogout: () => void;
+  onChangePassword: () => void;
 }
 
 export const LoggedInView: React.FC<LoggedInViewProps> = ({
   email,
   onLogout,
+  onChangePassword,
 }) => {
   const { resetPasscode } = usePasscode();
   const colorScheme = useColorScheme();
@@ -46,6 +48,16 @@ export const LoggedInView: React.FC<LoggedInViewProps> = ({
         onPress={onLogout}
       >
         <ThemedText style={styles.buttonText}>Logout</ThemedText>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.button,
+          { backgroundColor: colorScheme === "dark" ? "#4A4D50" : "#6c757d" },
+        ]}
+        onPress={onChangePassword}
+      >
+        <ThemedText style={styles.buttonText}>Change Password</ThemedText>
       </TouchableOpacity>
 
       <TouchableOpacity

@@ -19,13 +19,22 @@ import {
   StreamEvent,
   ArtifactIndexItem,
   ArtifactToolCall,
+  ToolResultEvent,
   ARTIFACT_TOOL_SCHEMAS,
+  LIBRARY_TOOL_SCHEMA,
+  ToolSchema,
 } from "../apiClients/ChatApiClient";
 import { ApiChatMessage } from "../model/ChatRequest";
 import Toast from "react-native-toast-message";
+import { Platform } from "react-native";
 import { BalanceService } from "./BalanceService";
 import StorageService from "./StorageService";
+import { CalendarService } from "./CalendarService";
+import { HealthService } from "./health";
 import { v4 as uuidv4 } from "uuid";
+import { selectIsAuthenticated } from "../redux/slices/authSlice";
+import { selectHasFunds } from "../redux/slices/balanceSlice";
+import { selectDefaultModel } from "../redux/slices/globalConfigSlice";
 
 const MAX_MEMORY_FETCH_LOOPS = 4;
 
@@ -73,6 +82,28 @@ export class MessageService {
 
   private constructor() {}
 
+  private async buildStaticData(): Promise<any> {
+    const state = store.getState();
+    const preferredLanguage = state.userSettings.language;
+    let sd: any = {
+      preferredLanguage,
+      date: new Date().toDateString() + " " + new Date().toTimeString(),
+    };
+    if (Platform.OS !== "web") {
+      const upcomingEventsInCalendar =
+        await CalendarService.getUpcomingEvents();
+      const pastEventsInCalendar = await CalendarService.getPastWeekEvents();
+      const health = await HealthService.getHealthDataSummerized();
+      sd = {
+        ...sd,
+        upcomingEventsInCalendar,
+        pastEventsInCalendar,
+        health,
+      };
+    }
+    return sd;
+  }
+
   /**
    * Cancels the currently active request if one exists.
    * This will abort any ongoing streaming or non-streaming message request.
@@ -107,6 +138,28 @@ export class MessageService {
       MessageService.instance = new MessageService();
     }
     return MessageService.instance;
+  }
+
+  /**
+   * Builds the tools array based on project and library settings.
+   * Includes artifact tools when chat has a project, and library tool
+   * when library integration is enabled.
+   */
+  private buildTools(projectId: string | undefined): ToolSchema[] | undefined {
+    const state = store.getState();
+    const libraryEnabled = state.userSettings.libraryIntegrationEnabled;
+
+    const tools: ToolSchema[] = [];
+
+    if (projectId) {
+      tools.push(...ARTIFACT_TOOL_SCHEMAS);
+    }
+
+    if (libraryEnabled) {
+      tools.push(LIBRARY_TOOL_SCHEMA);
+    }
+
+    return tools.length > 0 ? tools : undefined;
   }
 
   /**
@@ -595,18 +648,26 @@ export class MessageService {
       const updatedChat = updatedState.chats.chats[chatId];
       const messages = updatedChat.messages;
 
-      // Build artifact index and tools if chat is associated with a project
-      const artifactIndex = chat.projectId
+      // Check auth and balance state for feature gating
+      const isAuthenticated = selectIsAuthenticated(updatedState);
+      const hasFunds = selectHasFunds(updatedState);
+
+      // Build artifact index and tools only if authenticated
+      const artifactIndex = (isAuthenticated && chat.projectId)
         ? this.buildArtifactIndex(chat.projectId)
         : undefined;
-      const tools = chat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+      const tools = isAuthenticated ? this.buildTools(chat.projectId) : undefined;
+
+      // Memory is only available when authenticated and there are funds
+      const memoryEnabled = isAuthenticated && hasFunds;
+      const memories = memoryEnabled ? chat.memories : [];
 
       // Send the message and get response
       if (useStreaming) {
         await this.sendMessageWithStreaming({
           chatId,
           messages,
-          memories: chat.memories,
+          memories,
           memoryLoopCount,
           memoryLoopLimitReached,
           artifactIndex,
@@ -620,7 +681,7 @@ export class MessageService {
         await this.sendMessageWithoutStreaming({
           chatId,
           messages,
-          memories: chat.memories,
+          memories,
           memoryLoopCount,
           memoryLoopLimitReached,
           artifactIndex,
@@ -687,10 +748,73 @@ export class MessageService {
     const userSettings = state.userSettings;
     const chat = state.chats.chats[chatId];
 
+    // When not authenticated, force the default model
+    const isAuthenticated = selectIsAuthenticated(state);
+    const effectiveModel = isAuthenticated
+      ? userSettings.model
+      : selectDefaultModel(state);
+
+    // Resolve memory payload
+    const personalData = state.personal.data;
+    const configurableData =
+      typeof personalData === "string"
+        ? personalData
+        : JSON.stringify(personalData);
+    const staticData = await this.buildStaticData();
+    const memoryIndex = await StorageService.listKeys();
+    const resolvedMemories: Record<string, string> = {};
+    for (const key of memories) {
+      if (!StorageService.keyIsValid(key)) continue;
+      const value = await StorageService.get(key);
+      if (value != null) resolvedMemories[key] = value;
+    }
+
+    // Resolve custom system prompt and persona
+    const customSystemPrompt = userSettings.customSystemPrompt;
+    const useCustomPrompt =
+      messages.length > 0 &&
+      messages[0].content.startsWith("/custom") &&
+      !!customSystemPrompt;
+    const persona = state.personal.persona;
+
     let accumulated = "";
     let messageSignature: string | undefined;
     let assistantIndex = -1;
     let placeholderCreated = false;
+
+    // Throttle Redux updates to avoid excessive re-renders on low-CPU devices.
+    // Instead of dispatching on every chunk, we batch updates at ~60ms intervals.
+    let pendingFlush = false;
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+    const FLUSH_INTERVAL_MS = 60;
+
+    const flushAccumulated = () => {
+      flushTimer = null;
+      pendingFlush = false;
+      if (placeholderCreated && assistantIndex >= 0) {
+        store.dispatch(
+          updateMessageAtIndex({
+            chatId,
+            messageIndex: assistantIndex,
+            content: accumulated,
+          })
+        );
+      }
+    };
+
+    const scheduleFlush = () => {
+      pendingFlush = true;
+      if (flushTimer === null) {
+        flushTimer = setTimeout(flushAccumulated, FLUSH_INTERVAL_MS);
+      }
+    };
+
+    const cancelFlush = () => {
+      if (flushTimer !== null) {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+      }
+    };
 
     // Track tool calls and their results for chaining
     const toolCallResults: Array<{
@@ -707,20 +831,20 @@ export class MessageService {
       }
 
       for await (const evt of ChatApiClient.sendMessageStream(
-        userSettings.model,
+        effectiveModel,
         userSettings.humanPrompt,
         userSettings.keepGoing,
         userSettings.outsideBox,
         userSettings.holisticTherapist,
         userSettings.communicationStyle,
         messages,
-        undefined,
-        undefined,
+        configurableData,
+        staticData,
         userSettings.assistant_name,
-        memories,
-        undefined,
-        undefined,
-        undefined,
+        memoryIndex,
+        resolvedMemories,
+        useCustomPrompt ? customSystemPrompt : undefined,
+        persona && persona.length > 0 ? persona : undefined,
         userSettings.libraryIntegrationEnabled,
         memoryLoopCount,
         memoryLoopLimitReached,
@@ -753,13 +877,7 @@ export class MessageService {
             const part = typeof evt.data === "string" ? evt.data : "";
             accumulated += part;
 
-            store.dispatch(
-              updateMessageAtIndex({
-                chatId,
-                messageIndex: assistantIndex,
-                content: accumulated,
-              })
-            );
+            scheduleFlush();
 
             onChunk?.(accumulated);
             break;
@@ -796,6 +914,7 @@ export class MessageService {
               console.warn(
                 "MessageService: memory request received but fetch limit reached"
               );
+              cancelFlush();
               return;
             }
 
@@ -810,7 +929,7 @@ export class MessageService {
             const updatedArtifactIndex = updatedChat.projectId
               ? this.buildArtifactIndex(updatedChat.projectId)
               : undefined;
-            const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+            const updatedTools = this.buildTools(updatedChat.projectId);
 
             await this.sendMessageWithStreaming({
               chatId,
@@ -831,6 +950,23 @@ export class MessageService {
 
           case "tool_call": {
             const toolCall = evt.data;
+
+            // Check if this is a known frontend tool (artifact tools)
+            const FRONTEND_TOOL_NAMES = [
+              "read_artifact",
+              "write_artifact",
+              "delete_artifact",
+              "move_artifact",
+              "list_directory",
+            ];
+
+            if (!FRONTEND_TOOL_NAMES.includes(toolCall.name)) {
+              // Not a frontend tool - backend handles execution.
+              // Don't collect results; the backend will send tool_result events
+              // or continue streaming text after execution.
+              console.log(`Tool "${toolCall.name}" is backend-executed, skipping frontend handling`);
+              break;
+            }
 
             // Notify callback if provided
             onToolCall?.(toolCall);
@@ -867,7 +1003,17 @@ export class MessageService {
             break;
           }
 
+          case "tool_result": {
+            // Backend-executed tool result - log for visibility
+            const toolResult = evt.data as ToolResultEvent;
+            console.log(`Backend tool result for "${toolResult.name}":`, toolResult.is_error ? "error" : "success");
+            break;
+          }
+
           case "error": {
+            cancelFlush();
+            if (pendingFlush) flushAccumulated();
+
             const errorMsg =
               typeof evt.data === "string"
                 ? evt.data
@@ -889,6 +1035,10 @@ export class MessageService {
           }
         }
       }
+
+      // Flush any remaining throttled content to Redux
+      cancelFlush();
+      if (pendingFlush) flushAccumulated();
 
       // If there were tool calls, send results back to AI for chaining
       if (toolCallResults.length > 0 && toolCallLoopCount < MAX_TOOL_CALL_LOOPS) {
@@ -916,7 +1066,7 @@ export class MessageService {
           : undefined;
 
         // Build tools if project has artifacts
-        const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+        const updatedTools = this.buildTools(updatedChat.projectId);
 
         // Continue the conversation with tool results
         console.log(`Tool call loop ${toolCallLoopCount + 1}: sending ${toolCallResults.length} results back to AI`);
@@ -951,6 +1101,7 @@ export class MessageService {
         onComplete(assistantMessage);
       }
     } catch (error) {
+      cancelFlush();
       this.clearCurrentRequest();
 
       // Check if this was an intentional cancellation
@@ -1000,6 +1151,35 @@ export class MessageService {
     const state = store.getState();
     const userSettings = state.userSettings;
 
+    // When not authenticated, force the default model
+    const isAuthenticated = selectIsAuthenticated(state);
+    const effectiveModel = isAuthenticated
+      ? userSettings.model
+      : selectDefaultModel(state);
+
+    // Resolve memory payload
+    const personalData = state.personal.data;
+    const configurableData =
+      typeof personalData === "string"
+        ? personalData
+        : JSON.stringify(personalData);
+    const staticData = await this.buildStaticData();
+    const memoryIndex = await StorageService.listKeys();
+    const resolvedMemories: Record<string, string> = {};
+    for (const key of memories) {
+      if (!StorageService.keyIsValid(key)) continue;
+      const value = await StorageService.get(key);
+      if (value != null) resolvedMemories[key] = value;
+    }
+
+    // Resolve custom system prompt and persona
+    const customSystemPrompt = userSettings.customSystemPrompt;
+    const useCustomPrompt =
+      messages.length > 0 &&
+      messages[0].content.startsWith("/custom") &&
+      !!customSystemPrompt;
+    const persona = state.personal.persona;
+
     // Check if already cancelled before making request
     if (signal?.aborted) {
       console.log("MessageService: Request was cancelled before sending");
@@ -1008,20 +1188,20 @@ export class MessageService {
 
     try {
       const response = await ChatApiClient.sendMessage(
-        userSettings.model,
+        effectiveModel,
         userSettings.humanPrompt,
         userSettings.keepGoing,
         userSettings.outsideBox,
         userSettings.holisticTherapist,
         userSettings.communicationStyle,
         messages,
-        undefined,
-        undefined,
+        configurableData,
+        staticData,
         userSettings.assistant_name,
-        memories,
-        undefined,
-        undefined,
-        undefined,
+        memoryIndex,
+        resolvedMemories,
+        useCustomPrompt ? customSystemPrompt : undefined,
+        persona && persona.length > 0 ? persona : undefined,
         userSettings.libraryIntegrationEnabled,
         memoryLoopCount,
         memoryLoopLimitReached,
@@ -1057,7 +1237,7 @@ export class MessageService {
         const updatedArtifactIndex = updatedChat.projectId
           ? this.buildArtifactIndex(updatedChat.projectId)
           : undefined;
-        const updatedTools = updatedChat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+        const updatedTools = this.buildTools(updatedChat.projectId);
 
         await this.sendMessageWithoutStreaming({
           chatId,
@@ -1166,15 +1346,22 @@ export class MessageService {
       // Prevent auto-generation during manual regeneration
       store.dispatch(setAutoGenerateAnswer(false));
 
-      // Use current messages and memories from the chat
+      // Use current messages from the chat
       const messages = chat.messages;
-      const memories = chat.memories;
 
-      // Build artifact index and tools if chat is associated with a project
-      const artifactIndex = chat.projectId
+      // Check auth and balance state for feature gating
+      const isAuthenticated = selectIsAuthenticated(state);
+      const hasFunds = selectHasFunds(state);
+
+      // Memory is only available when authenticated and there are funds
+      const memoryEnabled = isAuthenticated && hasFunds;
+      const memories = memoryEnabled ? chat.memories : [];
+
+      // Build artifact index and tools only if authenticated
+      const artifactIndex = (isAuthenticated && chat.projectId)
         ? this.buildArtifactIndex(chat.projectId)
         : undefined;
-      const tools = chat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
+      const tools = isAuthenticated ? this.buildTools(chat.projectId) : undefined;
 
       // Send the message and get response
       if (useStreaming) {

@@ -63,6 +63,13 @@ export function useInitialization() {
         // This will handle all the necessary checks internally
         ExperienceService.showLanguageInputIfNeeded();
 
+        // Navigate to the chat view
+        router.replace({ pathname: '/chat/[id]', params: { id: newChatId } });
+
+        // Use the ExperienceService to show language input modal
+        // This will handle all the necessary checks internally
+        ExperienceService.showLanguageInputIfNeeded();
+
         // Mark app as no longer first launch and user as onboarded
         store.dispatch(
           setGlobalConfig({

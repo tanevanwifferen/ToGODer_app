@@ -61,7 +61,7 @@ export function Chat({ chatId, onBack }: ChatProps) {
 
   // Convert API messages to Gifted Chat messages
   const giftedMessages = useGiftedMessages(apiMessages);
-  const chatTitle = useChatTitle(chatId, giftedMessages);
+  const chatTitle = useChatTitle(chatId);
 
   // Edit modal state
   const [editModalVisible, setEditModalVisible] = useState(false);

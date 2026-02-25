@@ -50,7 +50,7 @@ export class InitializationService {
     const isFirstLaunch = InitializationService.selectAppFirstLaunch(state);
     
     const currentRoute = RouteService.getCurrentRoute();
-    const isChatRoute = currentRoute === '/' || currentRoute === '/index';
+    const isChatRoute = currentRoute === '/' || currentRoute === '/index' || currentRoute === '/chat';
     
     if(isFirstLaunch && isChatRoute){
       // Use the ExperienceService to show language input modal

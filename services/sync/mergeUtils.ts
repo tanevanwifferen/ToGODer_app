@@ -177,6 +177,23 @@ export function mergeMessages(
 }
 
 /**
+ * Get the effective timestamp for a chat by considering both
+ * the chat-level updatedAt and the newest message timestamp.
+ * This prevents older conversations from overriding younger ones
+ * when chat.updatedAt doesn't reflect the latest message activity.
+ */
+function getEffectiveTimestamp(chat: SyncableChat): number {
+  let maxMessageTimestamp = 0;
+  for (const msg of chat.messages) {
+    const ts = msg.deletedAt || msg.timestamp || 0;
+    if (ts > maxMessageTimestamp) {
+      maxMessageTimestamp = ts;
+    }
+  }
+  return Math.max(chat.updatedAt, maxMessageTimestamp);
+}
+
+/**
  * Merge two chats at the message level
  */
 export function mergeSingleChat(
@@ -197,14 +214,15 @@ export function mergeSingleChat(
     if (!remote) {
       return local;
     }
-    if ((local.deletedAt || 0) > remote.updatedAt) {
+    const remoteEffective = getEffectiveTimestamp(remote);
+    if ((local.deletedAt || 0) > remoteEffective) {
       console.log(
-        `[mergeUtils] Chat ${chatId}: local deleted at ${local.deletedAt} > remote updated ${remote.updatedAt}, using deleted`
+        `[mergeUtils] Chat ${chatId}: local deleted at ${local.deletedAt} > remote effective ${remoteEffective}, using deleted`
       );
       return local;
     }
     console.log(
-      `[mergeUtils] Chat ${chatId}: remote updated ${remote.updatedAt} >= local deleted ${local.deletedAt}, using remote`
+      `[mergeUtils] Chat ${chatId}: remote effective ${remoteEffective} >= local deleted ${local.deletedAt}, using remote`
     );
     return remote;
   }
@@ -213,14 +231,15 @@ export function mergeSingleChat(
     if (!local) {
       return remote;
     }
-    if ((remote.deletedAt || 0) > local.updatedAt) {
+    const localEffective = getEffectiveTimestamp(local);
+    if ((remote.deletedAt || 0) > localEffective) {
       console.log(
-        `[mergeUtils] Chat ${chatId}: remote deleted at ${remote.deletedAt} > local updated ${local.updatedAt}, using deleted`
+        `[mergeUtils] Chat ${chatId}: remote deleted at ${remote.deletedAt} > local effective ${localEffective}, using deleted`
       );
       return remote;
     }
     console.log(
-      `[mergeUtils] Chat ${chatId}: local updated ${local.updatedAt} >= remote deleted ${remote.deletedAt}, using local`
+      `[mergeUtils] Chat ${chatId}: local effective ${localEffective} >= remote deleted ${remote.deletedAt}, using local`
     );
     return local;
   }
@@ -236,17 +255,21 @@ export function mergeSingleChat(
   }
 
   // Both exist, merge messages and metadata
+  // Use effective timestamp (max of updatedAt and newest message) to pick metadata winner
   const mergedMessages = mergeMessages(local.messages, remote.messages);
-  const metadataWinner = local.updatedAt >= remote.updatedAt ? local : remote;
+  const localEffective = getEffectiveTimestamp(local);
+  const remoteEffective = getEffectiveTimestamp(remote);
+  const metadataWinner = localEffective >= remoteEffective ? local : remote;
+  const effectiveMax = Math.max(localEffective, remoteEffective);
 
   const merged: SyncableChat = {
     ...metadataWinner,
     messages: mergedMessages,
-    updatedAt: Math.max(local.updatedAt, remote.updatedAt),
+    updatedAt: effectiveMax,
   };
 
   console.log(
-    `[mergeUtils] Chat ${chatId}: merged local(${local.messages.length} msgs) + remote(${remote.messages.length} msgs) = ${merged.messages.length} msgs`
+    `[mergeUtils] Chat ${chatId}: merged local(${local.messages.length} msgs, effective=${localEffective}) + remote(${remote.messages.length} msgs, effective=${remoteEffective}) = ${merged.messages.length} msgs, winner=${localEffective >= remoteEffective ? "local" : "remote"}`
   );
   return merged;
 }

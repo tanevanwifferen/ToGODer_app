@@ -40,4 +40,12 @@ export class AuthApiClient {
     const request: ResetPasswordRequest = { email, password };
     return ApiClient.post<void>(`/auth/resetPassword/${code}`, request);
   }
+
+  static async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    return ApiClient.post<void>('/auth/changePassword', {
+      currentPassword,
+      newPassword,
+      confirmPassword: newPassword
+    });
+  }
 }

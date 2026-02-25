@@ -3,6 +3,7 @@ import {
   selectPersonalData,
   setPersonalData,
 } from "../redux/slices/personalSlice";
+import { selectHasFunds } from "../redux/slices/balanceSlice";
 import StorageService from "../services/StorageService";
 import { MemoryApiClient } from "../apiClients/MemoryApiClient";
 import { useState } from "react";
@@ -14,10 +15,11 @@ export const useMemoryService = () => {
   const [isCompressing, setIsCompressing] = useState(false);
   const personalData = useSelector(selectPersonalData);
   const { isAuthenticated } = useAuth();
+  const hasFunds = useSelector(selectHasFunds);
 
   const compressMemory =
     async (): Promise<MemoryCompressiontResponse | null> => {
-      if (!isAuthenticated) {
+      if (!isAuthenticated || !hasFunds) {
         return null;
       }
       try {

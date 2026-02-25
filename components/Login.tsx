@@ -4,6 +4,7 @@ import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { CreateAccount } from './CreateAccount';
 import { ForgotPassword } from './ForgotPassword';
+import { ChangePassword } from './ChangePassword';
 import { useAuth } from '../hooks/useAuth';
 import { BalanceDisplay } from './login/BalanceDisplay';
 import { LoginForm } from './login/LoginForm';
@@ -21,7 +22,7 @@ export const Login = () => {
     handleLogout
   } = useAuth();
   
-  const [view, setView] = useState<'login' | 'loggedIn' | 'createAccount' | 'forgotPassword'>(
+  const [view, setView] = useState<'login' | 'loggedIn' | 'createAccount' | 'forgotPassword' | 'changePassword'>(
     isAuthenticated ? 'loggedIn' : 'login'
   );
 
@@ -64,12 +65,17 @@ export const Login = () => {
 
         {view === 'forgotPassword' && <ForgotPassword setView={setView} />}
 
+        {view === 'changePassword' && (
+          <ChangePassword onBack={() => setView('loggedIn')} />
+        )}
+
         {view === 'loggedIn' && (
           <>
             <BalanceDisplay isAuthenticated={isAuthenticated} />
             <LoggedInView
               email={email}
               onLogout={onLogout}
+              onChangePassword={() => setView('changePassword')}
             />
           </>
         )}

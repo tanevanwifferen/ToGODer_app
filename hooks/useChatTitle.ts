@@ -1,37 +1,81 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setTitle } from "../redux/slices/chatsSlice";
 import { ChatApiClient } from "../apiClients/ChatApiClient";
-import { IMessage } from "react-native-gifted-chat";
 import { selectChatById } from "@/redux/slices/chatSelectors";
+import { store } from "@/redux/store";
+import { IMessage } from "react-native-gifted-chat";
 
-export const useChatTitle = (
-  chatId: string,
-  messages: IMessage[]
-): string | undefined => {
+
+/**
+ * Hook to manage chat title fetching.
+ *
+ * Fetches a title from the API when:
+ * 1. Chat has exactly 1 message (user just sent first message)
+ * 2. Chat doesn't already have a title
+ *
+ * Uses refs to prevent duplicate fetches during rapid re-renders
+ * (e.g., during message streaming).
+ */
+export const useChatTitle = (chatId: string): string | undefined => {
   const dispatch = useDispatch();
-  const currentChat = useSelector((state) => selectChatById(state, chatId));
-  const chatTitle = currentChat?.title || undefined;
+  const currentChat = useSelector((state: any) => selectChatById(state, chatId));
+
+  // Extract primitive values to use as stable dependencies
+  const chatTitle = currentChat?.title;
+  const messageCount = currentChat?.messages?.length ?? 0;
+
+  // Refs to track fetch state without causing re-renders
+  const fetchingRef = useRef(false);
+  const fetchedChatIdRef = useRef<string | null>(null);
+
 
   const messagesLength = messages.length;
 
   useEffect(() => {
-    if (chatTitle || messagesLength !== 1) return;
-    if (!currentChat?.messages) return;
+    // Guard: need a valid chatId
+    if (!chatId) return;
 
-    const chatMessages = currentChat.messages;
-    const fetchTitle = async () => {
-      try {
-        const title = await ChatApiClient.getTitle(chatMessages);
+    // Guard: already has a title
+    if (chatTitle) return;
+
+    // Guard: only fetch when there's exactly 1 message
+    // (user just sent first message, before assistant responds)
+    if (messageCount !== 1) return;
+
+    // Guard: already fetching
+    if (fetchingRef.current) return;
+
+    // Guard: already fetched for this chat
+    if (fetchedChatIdRef.current === chatId) return;
+
+    // Mark as fetching to prevent duplicate requests
+    fetchingRef.current = true;
+
+    // Get fresh messages from store at fetch time
+    // (avoids stale closure issues)
+    const state = store.getState();
+    const chat = state.chats.chats[chatId];
+    const messages = chat?.messages;
+
+    if (!messages || messages.length === 0) {
+      fetchingRef.current = false;
+      return;
+    }
+
+    ChatApiClient.getTitle(messages)
+      .then((title) => {
         dispatch(setTitle({ id: chatId, title }));
-      } catch (error) {
+        fetchedChatIdRef.current = chatId;
+      })
+      .catch((error) => {
         console.error("Failed to fetch title:", error);
-      }
-    };
-    fetchTitle();
-    // Only re-run when chatId changes, title appears, or message count changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatId, chatTitle, messagesLength, dispatch]);
+        // Don't mark as fetched on error, allowing retry on next trigger
+      })
+      .finally(() => {
+        fetchingRef.current = false;
+      });
+  }, [chatId, chatTitle, messageCount, dispatch]);
 
-  return chatTitle;
+  return chatTitle ?? undefined;
 };
