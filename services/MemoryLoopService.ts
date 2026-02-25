@@ -6,7 +6,6 @@
 
 import { store } from "../redux/store";
 import { selectIsAuthenticated } from "../redux/slices/authSlice";
-import { selectHasFunds } from "../redux/slices/balanceSlice";
 import {
   selectPersonalData,
   setPersonalData,
@@ -63,10 +62,9 @@ export class MemoryLoopService {
     try {
       const state = store.getState();
       const isAuthenticated = selectIsAuthenticated(state);
-      const hasFunds = selectHasFunds(state);
 
-      // Only run if authenticated and there are funds available
-      if (!isAuthenticated || !hasFunds) {
+      // Only run if authenticated
+      if (!isAuthenticated) {
         return;
       }
 

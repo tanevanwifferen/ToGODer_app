@@ -44,6 +44,4 @@ const balanceSlice = createSlice({
 export const { setBalance, setGlobalBalance, setLoading, setError } =
   balanceSlice.actions;
 export const selectBalance = (state: RootState) => state.balance;
-export const selectHasFunds = (state: RootState) =>
-  state.balance.balance > 0 || state.balance.globalBalance > 0;
 export default balanceSlice.reducer;

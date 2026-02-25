@@ -26,9 +26,6 @@ import Toast from "react-native-toast-message";
 import { BalanceService } from "./BalanceService";
 import StorageService from "./StorageService";
 import { v4 as uuidv4 } from "uuid";
-import { selectIsAuthenticated } from "../redux/slices/authSlice";
-import { selectHasFunds } from "../redux/slices/balanceSlice";
-import { selectDefaultModel } from "../redux/slices/globalConfigSlice";
 
 const MAX_MEMORY_FETCH_LOOPS = 4;
 
@@ -598,26 +595,18 @@ export class MessageService {
       const updatedChat = updatedState.chats.chats[chatId];
       const messages = updatedChat.messages;
 
-      // Check auth and balance state for feature gating
-      const isAuthenticated = selectIsAuthenticated(updatedState);
-      const hasFunds = selectHasFunds(updatedState);
-
-      // Build artifact index and tools only if authenticated and chat has a project
-      const artifactIndex = (isAuthenticated && chat.projectId)
+      // Build artifact index and tools if chat is associated with a project
+      const artifactIndex = chat.projectId
         ? this.buildArtifactIndex(chat.projectId)
         : undefined;
-      const tools = (isAuthenticated && chat.projectId) ? ARTIFACT_TOOL_SCHEMAS : undefined;
-
-      // Memory is only available when authenticated and there are funds
-      const memoryEnabled = isAuthenticated && hasFunds;
-      const memories = memoryEnabled ? chat.memories : [];
+      const tools = chat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
 
       // Send the message and get response
       if (useStreaming) {
         await this.sendMessageWithStreaming({
           chatId,
           messages,
-          memories,
+          memories: chat.memories,
           memoryLoopCount,
           memoryLoopLimitReached,
           artifactIndex,
@@ -631,7 +620,7 @@ export class MessageService {
         await this.sendMessageWithoutStreaming({
           chatId,
           messages,
-          memories,
+          memories: chat.memories,
           memoryLoopCount,
           memoryLoopLimitReached,
           artifactIndex,
@@ -698,12 +687,6 @@ export class MessageService {
     const userSettings = state.userSettings;
     const chat = state.chats.chats[chatId];
 
-    // When not authenticated, force the default model
-    const isAuthenticated = selectIsAuthenticated(state);
-    const effectiveModel = isAuthenticated
-      ? userSettings.model
-      : selectDefaultModel(state);
-
     let accumulated = "";
     let messageSignature: string | undefined;
     let assistantIndex = -1;
@@ -724,7 +707,7 @@ export class MessageService {
       }
 
       for await (const evt of ChatApiClient.sendMessageStream(
-        effectiveModel,
+        userSettings.model,
         userSettings.humanPrompt,
         userSettings.keepGoing,
         userSettings.outsideBox,
@@ -1017,12 +1000,6 @@ export class MessageService {
     const state = store.getState();
     const userSettings = state.userSettings;
 
-    // When not authenticated, force the default model
-    const isAuthenticated = selectIsAuthenticated(state);
-    const effectiveModel = isAuthenticated
-      ? userSettings.model
-      : selectDefaultModel(state);
-
     // Check if already cancelled before making request
     if (signal?.aborted) {
       console.log("MessageService: Request was cancelled before sending");
@@ -1031,7 +1008,7 @@ export class MessageService {
 
     try {
       const response = await ChatApiClient.sendMessage(
-        effectiveModel,
+        userSettings.model,
         userSettings.humanPrompt,
         userSettings.keepGoing,
         userSettings.outsideBox,
@@ -1189,22 +1166,15 @@ export class MessageService {
       // Prevent auto-generation during manual regeneration
       store.dispatch(setAutoGenerateAnswer(false));
 
-      // Use current messages from the chat
+      // Use current messages and memories from the chat
       const messages = chat.messages;
+      const memories = chat.memories;
 
-      // Check auth and balance state for feature gating
-      const isAuthenticated = selectIsAuthenticated(state);
-      const hasFunds = selectHasFunds(state);
-
-      // Memory is only available when authenticated and there are funds
-      const memoryEnabled = isAuthenticated && hasFunds;
-      const memories = memoryEnabled ? chat.memories : [];
-
-      // Build artifact index and tools only if authenticated and chat has a project
-      const artifactIndex = (isAuthenticated && chat.projectId)
+      // Build artifact index and tools if chat is associated with a project
+      const artifactIndex = chat.projectId
         ? this.buildArtifactIndex(chat.projectId)
         : undefined;
-      const tools = (isAuthenticated && chat.projectId) ? ARTIFACT_TOOL_SCHEMAS : undefined;
+      const tools = chat.projectId ? ARTIFACT_TOOL_SCHEMAS : undefined;
 
       // Send the message and get response
       if (useStreaming) {
