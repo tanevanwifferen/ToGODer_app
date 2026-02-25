@@ -30,8 +30,6 @@ export const useChatTitle = (chatId: string): string | undefined => {
   const fetchedChatIdRef = useRef<string | null>(null);
 
 
-  const messagesLength = messages.length;
-
   useEffect(() => {
     // Guard: need a valid chatId
     if (!chatId) return;
