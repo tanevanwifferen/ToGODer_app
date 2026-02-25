@@ -112,7 +112,9 @@ export function useInitialization() {
           MemoryLoopService.startMemoryLoop();
         } else {
           AuthService.stopTokenRefreshService();
-          MemoryLoopService.stopMemoryLoop();
+          // Don't stop MemoryLoopService here - it self-guards via
+          // isAuthenticated check in executeMemoryLoop(). Stopping it
+          // risks killing the loop if the token flickers during refresh.
         }
       });
     };
