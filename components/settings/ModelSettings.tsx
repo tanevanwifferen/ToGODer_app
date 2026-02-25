@@ -12,6 +12,7 @@ import {
   setCommunicationStyle,
   setAssistantName,
 } from '../../redux/slices/userSettingsSlice';
+import { selectIsAuthenticated } from '../../redux/slices/authSlice';
 import { Colors } from '../../constants/Colors';
 
 const ModelSettings = () => {
@@ -21,6 +22,12 @@ const ModelSettings = () => {
   const model = useSelector(selectModel);
   const communicationStyle = useSelector(selectCommunicationStyle);
   const assistant_name = useSelector(selectAssistantName);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  // When logged out, only allow the default (first) model
+  const displayModels = isAuthenticated
+    ? availableModels
+    : availableModels.slice(0, 1);
 
   const communicationStyles = [
     { value: ChatRequestCommunicationStyle.Default, label: 'Default' },
@@ -36,15 +43,16 @@ const ModelSettings = () => {
       <View style={styles.section}>
         <Text style={[styles.label, { color: theme.text }]}>Model</Text>
         <Picker
-          selectedValue={model}
+          selectedValue={isAuthenticated ? model : (availableModels[0]?.model ?? model)}
           onValueChange={(value: string) => dispatch(setModel(value))}
+          enabled={isAuthenticated}
           style={[styles.picker, {
             backgroundColor: theme.background,
             color: theme.text,
             borderColor: theme.icon
           }]}
         >
-          {availableModels.map((modelItem: { model: string; title: string }) => (
+          {displayModels.map((modelItem: { model: string; title: string }) => (
             <Picker.Item
               key={modelItem.model}
               label={modelItem.title}
@@ -53,6 +61,11 @@ const ModelSettings = () => {
             />
           ))}
         </Picker>
+        {!isAuthenticated && (
+          <Text style={[styles.warningText, { color: theme.icon }]}>
+            The free model is selected. Create an account to use other models.
+          </Text>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -108,6 +121,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 12,
+  },
+  warningText: {
+    fontSize: 13,
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   input: {
     borderWidth: 1,
