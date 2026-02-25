@@ -105,12 +105,16 @@ export function useInitialization() {
         BalanceService.getInstance().fetchBalance();
       }
 
-      // Subscribe to auth state changes
+      // Subscribe to auth state changes - only react to actual transitions
+      let previousIsAuthenticated = isAuthenticated;
       store.subscribe(() => {
         const currentState = store.getState();
         const currentIsAuthenticated = Boolean(currentState.auth.token);
 
-        if (currentIsAuthenticated && !AuthService.RefreshInterval) {
+        if (currentIsAuthenticated === previousIsAuthenticated) return;
+        previousIsAuthenticated = currentIsAuthenticated;
+
+        if (currentIsAuthenticated) {
           AuthService.startTokenRefreshService();
           MemoryLoopService.startMemoryLoop();
         } else {
